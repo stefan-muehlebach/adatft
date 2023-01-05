@@ -7,5 +7,5 @@ And it does this so fast, on RaspberryPi 2 you can even display animations with 
 ## Installation
 
 Since `adatft` consists of a Go package on one side but has also a part written in C responsible for the hardware access,
-you cannot just install the package with `git get`. A C compiler and a number of libraries are needed.
+you cannot just install the package with `git get` - a C compiler and a number of libraries are needed.
 
