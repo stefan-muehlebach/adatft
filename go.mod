@@ -1,12 +1,10 @@
-module mju.net/adatft
+module github.com/stefan-muehlebach/adatft
 
-go 1.21.0
-
-replace mju.net/gg => ../gg
+go 1.21.4
 
 require (
-	golang.org/x/image v0.11.0
-	mju.net/gg v0.0.0-00010101000000-000000000000
+	github.com/stefan-muehlebach/gg v0.0.0-20231206214430-a7be96dbea1b
+	golang.org/x/image v0.14.0
 	periph.io/x/conn/v3 v3.7.0
 	periph.io/x/host/v3 v3.8.2
 )

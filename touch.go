@@ -4,7 +4,7 @@ import (
     "fmt"
     "log"
     "time"
-    . "mju.net/adatft/stmpe610"
+    . "github.com/stefan-muehlebach/adatft/stmpe610"
 )
 
 const (

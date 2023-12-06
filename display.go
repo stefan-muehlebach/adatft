@@ -4,7 +4,7 @@ import (
     "errors"
     "image"
     "time"
-    . "mju.net/adatft/ili9341"
+    . "github.com/stefan-muehlebach/adatft/ili9341"
 )
 
 type ChannelDir int

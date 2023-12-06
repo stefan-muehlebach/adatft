@@ -8,8 +8,8 @@ import (
     "math/rand"
     "os"
     "testing"
-    . "mju.net/adatft/ili9341"
-    "mju.net/gg"
+    . "github.com/stefan-muehlebach/adatft/ili9341"
+    "github.com/stefan-muehlebach/gg"
     "golang.org/x/image/draw"
 )
 

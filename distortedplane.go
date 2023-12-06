@@ -7,7 +7,7 @@ import (
     "math"
     "os"
     "path/filepath"
-    . "mju.net/adatft/ili9341"
+    . "github.com/stefan-muehlebach/adatft/ili9341"
 )
 
 var (
