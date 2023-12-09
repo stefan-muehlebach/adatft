@@ -3,16 +3,16 @@ package stmpe610
 import (
     _ "fmt"
     "log"
-    "periph.io/x/conn/gpio"
-    "periph.io/x/conn/gpio/gpioreg"
-    "periph.io/x/conn/physic"
-    "periph.io/x/conn/spi"
-    "periph.io/x/conn/spi/spireg"
-//    "periph.io/x/conn/v3/gpio"
-//    "periph.io/x/conn/v3/gpio/gpioreg"
-//    "periph.io/x/conn/v3/physic"
-//    "periph.io/x/conn/v3/spi"
-//    "periph.io/x/conn/v3/spi/spireg"
+//    "periph.io/x/conn/gpio"
+//    "periph.io/x/conn/gpio/gpioreg"
+//    "periph.io/x/conn/physic"
+//    "periph.io/x/conn/spi"
+//    "periph.io/x/conn/spi/spireg"
+    "periph.io/x/conn/v3/gpio"
+    "periph.io/x/conn/v3/gpio/gpioreg"
+    "periph.io/x/conn/v3/physic"
+    "periph.io/x/conn/v3/spi"
+    "periph.io/x/conn/v3/spi/spireg"
 )
 
 //-----------------------------------------------------------------------------
@@ -226,10 +226,12 @@ func (d *STMPE610) ReadData() (x, y uint16 /*, z uint8*/) {
 func (d *STMPE610) SetCallback(cbFunc func(any), cbData any) {
     go func() {
         for {
+            log.Printf("SetCallback: wait for edge\n")
             if d.pin.WaitForEdge(-1) {
+                log.Printf("SetCallback: edge detected\n")
                 cbFunc(cbData)
             } else {
-                //log.Println("WaitForEdge() returned 'false'")
+                log.Printf("WaitForEdge() returned 'false'\n")
             }
         }
     }()
