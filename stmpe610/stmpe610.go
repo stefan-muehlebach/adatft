@@ -226,9 +226,7 @@ func (d *STMPE610) ReadData() (x, y uint16 /*, z uint8*/) {
 func (d *STMPE610) SetCallback(cbFunc func(any), cbData any) {
     go func() {
         for {
-            log.Printf("SetCallback: wait for edge\n")
             if d.pin.WaitForEdge(-1) {
-                log.Printf("SetCallback: edge detected\n")
                 cbFunc(cbData)
             } else {
                 log.Printf("WaitForEdge() returned 'false'\n")

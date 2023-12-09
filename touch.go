@@ -288,13 +288,11 @@ func eventDispatcher(arg any) {
     var ev PenEvent
     var evTyp PenEventType
 
-    log.Printf("eventDispatcher: starting\n")
     tch = arg.(*Touch)
     intStatus := tch.tspi.ReadReg8(STMPE610_INT_STA)
     intEnable := tch.tspi.ReadReg8(STMPE610_INT_EN)
 
     if (intStatus & 0x03) == 0 {
-        log.Printf("eventDispatcher: exit early\n")
         return
     }
 
