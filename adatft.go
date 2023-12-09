@@ -31,7 +31,8 @@ import (
     "log"
     "os"
     "path/filepath"
-    "periph.io/x/host/v3"
+    "periph.io/x/host"
+    //"periph.io/x/host/v3"
 )
 
 const (
