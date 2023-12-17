@@ -294,19 +294,17 @@ func (dsp *Display) Bounds() (image.Rectangle) {
     return image.Rect(0, 0, Width, Height)
 }
 
-func (dsp *Display) DrawSync(dstRect image.Rectangle, img image.Image,
-        srcPts image.Point) (error) {
-    dsp.staticBuf.Convert(dstRect, img.(*image.RGBA), srcPts)
+func (dsp *Display) DrawSync(img image.Image) (error) {
+    dsp.staticBuf.Convert(img.(*image.RGBA))
     dsp.drawBuffer(dsp.staticBuf)
     return nil
 }
 
-func (dsp *Display) Draw(dstRect image.Rectangle, img image.Image,
-        srcPts image.Point) (error) {
+func (dsp *Display) Draw(img image.Image) (error) {
     var buf *Buffer
 
     buf = <-dsp.bufChan[toConv]
-    buf.Convert(dstRect, img.(*image.RGBA), srcPts)
+    buf.Convert(img.(*image.RGBA))
     dsp.bufChan[toDisp] <- buf
     return nil
 }

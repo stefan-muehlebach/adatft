@@ -44,6 +44,29 @@ func (buf *Buffer) Clear() {
 // sind vorgaengig mit anderen Funktionen (bspw. aus dem Package gg oder
 // image/draw) durchzufuehren. Die Zeitmessung ueber die Variable 'ConvTime'
 // ist in dieser Funktion realisiert.
+func (buf *Buffer) Convert(src *image.RGBA) {
+    var srcIdx, dstIdx int
+
+    t1 := time.Now()
+    buf.dstRect = src.Bounds()
+    buf.strideLen = buf.dstRect.Dx() * bytesPerPixel
+
+    for row:=buf.dstRect.Min.Y; row<buf.dstRect.Max.Y; row++ {
+        srcIdx = (row-buf.dstRect.Min.Y)*src.Stride
+        dstIdx = (row-buf.dstRect.Min.Y)*buf.strideLen
+        for col:=buf.dstRect.Min.X; col<buf.dstRect.Max.X; col++ {
+            buf.pixBuf[dstIdx+0]  =  src.Pix[srcIdx+2]
+            buf.pixBuf[dstIdx+1]  =  src.Pix[srcIdx+1]
+            buf.pixBuf[dstIdx+2]  =  src.Pix[srcIdx+0]
+            srcIdx += 4
+            dstIdx += bytesPerPixel
+        }
+    }
+    ConvTime += time.Since(t1)
+    NumConv++
+}
+
+/*
 func (buf *Buffer) Convert(dstRect image.Rectangle, src *image.RGBA,
         srcPt image.Point) {
     var idx1, idx2, idx1Step, idx2Step int
@@ -66,4 +89,4 @@ func (buf *Buffer) Convert(dstRect image.Rectangle, src *image.RGBA,
     ConvTime += time.Since(t1)
     NumConv++
 }
-
+*/

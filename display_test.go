@@ -2,26 +2,27 @@ package adatft
 
 import (
     "image"
-    "image/color"
+    //"image/color"
     "image/png"
     "log"
     "math/rand"
     "os"
     "testing"
     "github.com/stefan-muehlebach/gg"
+    "github.com/stefan-muehlebach/gg/color"
     "golang.org/x/image/draw"
 )
 
 const (
-    testImage = "testbild.png"
+    imageFile = "testbild.png"
     speedHz   = 50_000_000
 )
 
 var (
     disp *Display
     pixBuf *Buffer
-    img *image.RGBA
-    dstRect  image.Rectangle
+    testImage *image.RGBA
+    dstRectFull, dstRectHalve, dstRectQuart, dstRectCust image.Rectangle
     srcPoint image.Point
     gc *gg.Context
     err error
@@ -37,7 +38,7 @@ func init() {
 
     pixBuf = NewBuffer()
 
-    fh, err := os.Open(testImage)
+    fh, err := os.Open(imageFile)
     if err != nil {
         log.Fatal(err)
     }
@@ -46,24 +47,22 @@ func init() {
     if err != nil {
         log.Fatal(err)
     }
-    img = tmp.(*image.RGBA)
+    testImage = tmp.(*image.RGBA)
 
-    dstRect = disp.Bounds()
+    dstRectFull  = image.Rect(  0,  0, 320, 240)
+    dstRectHalve = image.Rect( 80, 60, 240, 180)
+    dstRectQuart = image.Rect(120, 90, 200, 150)
+    dstRectCust  = image.Rect( 50, 10, 270, 210)
+
     srcPoint = image.Pt(0, 0)
 
     plane = &DistortedPlane{}
     plane.ReadConfig()
 
     gc = gg.NewContext(Width, Height)
-    fillColor   = color.RGBA{125, 52, 26, 160}
+    fillColor   = color.RGBAF{0.4902, 0.2039, 0.1019, 0.6274}
     strokeColor = color.White
 }
-
-func BenchmarkConvertImage(b *testing.B) {
-    for i := 0; i < b.N; i++ {
-        pixBuf.Convert(dstRect, img, srcPoint)
-    }
-} 
 
 func BenchmarkTransformPoint(b *testing.B) {
     for i := 0; i< b.N; i++ {
@@ -73,9 +72,72 @@ func BenchmarkTransformPoint(b *testing.B) {
     }
 }
 
+func BenchmarkConvertFull(b *testing.B) {
+    img := testImage.SubImage(dstRectFull).(*image.RGBA)
+    for i := 0; i < b.N; i++ {
+        pixBuf.Convert(img)
+    }
+} 
+func BenchmarkConvertHalve(b *testing.B) {
+    img := testImage.SubImage(dstRectHalve).(*image.RGBA)
+    for i := 0; i < b.N; i++ {
+        pixBuf.Convert(img)
+    }
+} 
+func BenchmarkConvertQuart(b *testing.B) {
+    img := testImage.SubImage(dstRectQuart).(*image.RGBA)
+    for i := 0; i < b.N; i++ {
+        pixBuf.Convert(img)
+    }
+} 
+func BenchmarkConvertCust(b *testing.B) {
+    img := testImage.SubImage(dstRectCust).(*image.RGBA)
+    for i := 0; i < b.N; i++ {
+        pixBuf.Convert(img)
+    }
+} 
+
+
+func BenchmarkDrawCust(b *testing.B) {
+    gc.SetFillColor(color.Black)
+    gc.Clear()
+    disp.DrawSync(gc.Image())
+    b.ResetTimer()
+    for i := 0; i < b.N; i++ {
+        disp.DrawSync(testImage.SubImage(dstRectCust))
+    }
+}
+func BenchmarkDrawQuart(b *testing.B) {
+    gc.SetFillColor(color.Black)
+    gc.Clear()
+    disp.DrawSync(gc.Image())
+    b.ResetTimer()
+    for i := 0; i < b.N; i++ {
+        disp.DrawSync(testImage.SubImage(dstRectQuart))
+    }
+}
+func BenchmarkDrawHalve(b *testing.B) {
+    gc.SetFillColor(color.Black)
+    gc.Clear()
+    disp.DrawSync(gc.Image())
+    b.ResetTimer()
+    for i := 0; i < b.N; i++ {
+        disp.DrawSync(testImage.SubImage(dstRectHalve))
+    }
+}
+func BenchmarkDrawFull(b *testing.B) {
+    gc.SetFillColor(color.Black)
+    gc.Clear()
+    disp.DrawSync(gc.Image())
+    b.ResetTimer()
+    for i := 0; i < b.N; i++ {
+        disp.DrawSync(testImage.SubImage(dstRectFull))
+    }
+}
+
 func BenchmarkDrawRectangle(b *testing.B) {
     gc.Clear()
-    disp.DrawSync(dstRect, gc.Image(), srcPoint)
+    disp.DrawSync(gc.Image())
     b.ResetTimer()
     for i := 0; i< b.N; i++ {
         x, y, w, h := 160.0*rand.Float64(), 120.0*rand.Float64(),
@@ -87,12 +149,12 @@ func BenchmarkDrawRectangle(b *testing.B) {
         gc.FillStroke()
     }
     b.StopTimer()
-    disp.DrawSync(dstRect, gc.Image(), srcPoint)
+    disp.DrawSync(gc.Image())
 }
 
 func BenchmarkDrawRectangleClipped(b *testing.B) {
     gc.Clear()
-    disp.DrawSync(dstRect, gc.Image(), srcPoint)
+    disp.DrawSync(gc.Image())
     b.ResetTimer()
     for i := 0; i< b.N; i++ {
         x, y, w, h := 160.0*rand.Float64(), 120.0*rand.Float64(),
@@ -106,12 +168,12 @@ func BenchmarkDrawRectangleClipped(b *testing.B) {
         gc.ResetClip()
     }
     b.StopTimer()
-    disp.DrawSync(dstRect, gc.Image(), srcPoint)
+    disp.DrawSync(gc.Image())
 }
 
 func BenchmarkDrawCircle(b *testing.B) {
     gc.Clear()
-    disp.DrawSync(dstRect, gc.Image(), srcPoint)
+    disp.DrawSync(gc.Image())
     b.ResetTimer()
     for i := 0; i< b.N; i++ {
         x, y, r := 320.0*rand.Float64(), 240.0*rand.Float64(),
@@ -123,12 +185,12 @@ func BenchmarkDrawCircle(b *testing.B) {
         gc.FillStroke()
     }
     b.StopTimer()
-    disp.DrawSync(dstRect, gc.Image(), srcPoint)
+    disp.DrawSync(gc.Image())
 }
 
 func BenchmarkDrawCircleClipped(b *testing.B) {
     gc.Clear()
-    disp.DrawSync(dstRect, gc.Image(), srcPoint)
+    disp.DrawSync(gc.Image())
     b.ResetTimer()
     for i := 0; i< b.N; i++ {
         x, y, r := 320.0*rand.Float64(), 240.0*rand.Float64(),
@@ -142,41 +204,41 @@ func BenchmarkDrawCircleClipped(b *testing.B) {
         gc.ResetClip()
     }
     b.StopTimer()
-    disp.DrawSync(dstRect, gc.Image(), srcPoint)
+    disp.DrawSync(gc.Image())
 }
 
 func BenchmarkDrawImageGG(b *testing.B) {
     gc.Clear()
-    disp.DrawSync(dstRect, gc.Image(), srcPoint)
+    disp.DrawSync(gc.Image())
     b.ResetTimer()
     for i := 0; i< b.N; i++ {
-        gc.DrawImage(img, 0, 0)
+        gc.DrawImage(testImage, 0, 0)
     }
     b.StopTimer()
-    disp.DrawSync(dstRect, gc.Image(), srcPoint)
+    disp.DrawSync(gc.Image())
 }
 
 func BenchmarkDrawImageGo(b *testing.B) {
     out := gc.Image().(*image.RGBA)
     gc.Clear()
-    disp.DrawSync(dstRect, gc.Image(), srcPoint)
+    disp.DrawSync(gc.Image())
     b.ResetTimer()
     for i := 0; i< b.N; i++ {
-        draw.Draw(out, out.Bounds(), img, image.Point{0, 0}, draw.Src)
+        draw.Draw(out, out.Bounds(), testImage, image.Point{0, 0}, draw.Src)
     }
     b.StopTimer()
-    disp.DrawSync(dstRect, gc.Image(), srcPoint)
+    disp.DrawSync(gc.Image())
 }
 
 func BenchmarkCopyImageGo(b *testing.B) {
     out := gc.Image().(*image.RGBA)
     gc.Clear()
-    disp.DrawSync(dstRect, gc.Image(), srcPoint)
+    disp.DrawSync(gc.Image())
     b.ResetTimer()
     for i := 0; i< b.N; i++ {
-        draw.Copy(out, image.Point{0, 0}, img, img.Bounds(), draw.Src, nil)
+        draw.Copy(out, image.Point{0, 0}, testImage, testImage.Bounds(), draw.Src, nil)
     }
     b.StopTimer()
-    disp.DrawSync(dstRect, gc.Image(), srcPoint)
+    disp.DrawSync(gc.Image())
 }
 
