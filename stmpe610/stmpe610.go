@@ -229,7 +229,7 @@ func (d *STMPE610) SetCallback(cbFunc func(any), cbData any) {
             if d.pin.WaitForEdge(-1) {
                 cbFunc(cbData)
             } else {
-                log.Printf("WaitForEdge() returned 'false'\n")
+                //log.Printf("WaitForEdge() returned 'false'\n")
             }
         }
     }()
