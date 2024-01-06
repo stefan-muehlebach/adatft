@@ -190,7 +190,26 @@ func BenchmarkDrawRectangleClipped(b *testing.B) {
     disp.DrawSync(gc.Image())
 }
 
-func BenchmarkDrawRectangleSubImage(b *testing.B) {
+func BenchmarkDrawRectangles(b *testing.B) {
+    var img *image.RGBA
+
+    img = gc.Image().(*image.RGBA)
+
+    gc.SetFillColor(fillColor)
+    gc.SetStrokeColor(strokeColor)
+    gc.SetStrokeWidth(2.0)
+    gc.Clear()
+    disp.DrawSync(gc.Image())
+    b.ResetTimer()
+    for i := 0; i< b.N; i++ {
+        x, y, w, h := 160.0*rand.Float64(), 120.0*rand.Float64(),
+                160.0*rand.Float64(), 120.0*rand.Float64()
+        gc.DrawRectangle(x, y, w, h)
+        gc.FillStroke()
+        disp.DrawSync(img)
+    }
+}
+func BenchmarkDrawRectanglesSubImage(b *testing.B) {
     var img *image.RGBA
 
     img = gc.Image().(*image.RGBA)
