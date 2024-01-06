@@ -204,7 +204,7 @@ func BenchmarkDrawRectangleSubImage(b *testing.B) {
     for i := 0; i< b.N; i++ {
         x, y, w, h := 160.0*rand.Float64(), 120.0*rand.Float64(),
                 160.0*rand.Float64(), 120.0*rand.Float64()
-        rect := image.Rect(int(x), int(y), int(x+w), int(y+h))
+        rect := image.Rect(int(x), int(y), int(x+w), int(y+h)).Inset(-1)
         gc.DrawRectangle(x, y, w, h)
         gc.FillStroke()
         // disp.DrawSync(img)
