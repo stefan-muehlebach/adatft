@@ -28,7 +28,7 @@ var (
     gc *gg.Context
     err error
     plane *DistortedPlane
-    touchData TouchPosRaw
+    touchData TouchRawPos
     touchPos  TouchPos
     backColor, fillColor, borderColor color.Color
     borderWidth float64
@@ -76,7 +76,7 @@ func BenchmarkTransformPoint(b *testing.B) {
     x, y := uint16(rand.Intn(2 << 16)), uint16(rand.Intn(2 << 16))
     b.ResetTimer()
     for i := 0; i< b.N; i++ {
-        touchData = TouchPosRaw{x, y}
+        touchData = TouchRawPos{x, y}
         touchPos, _ = plane.Transform(touchData)
     }
 }

@@ -50,12 +50,12 @@ type Touch struct {
 
 // Dieser Typ enthält die rohen, unkalibrierten Display-Daten
 //
-type TouchPosRaw struct {
+type TouchRawPos struct {
     RawX, RawY uint16
     //RawZ uint8
 }
 
-func (td TouchPosRaw) String() (string) {
+func (td TouchRawPos) String() (string) {
     return fmt.Sprintf("(%4d, %4d)", td.RawX, td.RawY)
     //return fmt.Sprintf("(%4d, %4d, %3d)", td.RawX, td.RawY, td.RawZ)
 }
@@ -77,7 +77,7 @@ func (tp TouchPos) String() (string) {
 //
 type PenEvent struct {
     Type       PenEventType
-    TouchPosRaw
+    TouchRawPos
     TouchPos
     Time       time.Time
     FifoSize   uint8
@@ -161,16 +161,16 @@ func (tch *Touch) WaitForEvent() (PenEvent) {
 }
 
 // Diese Hilfsfunktion dient der einfacheren Erstellung eines Event-Objektes.
-func (tch *Touch) newPenEvent(typ PenEventType, posRaw TouchPosRaw) (ev PenEvent) {
+func (tch *Touch) newPenEvent(typ PenEventType, rawPos TouchRawPos) (ev PenEvent) {
     ev.Type = typ
-    ev.TouchPosRaw = posRaw
-    ev.TouchPos, _ = tch.Transform(posRaw)
+    ev.TouchRawPos = rawPos
+    ev.TouchPos, _ = tch.Transform(rawPos)
     ev.Time = time.Now()
     ev.FifoSize = tch.tspi.ReadReg8(stmpe.STMPE610_FIFO_SIZE)
     return
 }
 
-func (tch *Touch) readPosRaw() (td TouchPosRaw) {
+func (tch *Touch) readRawPos() (td TouchRawPos) {
     td.RawX, td.RawY = tch.tspi.ReadData()
     //td.RawX, td.RawY, td.RawZ = tch.tspi.ReadData()
     return
@@ -179,7 +179,7 @@ func (tch *Touch) readPosRaw() (td TouchPosRaw) {
 // In diesen globalen Variablen werden Daten verwaltet, die vom
 // Callback-Handler (siehe unten) benötigt werden.
 var (
-    posRaw TouchPosRaw
+    posRaw TouchRawPos
     penUp  bool = true
 )
 
@@ -222,7 +222,7 @@ func eventDispatcher(arg any) {
     case (intStatus & stmpe.STMPE610_INT_FIFO_TH) != 0:
          for tch.tspi.ReadReg8(stmpe.STMPE610_FIFO_SIZE) > 0 {
              time.Sleep(sampleTime)      // NEU!!! ACHTUNG!!!
-             posRaw = tch.readPosRaw()
+             posRaw = tch.readRawPos()
              evTyp = PenDrag
              if penUp {
                  evTyp = PenPress

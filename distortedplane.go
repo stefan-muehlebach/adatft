@@ -24,8 +24,8 @@ var (
 // wird der Datentyp DistortedPlane verwendet.
 //
 type DistortedPlane struct {
-    DataList [NumRefPoints]TouchPosRaw
-    PosList  [NumRefPoints]TouchPos
+    RawPosList [NumRefPoints]TouchRawPos
+    PosList    [NumRefPoints]TouchPos
     m1, m2, n1, n2, o1, o2 float64
     ax, ay float64
 }
@@ -75,27 +75,27 @@ func (d *DistortedPlane) ReadConfigFile(fileName string) {
 
 //-----------------------------------------------------------------------------
 //
-func (d *DistortedPlane) SetRefPoint(id RefPointType, touchData TouchPosRaw,
-        touchPos TouchPos) {
-    d.DataList[id] = touchData
-    d.PosList[id]  = touchPos
+func (d *DistortedPlane) SetRefPoint(id RefPointType, rawPos TouchRawPos,
+        pos TouchPos) {
+    d.RawPosList[id] = rawPos
+    d.PosList[id] = pos
     d.update()
 }
 
-func (d *DistortedPlane) SetRefPoints(DataList []TouchPosRaw, posList []TouchPos) {
+func (d *DistortedPlane) SetRefPoints(rawPosList []TouchRawPos, posList []TouchPos) {
     for id := RefTopLeft; id < NumRefPoints; id++ {
-        d.DataList[id] = DataList[id]
+        d.RawPosList[id] = rawPosList[id]
         d.PosList[id] = posList[id]
     }
 }
 
-func (d *DistortedPlane) Transform(touchData TouchPosRaw) (touchPos TouchPos,
+func (d *DistortedPlane) Transform(touchData TouchRawPos) (touchPos TouchPos,
         err error) {
     var p1, p2, bx, cx, by, cy float64
     var tx, ty float64
 
-    p1 = float64(touchData.RawX) - float64(d.DataList[0].RawX)
-    p2 = float64(touchData.RawY) - float64(d.DataList[0].RawY)
+    p1 = float64(touchData.RawX) - float64(d.RawPosList[0].RawX)
+    p2 = float64(touchData.RawY) - float64(d.RawPosList[0].RawY)
 
     bx = p1*d.o2 - d.m1*d.n2 - p2*d.o1 + d.n1*d.m2
     cx = p1*d.n2 - p2*d.n1
@@ -122,12 +122,12 @@ func (d *DistortedPlane) Transform(touchData TouchPosRaw) (touchPos TouchPos,
 }
 
 func (d *DistortedPlane) update() {
-    d.m1 = float64(d.DataList[1].RawX) - float64(d.DataList[0].RawX)
-    d.m2 = float64(d.DataList[1].RawY) - float64(d.DataList[0].RawY)
-    d.n1 = float64(d.DataList[3].RawX) - float64(d.DataList[0].RawX)
-    d.n2 = float64(d.DataList[3].RawY) - float64(d.DataList[0].RawY)
-    d.o1 = float64(d.DataList[2].RawX) - float64(d.DataList[3].RawX) - d.m1
-    d.o2 = float64(d.DataList[2].RawY) - float64(d.DataList[3].RawY) - d.m2
+    d.m1 = float64(d.RawPosList[1].RawX) - float64(d.RawPosList[0].RawX)
+    d.m2 = float64(d.RawPosList[1].RawY) - float64(d.RawPosList[0].RawY)
+    d.n1 = float64(d.RawPosList[3].RawX) - float64(d.RawPosList[0].RawX)
+    d.n2 = float64(d.RawPosList[3].RawY) - float64(d.RawPosList[0].RawY)
+    d.o1 = float64(d.RawPosList[2].RawX) - float64(d.RawPosList[3].RawX) - d.m1
+    d.o2 = float64(d.RawPosList[2].RawY) - float64(d.RawPosList[3].RawY) - d.m2
     d.ax = d.m2*d.o1 - d.m1*d.o2
     d.ay = d.n2*d.o1 - d.n1*d.o2
 }

@@ -13,13 +13,13 @@ const (
 func (pt RefPointType) String() (string) {
     switch pt {
     case RefTopLeft:
-        return "Top Left"
+        return "TopLeft"
     case RefTopRight:
-        return "Top Right"
+        return "TopRight"
     case RefBottomRight:
-        return "Bottom Right"
+        return "BottomRight"
     case RefBottomLeft:
-        return "Bottom Left"
+        return "BottomLeft"
     }
     return "(unknow reference point)"
 }
