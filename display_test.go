@@ -31,6 +31,7 @@ var (
     touchData TouchData
     touchPos  TouchPos
     backColor, fillColor, borderColor color.Color
+    borderWidth int
 )
 
 func init() {
@@ -64,6 +65,7 @@ func init() {
     backColor   = colornames.LightGreen
     fillColor   = colornames.CadetBlue
     borderColor = colornames.WhiteSmoke
+    borderWidth = 5.0
 }
 
 // Benchmark der Konvertierung von Touchscreen-Koordinaten nach Bildschirm-
@@ -205,7 +207,7 @@ func BenchmarkDrawRectanglesFull(b *testing.B) {
     disp.DrawSync(gc.Image())
     gc.SetFillColor(fillColor)
     gc.SetStrokeColor(borderColor)
-    gc.SetStrokeWidth(2.0)
+    gc.SetStrokeWidth(borderWidth)
     b.ResetTimer()
     for i := 0; i< b.N; i++ {
         x, y, w, h := 160.0*rand.Float64(), 120.0*rand.Float64(),
@@ -230,7 +232,7 @@ func BenchmarkDrawRectanglesSubImage(b *testing.B) {
     disp.DrawSync(gc.Image())
     gc.SetFillColor(fillColor)
     gc.SetStrokeColor(borderColor)
-    gc.SetStrokeWidth(2.0)
+    gc.SetStrokeWidth(borderWidth)
     b.ResetTimer()
     for i := 0; i< b.N; i++ {
         x, y, w, h := 160.0*rand.Float64(), 120.0*rand.Float64(),
