@@ -73,9 +73,11 @@ func Init() {
 func PrintStat() {
     fmt.Printf("total:\n")
     fmt.Printf("  %d frames\n", NumConv)
-    fmt.Printf("application painting:\n")
-    fmt.Printf("  %v total\n", PaintTime)
-    fmt.Printf("  %.3f ms / frame\n", float64(PaintTime.Milliseconds()) / float64(NumPaint))
+    if NumPaint != 0 {
+        fmt.Printf("application painting:\n")
+        fmt.Printf("  %v total\n", PaintTime)
+        fmt.Printf("  %.3f ms / frame\n", float64(PaintTime.Milliseconds()) / float64(NumPaint))
+    }
     fmt.Printf("buffer conversion:\n")
     fmt.Printf("  %v total\n", ConvTime)
     fmt.Printf("  %.3f ms / frame\n", float64(ConvTime.Milliseconds()) / float64(NumConv))
