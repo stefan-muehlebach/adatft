@@ -52,7 +52,7 @@ func init() {
     dstRectFull  = image.Rect(  0,  0, 320, 240)
     dstRectHalve = image.Rect( 80, 60, 240, 180)
     dstRectQuart = image.Rect(120, 90, 200, 150)
-    dstRectCust  = image.Rect( 50, 10, 270, 210)
+    dstRectCust  = image.Rect(120, 80, 300, 200)
 
     srcPoint = image.Pt(0, 0)
 
@@ -64,56 +64,57 @@ func init() {
     strokeColor = color.White
 }
 
+// Benchmark der Konvertierung von Touchscreen-Koordinaten nach Bildschirm-
+// Koordinaten. TO DO: ev. sollte die Erzeugung der Touchscreen-Koordinaten
+// aus der Zeitmessung entfernt werden.
+//
 func BenchmarkTransformPoint(b *testing.B) {
+    x, y := uint16(rand.Intn(2 << 16)), uint16(rand.Intn(2 << 16))
+    b.ResetTimer()
     for i := 0; i< b.N; i++ {
-        x, y := uint16(rand.Intn(2 << 16)), uint16(rand.Intn(2 << 16))
         touchData = TouchData{x, y}
         touchPos, _ = plane.Transform(touchData)
     }
 }
 
+// Misst die Zeit für die Konvertierung eines Bildes im image.RGBA-Format
+// ins TFT-spezifische 666-/565-Format. Es gibt dazu vier Funktionen, welche
+// vier verschiedene Ausschnitte des Bildes konvertieren: Full, Halve, Quart
+// und Cust (siehe auch die Variablen dstRectXXX in der Funktion init()).
+//
 func BenchmarkConvertFull(b *testing.B) {
     img := testImage.SubImage(dstRectFull).(*image.RGBA)
     for i := 0; i < b.N; i++ {
         pixBuf.Convert(img)
     }
-} 
+}
 func BenchmarkConvertHalve(b *testing.B) {
     img := testImage.SubImage(dstRectHalve).(*image.RGBA)
     for i := 0; i < b.N; i++ {
         pixBuf.Convert(img)
     }
-} 
+}
 func BenchmarkConvertQuart(b *testing.B) {
     img := testImage.SubImage(dstRectQuart).(*image.RGBA)
     for i := 0; i < b.N; i++ {
         pixBuf.Convert(img)
     }
-} 
+}
 func BenchmarkConvertCust(b *testing.B) {
     img := testImage.SubImage(dstRectCust).(*image.RGBA)
     for i := 0; i < b.N; i++ {
         pixBuf.Convert(img)
     }
-} 
-
-
-func BenchmarkDrawCust(b *testing.B) {
-    gc.SetFillColor(color.Black)
-    gc.Clear()
-    disp.DrawSync(gc.Image())
-    b.ResetTimer()
-    for i := 0; i < b.N; i++ {
-        disp.DrawSync(testImage.SubImage(dstRectCust))
-    }
 }
-func BenchmarkDrawQuart(b *testing.B) {
+
+
+func BenchmarkDrawFull(b *testing.B) {
     gc.SetFillColor(color.Black)
     gc.Clear()
     disp.DrawSync(gc.Image())
     b.ResetTimer()
     for i := 0; i < b.N; i++ {
-        disp.DrawSync(testImage.SubImage(dstRectQuart))
+        disp.DrawSync(testImage.SubImage(dstRectFull))
     }
 }
 func BenchmarkDrawHalve(b *testing.B) {
@@ -125,13 +126,22 @@ func BenchmarkDrawHalve(b *testing.B) {
         disp.DrawSync(testImage.SubImage(dstRectHalve))
     }
 }
-func BenchmarkDrawFull(b *testing.B) {
+func BenchmarkDrawQuart(b *testing.B) {
     gc.SetFillColor(color.Black)
     gc.Clear()
     disp.DrawSync(gc.Image())
     b.ResetTimer()
     for i := 0; i < b.N; i++ {
-        disp.DrawSync(testImage.SubImage(dstRectFull))
+        disp.DrawSync(testImage.SubImage(dstRectQuart))
+    }
+}
+func BenchmarkDrawCust(b *testing.B) {
+    gc.SetFillColor(color.Black)
+    gc.Clear()
+    disp.DrawSync(gc.Image())
+    b.ResetTimer()
+    for i := 0; i < b.N; i++ {
+        disp.DrawSync(testImage.SubImage(dstRectCust))
     }
 }
 
