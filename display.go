@@ -80,10 +80,10 @@ type RotationData struct {
 
 var (
     rotDat = []RotationData{
-        RotationData{0xe0, "Rotate090.json", ili.ILI9341_SIDE_A, ili.ILI9341_SIDE_B},
-        RotationData{0x80, "Rotate180.json", ili.ILI9341_SIDE_B, ili.ILI9341_SIDE_A},
-        RotationData{0x20, "Rotate270.json", ili.ILI9341_SIDE_A, ili.ILI9341_SIDE_B},
-        RotationData{0x40, "Rotate000.json", ili.ILI9341_SIDE_B, ili.ILI9341_SIDE_A},
+        RotationData{0xe0, "Rotate000.json", ili.ILI9341_SIDE_A, ili.ILI9341_SIDE_B},
+        RotationData{0x80, "Rotate090.json", ili.ILI9341_SIDE_B, ili.ILI9341_SIDE_A},
+        RotationData{0x20, "Rotate180.json", ili.ILI9341_SIDE_A, ili.ILI9341_SIDE_B},
+        RotationData{0x40, "Rotate270.json", ili.ILI9341_SIDE_B, ili.ILI9341_SIDE_A},
     }
 )
 
