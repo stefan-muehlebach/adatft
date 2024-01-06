@@ -24,7 +24,7 @@ var (
 // wird der Datentyp DistortedPlane verwendet.
 //
 type DistortedPlane struct {
-    DataList [NumRefPoints]TouchData
+    DataList [NumRefPoints]TouchPosRaw
     PosList  [NumRefPoints]TouchPos
     m1, m2, n1, n2, o1, o2 float64
     ax, ay float64
@@ -75,21 +75,21 @@ func (d *DistortedPlane) ReadConfigFile(fileName string) {
 
 //-----------------------------------------------------------------------------
 //
-func (d *DistortedPlane) SetRefPoint(id RefPointType, touchData TouchData,
+func (d *DistortedPlane) SetRefPoint(id RefPointType, touchData TouchPosRaw,
         touchPos TouchPos) {
     d.DataList[id] = touchData
     d.PosList[id]  = touchPos
     d.update()
 }
 
-func (d *DistortedPlane) SetRefPoints(DataList []TouchData, posList []TouchPos) {
+func (d *DistortedPlane) SetRefPoints(DataList []TouchPosRaw, posList []TouchPos) {
     for id := RefTopLeft; id < NumRefPoints; id++ {
         d.DataList[id] = DataList[id]
         d.PosList[id] = posList[id]
     }
 }
 
-func (d *DistortedPlane) Transform(touchData TouchData) (touchPos TouchPos,
+func (d *DistortedPlane) Transform(touchData TouchPosRaw) (touchPos TouchPos,
         err error) {
     var p1, p2, bx, cx, by, cy float64
     var tx, ty float64

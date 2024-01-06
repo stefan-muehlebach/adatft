@@ -259,7 +259,7 @@ func (d *STMPE610) Init(initParams []any) {
 	// des Bildschirms (beide Ereignisse generieren das gleiche Event) sowie
 	// das Erreichen eines bestimmten Schwellwertes bei der FIFO-Queue
 	d.WriteReg8(STMPE610_INT_EN,
-		STMPE610_INT_TOUCH_DET|
+		STMPE610_INT_TOUCH_DET |
 			STMPE610_INT_FIFO_TH)
 
 	d.WriteReg8(STMPE610_TSC_I_DRIVE,
@@ -276,7 +276,7 @@ func (d *STMPE610) Init(initParams []any) {
 
 	// Mit diesem Register schliesslich, wird das Interrupt-System aktiviert.
 	d.WriteReg8(STMPE610_INT_CTRL,
-		STMPE610_INT_CTRL_EDGE|
+		STMPE610_INT_CTRL_EDGE |
 			STMPE610_INT_CTRL_ENABLE)
 }
 
