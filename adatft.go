@@ -12,7 +12,7 @@ abstraketeres API unterteilt. Konkret:
 
  * ili9341.go, ili9341-spi.go: enthalten alles, was für die direkte
    Ansteuerung des Display-Chips benötigt wird.
- * display.go: 
+ * display.go:
 
 Interfaces: der SPI-Verbindung zum
 Display-Chip ILI9341 und der SPI-Verbindung zum Touchscreen-Chip STMPE610.
@@ -27,6 +27,8 @@ ein "high level API" anbieten.
 package adatft
 
 import (
+	"io/fs"
+	"errors"
     "fmt"
     "log"
     "os"
@@ -36,30 +38,35 @@ import (
 )
 
 const (
-    confBaseDir    = "adatft"
+    // Enthält den Namen des Verzeichnisses, in welchem alle
+    // AdaTFT-spezifischen Konfigurationsdateien abgelegt werden.
+    confDirName = "adatft"
 )
 
-// Wenn 'true' werden viele Meldungen ausgegeben, mit welchen das
-// Funktionieren des Packages ueberprueft werden kann.
-// Default ist 'false'
 var (
-    appConfDir string
+    // Enthält den absoluten Pfad des AdaTFT-spezifischen Konfigurations-
+    // verzeichnisses.
+    confDir string
 )
 
 // Damit wird die 'periph.io'-Umgebung initialisiert. Diese Funktion muss
 // immer als erstes aufgerufen werden, noch bevor irgendwelche Devices
 // geoeffnet werden.
 func Init() {
-    _, err := host.Init()
-    check("host.Init()", err)
+    var userConfDir string
+    var err error
 
-    userConfDir, err := os.UserConfigDir()
-    check("os.UserConfigDir()", err)
+    if _, err = host.Init(); err != nil {
+        log.Fatalf("host.Init(): %v", err)
+    }
 
-    appConfDir = filepath.Join(userConfDir, confBaseDir)
-    err = os.MkdirAll(appConfDir, 0755)
-    if err != nil && !os.IsExist(err) {
-        log.Fatal(err)
+    if userConfDir, err = os.UserConfigDir(); err != nil {
+        log.Fatalf("os.UserConfigDir(): %v", err)
+    }
+
+    confDir = filepath.Join(userConfDir, confDirName)
+    if err = os.MkdirAll(confDir, 0755); err != nil && errors.Is(err, fs.ErrNotExist) {
+        log.Fatalf("os.MdirAll(): %v", err)
     }
 }
 

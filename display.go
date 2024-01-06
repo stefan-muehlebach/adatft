@@ -80,10 +80,10 @@ type RotationData struct {
 
 var (
     rotDat = []RotationData{
-        RotationData{0xe0, "rot090.json", ILI9341_SIDE_A, ILI9341_SIDE_B},
-        RotationData{0x80, "rot180.json", ILI9341_SIDE_B, ILI9341_SIDE_A},
-        RotationData{0x20, "rot270.json", ILI9341_SIDE_A, ILI9341_SIDE_B},
-        RotationData{0x40, "rot000.json", ILI9341_SIDE_B, ILI9341_SIDE_A},
+        RotationData{0xe0, "Rotate090.json", ILI9341_SIDE_A, ILI9341_SIDE_B},
+        RotationData{0x80, "Rotate180.json", ILI9341_SIDE_B, ILI9341_SIDE_A},
+        RotationData{0x20, "Rotate270.json", ILI9341_SIDE_A, ILI9341_SIDE_B},
+        RotationData{0x40, "Rotate000.json", ILI9341_SIDE_B, ILI9341_SIDE_A},
     }
 )
 
@@ -208,35 +208,35 @@ func (dsp *Display) InitDisplay(rot RotationType) {
 
         dsp.dspi.Cmd(ILI9341_PWCTRLB)
         dsp.dspi.DataArray([]byte{0x00, 0xc1, 0x30})
-    
+
         dsp.dspi.Cmd(ILI9341_PWOSEQCTR)
         dsp.dspi.DataArray([]byte{0x64, 0x03, 0x12, 0x81})
-    
+
         dsp.dspi.Cmd(ILI9341_DRVTICTRLA)
         dsp.dspi.DataArray([]byte{0x85, 0x00, 0x78})
-    
+
         dsp.dspi.Cmd(ILI9341_PWCTRLA)
         dsp.dspi.DataArray([]byte{0x39, 0x2c, 0x00, 0x34, 0x02})
-    
+
         dsp.dspi.Cmd(ILI9341_PMPRTCTR)
         dsp.dspi.Data8(0x20)
-    
+
         dsp.dspi.Cmd(ILI9341_DRVTICTRLB)
         dsp.dspi.DataArray([]byte{0x00, 0x00})
-    
+
         dsp.dspi.Cmd(ILI9341_PWCTR1)
         dsp.dspi.Data8(0x23)
-    
+
         dsp.dspi.Cmd(ILI9341_PWCTR2)
         dsp.dspi.Data8(0x10)
-    
+
         dsp.dspi.Cmd(ILI9341_VMCTR1)
         dsp.dspi.DataArray([]byte{0x3e, 0x28})
-    
+
         dsp.dspi.Cmd(ILI9341_VMCTR2)
         dsp.dspi.Data8(0x86)
     }
-    
+
     dsp.dspi.Cmd(ILI9341_MADCTL) // Memory Access Control
     dsp.dspi.Data8(madctlParam)
 
@@ -252,13 +252,13 @@ func (dsp *Display) InitDisplay(rot RotationType) {
     if !initMinimal {
         //dsp.dspi.Cmd(ILI9341_WRDISBV)
         //dsp.dspi.Data8(0x00)
-    
+
         //dsp.dspi.Cmd(ILI9341_WRCTRLD)
         //dsp.dspi.Data8(0x2c)
-    
+
         dsp.dspi.Cmd(ILI9341_FRMCTR1)
         dsp.dspi.DataArray([]byte{0x00, 0x18})
-    
+
         dsp.dspi.Cmd(ILI9341_DFUNCTR)
         dsp.dspi.DataArray([]byte{0x08, 0x82, 0x27})
     }

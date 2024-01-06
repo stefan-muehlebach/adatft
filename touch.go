@@ -24,7 +24,7 @@ const (
     PenDrag
     PenRelease
     numEvents
-    sampleTime = 5 * time.Millisecond 
+    sampleTime = 5 * time.Millisecond
 )
 
 func (pet PenEventType) String() (string) {
@@ -36,7 +36,7 @@ func (pet PenEventType) String() (string) {
     case PenRelease:
         return "PenRelease"
     }
-    return "(unknown event)"    
+    return "(unknown event)"
 }
 
 // Dieser Typ steht fuer das SPI Interface zum STMPE - dem Touchscreen.
@@ -90,7 +90,7 @@ func (p1 TouchPos) Near(p2 TouchPos) (bool) {
     return dx*dx+dy*dy <= 50
 }
 
-// Dies ist der Funktionstyp fuer den PenEvent-Handler - also jene Funktion,
+// Dies ist der Funktionstyp für den PenEvent-Handler - also jene Funktion,
 // welche beim Eintreffen eines Interrupts vom STMPE610 aufgerufen werden
 // soll.
 //
@@ -232,8 +232,10 @@ func (tch *Touch) InitTouch() {
 // gestellt (welche dann von der Applikation ausgelesen werden muss).
 // Diese Operation darf nicht blockierend ausgeführt werden, andernfalls
 // würde der Event-Handler blockiert - was in meinen Augen gravierender ist.
+//
 // Mit dem auskommentierten Code kann für Testzwecke dafür gesorgt werden,
-// dass bei einem Fehler ein Runtim-Panic ausgelöst wird.
+// dass bei einem Fehler ein Runtime-Panic ausgelöst wird.
+//
 func (tch *Touch) enqueueEvent(event PenEvent) {
     //defer func() {
     //    if x := recover(); x != nil {

@@ -15,17 +15,13 @@ var (
 )
 
 // Der Touchscreen hat ein eigenes Koordinatensystem, welches mit den Pixel-
-// Koordinaten des Bildschirms nicht zusammenpasst. Fuer die Konvertierung der
-// Tchscreen-Koordinaten in Bildschirm-Koordinaten wird der Datentyp
-// in diesem File verwendet.
+// Koordinaten des Bildschirms erst einmal nichts gemeinsam hat (eigener
+// Ursprung, eigene Skalierung, etc.). Ausserdem kann das Touchscreen-
+// Koordinatensystem gegenüber dem Bildschirm-Koord.system verzerrt sein, d.h.
+// die jeweiligen Koordinaten-Achsen müssen nicht parallel sein.
 //
-// Fuer die Kalibrierung des Tchscreens braucht es 4 Referenzpunkte auf
-// dem Display, welche moeglichst in die Ecken des Displays gesetzt werden
-// muessen.
-//
-
-// Dieser Typ schliesslich wird gebraucht, um von den verzerrten Touchscreen-
-// Koordinaten auf Display-Koordinaten des Bildschirms umzurechnen.
+// Für die Konvertierung der Touchscreen-Koordinaten in Bildschirm-Koordinaten
+// wird der Datentyp DistortedPlane verwendet.
 //
 type DistortedPlane struct {
     DataList [NumRefPoints]TouchData
@@ -34,13 +30,16 @@ type DistortedPlane struct {
     ax, ay float64
 }
 
-//-----------------------------------------------------------------------------
+// Schreibt die aktuelle Konfiguration in das Default-File.
 //
 func (d *DistortedPlane) WriteConfig() {
-    fileName := filepath.Join(appConfDir, calibDataFile)
+    fileName := filepath.Join(confDir, calibDataFile)
     d.WriteConfigFile(fileName)
 }
 
+// Schreibt die aktuelle Konfiguration in das angegebene File. Der Pfad kann
+// absolut oder relativ angegeben werden. Als Dateiformat wird JSON verwendet.
+//
 func (d *DistortedPlane) WriteConfigFile(fileName string) {
     data, err := json.MarshalIndent(d, "", "  ")
     if err != nil {
@@ -52,11 +51,16 @@ func (d *DistortedPlane) WriteConfigFile(fileName string) {
     }
 }
 
+// Liest die Konfiguration aus dem Default-File.
+//
 func (d *DistortedPlane) ReadConfig() {
-    fileName := filepath.Join(appConfDir, calibDataFile)
+    fileName := filepath.Join(confDir, calibDataFile)
     d.ReadConfigFile(fileName)
 }
 
+// Liest die Konfiguration aus dem angegebenen File. Der Pfad kann absolut
+// oder relativ angegeben werden. Als Dateiformat wird JSON verwendet.
+//
 func (d *DistortedPlane) ReadConfigFile(fileName string) {
     data, err := os.ReadFile(fileName)
     if err != nil {
