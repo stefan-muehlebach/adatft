@@ -40,13 +40,13 @@ const (
 func (rot RotationType) String() string {
     switch rot {
     case Rotate000:
-        return "Rotate000 (rotate by 0 deg)"
+        return "Rotate000"
     case Rotate090:
-        return "Rotate090 (rotate by 90 deg)"
+        return "Rotate090"
     case Rotate180:
-        return "Rotate180 (rotate by 180 deg)"
+        return "Rotate180"
     case Rotate270:
-        return "Rotate270 (rotate by 270 deg)"
+        return "Rotate270"
     default:
         return "(unknown rotation)"
     }
