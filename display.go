@@ -4,7 +4,7 @@ import (
     "errors"
     "image"
     "time"
-    . "github.com/stefan-muehlebach/adatft/ili9341"
+    ili "github.com/stefan-muehlebach/adatft/ili9341"
 )
 
 type ChannelDir int
@@ -80,10 +80,10 @@ type RotationData struct {
 
 var (
     rotDat = []RotationData{
-        RotationData{0xe0, "Rotate090.json", ILI9341_SIDE_A, ILI9341_SIDE_B},
-        RotationData{0x80, "Rotate180.json", ILI9341_SIDE_B, ILI9341_SIDE_A},
-        RotationData{0x20, "Rotate270.json", ILI9341_SIDE_A, ILI9341_SIDE_B},
-        RotationData{0x40, "Rotate000.json", ILI9341_SIDE_B, ILI9341_SIDE_A},
+        RotationData{0xe0, "Rotate090.json", ili.ILI9341_SIDE_A, ili.ILI9341_SIDE_B},
+        RotationData{0x80, "Rotate180.json", ili.ILI9341_SIDE_B, ili.ILI9341_SIDE_A},
+        RotationData{0x20, "Rotate270.json", ili.ILI9341_SIDE_A, ili.ILI9341_SIDE_B},
+        RotationData{0x40, "Rotate000.json", ili.ILI9341_SIDE_B, ili.ILI9341_SIDE_A},
     }
 )
 
@@ -94,7 +94,7 @@ var (
 //    Format vornimmt und
 // b) die Daten via SPI-Bus an den ILI9341 sendet.
 type Display struct {
-    dspi    ILIInterface
+    dspi    DispInterface
     bufChan []chan *Buffer
     staticBuf *Buffer
     quitQ chan bool
@@ -130,10 +130,16 @@ var (
 func OpenDisplay(rot RotationType) (*Display) {
     var dsp *Display
 
-    dsp = &Display{}
-    dsp.dspi = OpenILI9341(dspSpeedHz)
+    Width  = rotDat[rot].width
+    Height = rotDat[rot].height
 
-    dsp.InitDisplay(rot)
+    calibDataFile = rotDat[rot].calibDataFile
+
+    dsp = &Display{}
+    dsp.dspi = ili.Open(dspSpeedHz)
+    dsp.dspi.Init([]any{false, rotDat[rot].iliParam})
+
+    // dsp.InitDisplay(rot)
     dsp.InitChannels()
 
     return dsp
@@ -154,133 +160,133 @@ func (dsp *Display) Close() {
 // unzaehligen Beidspielen im Internet zusammengetragen und wurde durch
 // "Trial und Error" ermittelt.
 // TO DO: das gehört eigentlich in das Sub-Package ili9341...
-func (dsp *Display) InitDisplay(rot RotationType) {
-    var posGamma []uint8 = []uint8{
-        0x0f, 0x31, 0x2b, 0x0c, 0x0e, 0x08, 0x4e,
-        0xf1,
-        0x37, 0x07, 0x10, 0x03, 0x0e, 0x09, 0x00,
-    }
-    var negGamma []uint8 = []uint8{
-        0x00, 0x0e, 0x14, 0x03, 0x11, 0x07, 0x31,
-        0xc1,
-        0x48, 0x08, 0x0f, 0x0c, 0x31, 0x36, 0x0f,
-    }
-/*
-    var colorLut []uint8
-    colorLut = make([]uint8, 128)
-    for i := 0; i < 32; i++ {
-        colorLut[i] = uint8(2*i)
-    }
-    for i := 0; i < 64; i++ {
-        colorLut[i+32] = uint8(i)
-    }
-    for i := 0; i < 32; i++ {
-        colorLut[i+96] = uint8(2*i)
-    }
-*/
+// func (dsp *Display) InitDisplay(rot RotationType) {
+//     var posGamma []uint8 = []uint8{
+//         0x0f, 0x31, 0x2b, 0x0c, 0x0e, 0x08, 0x4e,
+//         0xf1,
+//         0x37, 0x07, 0x10, 0x03, 0x0e, 0x09, 0x00,
+//     }
+//     var negGamma []uint8 = []uint8{
+//         0x00, 0x0e, 0x14, 0x03, 0x11, 0x07, 0x31,
+//         0xc1,
+//         0x48, 0x08, 0x0f, 0x0c, 0x31, 0x36, 0x0f,
+//     }
+// /*
+//     var colorLut []uint8
+//     colorLut = make([]uint8, 128)
+//     for i := 0; i < 32; i++ {
+//         colorLut[i] = uint8(2*i)
+//     }
+//     for i := 0; i < 64; i++ {
+//         colorLut[i+32] = uint8(i)
+//     }
+//     for i := 0; i < 32; i++ {
+//         colorLut[i+96] = uint8(2*i)
+//     }
+// */
 
-    madctlParam := rotDat[rot].iliParam
+//     madctlParam := rotDat[rot].iliParam
 
-    Width  = rotDat[rot].width
-    Height = rotDat[rot].height
+//     Width  = rotDat[rot].width
+//     Height = rotDat[rot].height
 
-    calibDataFile = rotDat[rot].calibDataFile
-/*
-    macroGamma = make([]uint8, 16)
-    for i := 0; i < 16; i++ {
-        macroGamma[i] = 0x00
-    }
-    microGamma = make([]uint8, 64)
-    for i := 0; i < 64; i++ {
-        microGamma[i] = 0x00
-    }
-*/
+//     calibDataFile = rotDat[rot].calibDataFile
+// /*
+//     macroGamma = make([]uint8, 16)
+//     for i := 0; i < 16; i++ {
+//         macroGamma[i] = 0x00
+//     }
+//     microGamma = make([]uint8, 64)
+//     for i := 0; i < 64; i++ {
+//         microGamma[i] = 0x00
+//     }
+// */
 
-    dsp.dspi.Cmd(ILI9341_DISPOFF) // Display On
-    time.Sleep(125 * time.Millisecond)
+//     dsp.dspi.Cmd(ILI9341_DISPOFF) // Display On
+//     time.Sleep(125 * time.Millisecond)
 
-    dsp.dspi.Cmd(ILI9341_SWRESET) // Reset the chip at the beginning
-    time.Sleep(128 * time.Millisecond)
+//     dsp.dspi.Cmd(ILI9341_SWRESET) // Reset the chip at the beginning
+//     time.Sleep(128 * time.Millisecond)
 
-    if !initMinimal {
-        dsp.dspi.Cmd(0xEF)
-        dsp.dspi.DataArray([]byte{0x03, 0x80, 0x02})
+//     if !initMinimal {
+//         dsp.dspi.Cmd(0xEF)
+//         dsp.dspi.DataArray([]byte{0x03, 0x80, 0x02})
 
-        dsp.dspi.Cmd(ILI9341_PWCTRLB)
-        dsp.dspi.DataArray([]byte{0x00, 0xc1, 0x30})
+//         dsp.dspi.Cmd(ILI9341_PWCTRLB)
+//         dsp.dspi.DataArray([]byte{0x00, 0xc1, 0x30})
 
-        dsp.dspi.Cmd(ILI9341_PWOSEQCTR)
-        dsp.dspi.DataArray([]byte{0x64, 0x03, 0x12, 0x81})
+//         dsp.dspi.Cmd(ILI9341_PWOSEQCTR)
+//         dsp.dspi.DataArray([]byte{0x64, 0x03, 0x12, 0x81})
 
-        dsp.dspi.Cmd(ILI9341_DRVTICTRLA)
-        dsp.dspi.DataArray([]byte{0x85, 0x00, 0x78})
+//         dsp.dspi.Cmd(ILI9341_DRVTICTRLA)
+//         dsp.dspi.DataArray([]byte{0x85, 0x00, 0x78})
 
-        dsp.dspi.Cmd(ILI9341_PWCTRLA)
-        dsp.dspi.DataArray([]byte{0x39, 0x2c, 0x00, 0x34, 0x02})
+//         dsp.dspi.Cmd(ILI9341_PWCTRLA)
+//         dsp.dspi.DataArray([]byte{0x39, 0x2c, 0x00, 0x34, 0x02})
 
-        dsp.dspi.Cmd(ILI9341_PMPRTCTR)
-        dsp.dspi.Data8(0x20)
+//         dsp.dspi.Cmd(ILI9341_PMPRTCTR)
+//         dsp.dspi.Data8(0x20)
 
-        dsp.dspi.Cmd(ILI9341_DRVTICTRLB)
-        dsp.dspi.DataArray([]byte{0x00, 0x00})
+//         dsp.dspi.Cmd(ILI9341_DRVTICTRLB)
+//         dsp.dspi.DataArray([]byte{0x00, 0x00})
 
-        dsp.dspi.Cmd(ILI9341_PWCTR1)
-        dsp.dspi.Data8(0x23)
+//         dsp.dspi.Cmd(ILI9341_PWCTR1)
+//         dsp.dspi.Data8(0x23)
 
-        dsp.dspi.Cmd(ILI9341_PWCTR2)
-        dsp.dspi.Data8(0x10)
+//         dsp.dspi.Cmd(ILI9341_PWCTR2)
+//         dsp.dspi.Data8(0x10)
 
-        dsp.dspi.Cmd(ILI9341_VMCTR1)
-        dsp.dspi.DataArray([]byte{0x3e, 0x28})
+//         dsp.dspi.Cmd(ILI9341_VMCTR1)
+//         dsp.dspi.DataArray([]byte{0x3e, 0x28})
 
-        dsp.dspi.Cmd(ILI9341_VMCTR2)
-        dsp.dspi.Data8(0x86)
-    }
+//         dsp.dspi.Cmd(ILI9341_VMCTR2)
+//         dsp.dspi.Data8(0x86)
+//     }
 
-    dsp.dspi.Cmd(ILI9341_MADCTL) // Memory Access Control
-    dsp.dspi.Data8(madctlParam)
+//     dsp.dspi.Cmd(ILI9341_MADCTL) // Memory Access Control
+//     dsp.dspi.Data8(madctlParam)
 
-    if !initMinimal {
-        dsp.dspi.Cmd(ILI9341_VSCRSADD)
-        dsp.dspi.Data8(0x00)
-    }
+//     if !initMinimal {
+//         dsp.dspi.Cmd(ILI9341_VSCRSADD)
+//         dsp.dspi.Data8(0x00)
+//     }
 
-    dsp.dspi.Cmd(ILI9341_PIXFMT)
-    dsp.dspi.Data8(0x66)        // Fuer das 666-Format
-    //dsp.dspi.Data8(0x55)        // Fuer das 565-Format
+//     dsp.dspi.Cmd(ILI9341_PIXFMT)
+//     dsp.dspi.Data8(0x66)        // Fuer das 666-Format
+//     //dsp.dspi.Data8(0x55)        // Fuer das 565-Format
 
-    if !initMinimal {
-        //dsp.dspi.Cmd(ILI9341_WRDISBV)
-        //dsp.dspi.Data8(0x00)
+//     if !initMinimal {
+//         //dsp.dspi.Cmd(ILI9341_WRDISBV)
+//         //dsp.dspi.Data8(0x00)
 
-        //dsp.dspi.Cmd(ILI9341_WRCTRLD)
-        //dsp.dspi.Data8(0x2c)
+//         //dsp.dspi.Cmd(ILI9341_WRCTRLD)
+//         //dsp.dspi.Data8(0x2c)
 
-        dsp.dspi.Cmd(ILI9341_FRMCTR1)
-        dsp.dspi.DataArray([]byte{0x00, 0x18})
+//         dsp.dspi.Cmd(ILI9341_FRMCTR1)
+//         dsp.dspi.DataArray([]byte{0x00, 0x18})
 
-        dsp.dspi.Cmd(ILI9341_DFUNCTR)
-        dsp.dspi.DataArray([]byte{0x08, 0x82, 0x27})
-    }
+//         dsp.dspi.Cmd(ILI9341_DFUNCTR)
+//         dsp.dspi.DataArray([]byte{0x08, 0x82, 0x27})
+//     }
 
-    dsp.dspi.Cmd(ILI9341_GAMMA_3G) // Disable 3G (Gamma)
-    dsp.dspi.Data8(0x00)
+//     dsp.dspi.Cmd(ILI9341_GAMMA_3G) // Disable 3G (Gamma)
+//     dsp.dspi.Data8(0x00)
 
-    dsp.dspi.Cmd(ILI9341_GAMMASET) // Set gamma correction to custom
-    dsp.dspi.Data8(0x01)           // curve 1
+//     dsp.dspi.Cmd(ILI9341_GAMMASET) // Set gamma correction to custom
+//     dsp.dspi.Data8(0x01)           // curve 1
 
-    dsp.dspi.Cmd(ILI9341_GMCTRP1) // Positive Gamma Correction values
-    dsp.dspi.DataArray(posGamma)
+//     dsp.dspi.Cmd(ILI9341_GMCTRP1) // Positive Gamma Correction values
+//     dsp.dspi.DataArray(posGamma)
 
-    dsp.dspi.Cmd(ILI9341_GMCTRN1) // Negative Gamma Correction values
-    dsp.dspi.DataArray(negGamma)
+//     dsp.dspi.Cmd(ILI9341_GMCTRN1) // Negative Gamma Correction values
+//     dsp.dspi.DataArray(negGamma)
 
-    dsp.dspi.Cmd(ILI9341_SLPOUT) // Exit Sleep
-    time.Sleep(125 * time.Millisecond)
+//     dsp.dspi.Cmd(ILI9341_SLPOUT) // Exit Sleep
+//     time.Sleep(125 * time.Millisecond)
 
-    dsp.dspi.Cmd(ILI9341_DISPON) // Display On
-    time.Sleep(125 * time.Millisecond)
-}
+//     dsp.dspi.Cmd(ILI9341_DISPON) // Display On
+//     time.Sleep(125 * time.Millisecond)
+// }
 
 // Diese Routine baut die GO-Routinen fuer die parallelisierte Konvertierung
 // und Anzeige auf und retourniert einen Channel, auf welchem die Pointer
@@ -336,11 +342,11 @@ func (dsp *Display) drawBuffer(buf *Buffer) {
     end   := buf.dstRect.Max
     numBytes := buf.dstRect.Dx() * buf.dstRect.Dy() * bytesPerPixel
 
-    dsp.dspi.Cmd(ILI9341_CASET)
+    dsp.dspi.Cmd(ili.ILI9341_CASET)
     dsp.dspi.Data32(uint32((start.X<<16) | (end.X-1)))
-    dsp.dspi.Cmd(ILI9341_PASET)
+    dsp.dspi.Cmd(ili.ILI9341_PASET)
     dsp.dspi.Data32(uint32((start.Y<<16) | (end.Y-1)))
-    dsp.dspi.Cmd(ILI9341_RAMWR)
+    dsp.dspi.Cmd(ili.ILI9341_RAMWR)
     dsp.dspi.DataArray(buf.pixBuf[:numBytes])
     DispTime += time.Since(t1)
     NumDisp++
