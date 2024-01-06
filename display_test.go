@@ -31,7 +31,7 @@ var (
     touchData TouchData
     touchPos  TouchPos
     backColor, fillColor, borderColor color.Color
-    borderWidth int
+    borderWidth float64
 )
 
 func init() {
