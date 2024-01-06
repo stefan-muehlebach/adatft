@@ -206,8 +206,6 @@ func BenchmarkDrawRectanglesFull(b *testing.B) {
     gc.SetFillColor(fillColor)
     gc.SetStrokeColor(borderColor)
     gc.SetStrokeWidth(2.0)
-    gc.Clear()
-    disp.DrawSync(gc.Image())
     b.ResetTimer()
     for i := 0; i< b.N; i++ {
         x, y, w, h := 160.0*rand.Float64(), 120.0*rand.Float64(),
@@ -233,8 +231,6 @@ func BenchmarkDrawRectanglesSubImage(b *testing.B) {
     gc.SetFillColor(fillColor)
     gc.SetStrokeColor(borderColor)
     gc.SetStrokeWidth(2.0)
-    gc.Clear()
-    disp.DrawSync(gc.Image())
     b.ResetTimer()
     for i := 0; i< b.N; i++ {
         x, y, w, h := 160.0*rand.Float64(), 120.0*rand.Float64(),
