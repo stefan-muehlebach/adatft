@@ -150,6 +150,10 @@ func BenchmarkDrawCust(b *testing.B) {
     }
 }
 
+// Misst die Zeit für das Zeichnen von zufälligen Rechtecken. Damit wird im
+// Wesentlichen die Performance der Zeichenoperationen in gg gemessen
+// TO DO: Ev. sollten diese Benchmarks in das Package gg verschoben werden.
+//
 func BenchmarkDrawRectangle(b *testing.B) {
     gc.Clear()
     disp.DrawSync(gc.Image())
