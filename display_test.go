@@ -30,7 +30,7 @@ var (
     plane *DistortedPlane
     touchData TouchData
     touchPos  TouchPos
-    fillColor, strokeColor color.Color
+    backColor, fillColor, borderColor color.Color
 )
 
 func init() {
@@ -61,8 +61,9 @@ func init() {
     plane.ReadConfig()
 
     gc = gg.NewContext(Width, Height)
+    backColor   = colornames.LightGreen
     fillColor   = colornames.CadetBlue
-    strokeColor = colornames.WhiteSmoke
+    borderColor = colornames.WhiteSmoke
 }
 
 // Benchmark der Konvertierung von Touchscreen-Koordinaten nach Bildschirm-
@@ -164,7 +165,7 @@ func BenchmarkDrawRectangle(b *testing.B) {
         gc.DrawRectangle(x, y, w, h)
         gc.SetStrokeWidth(2.0)
         gc.SetFillColor(fillColor)
-        gc.SetStrokeColor(strokeColor)
+        gc.SetStrokeColor(borderColor)
         gc.FillStroke()
     }
     b.StopTimer()
@@ -182,7 +183,7 @@ func BenchmarkDrawRectangleClipped(b *testing.B) {
         gc.ClipPreserve()
         gc.SetStrokeWidth(2.0)
         gc.SetFillColor(fillColor)
-        gc.SetStrokeColor(strokeColor)
+        gc.SetStrokeColor(borderColor)
         gc.FillStroke()
         gc.ResetClip()
     }
@@ -199,8 +200,11 @@ func BenchmarkDrawRectanglesFull(b *testing.B) {
     img = gc.Image().(*image.RGBA)
 
     rand.Seed(123_456)
+    gc.SetFillColor(backColor)
+    gc.Clear()
+    disp.DrawSync(gc.Image())
     gc.SetFillColor(fillColor)
-    gc.SetStrokeColor(strokeColor)
+    gc.SetStrokeColor(borderColor)
     gc.SetStrokeWidth(2.0)
     gc.Clear()
     disp.DrawSync(gc.Image())
@@ -223,8 +227,11 @@ func BenchmarkDrawRectanglesSubImage(b *testing.B) {
     img = gc.Image().(*image.RGBA)
 
     rand.Seed(123_456)
+    gc.SetFillColor(backColor)
+    gc.Clear()
+    disp.DrawSync(gc.Image())
     gc.SetFillColor(fillColor)
-    gc.SetStrokeColor(strokeColor)
+    gc.SetStrokeColor(borderColor)
     gc.SetStrokeWidth(2.0)
     gc.Clear()
     disp.DrawSync(gc.Image())
@@ -250,7 +257,7 @@ func BenchmarkDrawCircle(b *testing.B) {
         gc.DrawCircle(x, y, r)
         gc.SetStrokeWidth(2.0)
         gc.SetFillColor(fillColor)
-        gc.SetStrokeColor(strokeColor)
+        gc.SetStrokeColor(borderColor)
         gc.FillStroke()
     }
     b.StopTimer()
@@ -268,7 +275,7 @@ func BenchmarkDrawCircleClipped(b *testing.B) {
         gc.ClipPreserve()
         gc.SetStrokeWidth(2.0)
         gc.SetFillColor(fillColor)
-        gc.SetStrokeColor(strokeColor)
+        gc.SetStrokeColor(borderColor)
         gc.FillStroke()
         gc.ResetClip()
     }
