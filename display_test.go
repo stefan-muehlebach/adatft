@@ -190,11 +190,15 @@ func BenchmarkDrawRectangleClipped(b *testing.B) {
     disp.DrawSync(gc.Image())
 }
 
+// Zeichnet eine Anzahl zufälliger Rechtecke und aktualisiert nach jedem
+// Rechteck den gesamten Bildschirm.
+//
 func BenchmarkDrawRectangles(b *testing.B) {
     var img *image.RGBA
 
     img = gc.Image().(*image.RGBA)
 
+    rand.Seed(123_456)
     gc.SetFillColor(fillColor)
     gc.SetStrokeColor(strokeColor)
     gc.SetStrokeWidth(2.0)
@@ -214,6 +218,7 @@ func BenchmarkDrawRectanglesSubImage(b *testing.B) {
 
     img = gc.Image().(*image.RGBA)
 
+    rand.Seed(123_456)
     gc.SetFillColor(fillColor)
     gc.SetStrokeColor(strokeColor)
     gc.SetStrokeWidth(2.0)
