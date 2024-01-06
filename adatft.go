@@ -83,12 +83,3 @@ func PrintStat() {
     fmt.Printf("  %v total\n", DispTime)
     fmt.Printf("  %.3f ms / frame\n", float64(DispTime.Milliseconds()) / float64(NumDisp))
 }
-
-// Interne Check-Funktion, welche bei gravierenden Fehlern das Programm
-// beendet.
-func check(fncName string, err error) {
-    if err != nil {
-        log.Fatalf("%s: %s", fncName, err)
-    }
-}
-
