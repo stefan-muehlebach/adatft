@@ -22,11 +22,12 @@ var (
     Width, Height int
 )
 
-// Rotationsmoeglichkeiten des Display. Es gibt (logischerweise) 4
+// Rotationsmöglichkeiten des Displays. Es gibt (logischerweise) 4
 // Möglichkeiten das Display zu rotieren. Dies hat Auswirkungen auf die
-// Initialisierung des Displays, auf die globalen Variablen Width und Height,
-// auf die Konfigurationsdateien, in welchen die Daten für die Transformation
-// von Touch-Koordinaten auf Display-Koordianten abgelegt sind, etc.
+// Initialisierung des Displays, auf die globalen Variablen Width und Height
+// und auf die Konfigurationsdateien, in welchen die Daten für die
+// Transformation von Touch-Koordinaten auf Display-Koordianten abgelegt
+// sind, etc.
 type RotationType int
 
 const (
@@ -39,13 +40,13 @@ const (
 func (rot RotationType) String() string {
     switch rot {
     case Rotate000:
-        return "rotate by 0 deg"
+        return "Rotate000 (rotate by 0 deg)"
     case Rotate090:
-        return "rotate by 90 deg"
+        return "Rotate090 (rotate by 90 deg)"
     case Rotate180:
-        return "rotate by 180 deg"
+        return "Rotate180 (rotate by 180 deg)"
     case Rotate270:
-        return "rotate by 270 deg"
+        return "Rotate270 (rotate by 270 deg)"
     default:
         return "(unknown rotation)"
     }
@@ -53,13 +54,13 @@ func (rot RotationType) String() string {
 
 func (rot *RotationType) Set(s string) error {
     switch s {
-    case "rot000":
+    case "Rotate000":
         *rot = Rotate000
-    case "rot090":
+    case "Rotate090":
         *rot = Rotate090
-    case "rot180":
+    case "Rotate180":
         *rot = Rotate180
-    case "rot270":
+    case "Rotate270":
         *rot = Rotate270
     default:
         return errors.New("Unknown rotation: " + s)
@@ -112,10 +113,20 @@ var (
     DispTime  time.Duration
     // NumDisp enthält die Anzahl Aufrufe von 'drawBuffer'.
     NumDisp   int
+    // PaintTime kann von der Applikation verwendet werden, um die kumulierte
+    // Zeit zu erfassen, die von der Applikation selber zum Zeichnen des
+    // Bildschirms verwendet wird.
     PaintTime time.Duration
+    // In NumPaint kann die Applikation festhalten, wie oft der Bildschirm-
+    // inhalt (oder Teile davon) neu gezeichnet wird.
     NumPaint  int
 )
 
+// OpenDisplay initialisiert die Hardware, damit ein Zeichnen auf dem TFT
+// erst möglich wird. Als einziger Parameter muss die gewünschte Rotation des
+// Bildschirms angegeben werden.
+// Ebenso werden Channels und Go-Routines erstellt, die für das asynchrone
+// Anzeigen notwendig sind.
 func OpenDisplay(rot RotationType) (*Display) {
     var dsp *Display
 
@@ -138,9 +149,11 @@ func (dsp *Display) Close() {
     dsp.dspi.Close()
 }
 
-// Initialisiert die Werte im ILI9341. Der Inhalt dieser Funktion ist aus
+// Initialisiert die Hardware, welche hinter dem Display steht (aktuell der
+// ILI9341, angesteuert via SPI). Der Inhalt dieser Funktion ist aus
 // unzaehligen Beidspielen im Internet zusammengetragen und wurde durch
 // "Trial und Error" ermittelt.
+// TO DO: das gehört eigentlich in das Sub-Package ili9341...
 func (dsp *Display) InitDisplay(rot RotationType) {
     var posGamma []uint8 = []uint8{
         0x0f, 0x31, 0x2b, 0x0c, 0x0e, 0x08, 0x4e,
@@ -294,12 +307,18 @@ func (dsp *Display) Bounds() (image.Rectangle) {
     return image.Rect(0, 0, Width, Height)
 }
 
+// Damit wird das Bild img auf dem Bildschirm dargestellt. Die Darstellung
+// erfolgt synchron, d.h. die Methode wartet so lange, bis alle Bilddaten
+// zum TFT gesendet wurden. Wichtig: img muss ein image.RGBA-Typ sein!
 func (dsp *Display) DrawSync(img image.Image) (error) {
     dsp.staticBuf.Convert(img.(*image.RGBA))
     dsp.drawBuffer(dsp.staticBuf)
     return nil
 }
 
+// Damit wird das Bild img auf dem Bildschirm dargestellt. Die Darstellung
+// erfolgt asynchron, d.h. die Methode wartet nur, bis das Bild konvertiert
+// wurde. Wichtig: img muss ein image.RGBA-Typ sein!
 func (dsp *Display) Draw(img image.Image) (error) {
     var buf *Buffer
 
@@ -327,9 +346,9 @@ func (dsp *Display) drawBuffer(buf *Buffer) {
     NumDisp++
 }
 
-// Das ist die Funktion, welche im Hintergrund fuer die Anzeige der Bilder
-// zustaendig ist. Sie wird als Go-Routine aufgerufen und wartet bis ueber
-// den Channel bufChan[toDisp] Bilder zur Anzeige eintreffen.
+// Das ist die Funktion, welche im Hintergrund für die Anzeige der Bilder
+// zuständig ist. Sie läuft als Go-Routine und wartet, bis über den Channel
+// bufChan[toDisp] Bilder zur Anzeige eintreffen.
 func (dsp *Display) displayer() {
     var buf *Buffer
     var ok bool
