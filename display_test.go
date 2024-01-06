@@ -162,8 +162,8 @@ func BenchmarkDrawRectangle(b *testing.B) {
     disp.DrawSync(gc.Image())
     b.ResetTimer()
     for i := 0; i< b.N; i++ {
-        x, y, w, h := 160.0*rand.Float64(), 120.0*rand.Float64(),
-                160.0*rand.Float64(), 120.0*rand.Float64()
+        x, y, w, h := Width/2*rand.Float64(), Height/2*rand.Float64(),
+                Width/2*rand.Float64(), Height/2*rand.Float64()
         gc.DrawRectangle(x, y, w, h)
         gc.SetStrokeWidth(2.0)
         gc.SetFillColor(fillColor)
@@ -179,8 +179,8 @@ func BenchmarkDrawRectangleClipped(b *testing.B) {
     disp.DrawSync(gc.Image())
     b.ResetTimer()
     for i := 0; i< b.N; i++ {
-        x, y, w, h := 160.0*rand.Float64(), 120.0*rand.Float64(),
-                160.0*rand.Float64(), 120.0*rand.Float64()
+        x, y, w, h := Width/2*rand.Float64(), Height/2*rand.Float64(),
+                Width/2*rand.Float64(), Height/2*rand.Float64()
         gc.DrawRectangle(x, y, w, h)
         gc.ClipPreserve()
         gc.SetStrokeWidth(2.0)
@@ -210,8 +210,8 @@ func BenchmarkDrawRectanglesFull(b *testing.B) {
     gc.SetStrokeWidth(borderWidth)
     b.ResetTimer()
     for i := 0; i< b.N; i++ {
-        x, y, w, h := 160.0*rand.Float64(), 120.0*rand.Float64(),
-                160.0*rand.Float64(), 120.0*rand.Float64()
+        x, y, w, h := Width/2*rand.Float64(), Height/2*rand.Float64(),
+                Width/2*rand.Float64(), Height/2*rand.Float64()
         gc.DrawRectangle(x, y, w, h)
         gc.FillStroke()
         disp.DrawSync(img)
@@ -235,8 +235,8 @@ func BenchmarkDrawRectanglesSubImage(b *testing.B) {
     gc.SetStrokeWidth(borderWidth)
     b.ResetTimer()
     for i := 0; i< b.N; i++ {
-        x, y, w, h := 160.0*rand.Float64(), 120.0*rand.Float64(),
-                160.0*rand.Float64(), 120.0*rand.Float64()
+        x, y, w, h := Width/2*rand.Float64(), Height/2*rand.Float64(),
+                Width/2*rand.Float64(), Height/2*rand.Float64()
         rect := image.Rect(int(x), int(y), int(x+w), int(y+h)).Inset(-1)
         gc.DrawRectangle(x, y, w, h)
         gc.FillStroke()
@@ -250,7 +250,7 @@ func BenchmarkDrawCircle(b *testing.B) {
     disp.DrawSync(gc.Image())
     b.ResetTimer()
     for i := 0; i< b.N; i++ {
-        x, y, r := 320.0*rand.Float64(), 240.0*rand.Float64(),
+        x, y, r := Width*rand.Float64(), Height*rand.Float64(),
                 20.0+40.0*rand.Float64()
         gc.DrawCircle(x, y, r)
         gc.SetStrokeWidth(2.0)
@@ -267,7 +267,7 @@ func BenchmarkDrawCircleClipped(b *testing.B) {
     disp.DrawSync(gc.Image())
     b.ResetTimer()
     for i := 0; i< b.N; i++ {
-        x, y, r := 320.0*rand.Float64(), 240.0*rand.Float64(),
+        x, y, r := Width*rand.Float64(), Height*rand.Float64(),
                 20.0+40.0*rand.Float64()
         gc.DrawCircle(x, y, r)
         gc.ClipPreserve()
