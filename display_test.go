@@ -207,7 +207,8 @@ func BenchmarkDrawRectangleSubImage(b *testing.B) {
         rect := image.Rect(int(x), int(y), int(x+w), int(y+h))
         gc.DrawRectangle(x, y, w, h)
         gc.FillStroke()
-        disp.DrawSync(img.SubImage(rect))
+        disp.DrawSync(img)
+        // disp.DrawSync(img.SubImage(rect))
     }
 }
 
