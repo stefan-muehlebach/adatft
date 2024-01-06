@@ -162,7 +162,7 @@ func BenchmarkDrawRectangle(b *testing.B) {
     disp.DrawSync(gc.Image())
     b.ResetTimer()
     for i := 0; i< b.N; i++ {
-        x, y, w, h := Width/2*rand.Float64(), Height/2*rand.Float64(),
+        x, y, w, h := Width/2.0*rand.Float64(), Height/2.0*rand.Float64(),
                 Width/2*rand.Float64(), Height/2*rand.Float64()
         gc.DrawRectangle(x, y, w, h)
         gc.SetStrokeWidth(2.0)
