@@ -10,6 +10,7 @@ import (
     "testing"
     "github.com/stefan-muehlebach/gg"
     "github.com/stefan-muehlebach/gg/color"
+    "github.com/stefan-muehlebach/gg/colornames"
     "golang.org/x/image/draw"
 )
 
@@ -60,8 +61,8 @@ func init() {
     plane.ReadConfig()
 
     gc = gg.NewContext(Width, Height)
-    fillColor   = color.RGBAF{0.4902, 0.2039, 0.1019, 0.6274}
-    strokeColor = color.White
+    fillColor   = colornames.CadetBlue
+    strokeColor = colornames.WhiteSmoke
 }
 
 // Benchmark der Konvertierung von Touchscreen-Koordinaten nach Bildschirm-
@@ -107,7 +108,11 @@ func BenchmarkConvertCust(b *testing.B) {
     }
 }
 
-
+// Misst die Zeit für die Darstellung eines Bildes (resp. eines Teils davon)
+// auf dem TFT. Es gibt dazu vier Funktionen, welche vier verschiedene
+// Ausschnitte des Bildes darstellen: Full, Halve, Quart und Cust (siehe auch
+// die Variablen dstRectXXX in der Funktion init()).
+//
 func BenchmarkDrawFull(b *testing.B) {
     gc.SetFillColor(color.Black)
     gc.Clear()
