@@ -36,7 +36,7 @@ var (
 
 func init() {
     Init()
-    disp = OpenDisplay(Rotate180)
+    disp = OpenDisplay(Rotate270)
 
     pixBuf = NewBuffer(Width, Height)
 
@@ -51,10 +51,10 @@ func init() {
     }
     testImage = tmp.(*image.RGBA)
 
-    dstRectFull  = image.Rect(  0,  0, 320, 240)
-    dstRectHalve = image.Rect( 80, 60, 240, 180)
-    dstRectQuart = image.Rect(120, 90, 200, 150)
-    dstRectCust  = image.Rect(120, 80, 300, 200)
+    dstRectFull  = image.Rect(  0,  0, Width, Height)
+    dstRectHalve = image.Rect(Width/4, Height/4, 3*Width/4, 3*Height/4)
+    dstRectQuart = image.Rect(3*Width/8, 3*Height/8, 5*Width/8, 5*Height/8)
+    dstRectCust  = image.Rect(20, 40, Width-60, Height-80)
 
     srcPoint = image.Pt(0, 0)
 
