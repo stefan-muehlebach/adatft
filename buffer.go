@@ -38,12 +38,12 @@ func (buf *Buffer) Clear() {
 }
 
 // Mit dieser Funktion wird ein Bild vom RGBA-Format (image.RGBA) in das
-// fuer den ILI9341 typische 666 oder (praeferiert) 565 Format konvertiert.
-// Die Masse von src muessen den Massen des TFT-Displays
-// (d.h. ILI9341_WIDTH x ILI9341_HEIGHT) entsprechen. Allfaellige Anpassungen
-// sind vorgaengig mit anderen Funktionen (bspw. aus dem Package gg oder
-// image/draw) durchzufuehren. Die Zeitmessung ueber die Variable 'ConvTime'
-// ist in dieser Funktion realisiert.
+// für den ILI9341 typische 666 (präferiert) oder 565 Format konvertiert.
+// Die Grösse von src (Breite, Höhe) muss der Grösse des TFT-Displays
+// (d.h. ILI9341_WIDTH x ILI9341_HEIGHT) entsprechen. Allfällige Anpassungen
+// sind vorgängig mit anderen Funktionen (bspw. aus dem Package gg oder
+// image/draw) durchzuführen. Die Zeitmessung über die Variablen 'ConvTime'
+// und 'NumConv' ist in dieser Funktion realisiert.
 func (buf *Buffer) Convert(src *image.RGBA) {
     var srcIdx, dstIdx int
 
@@ -65,28 +65,3 @@ func (buf *Buffer) Convert(src *image.RGBA) {
     ConvTime += time.Since(t1)
     NumConv++
 }
-
-/*
-func (buf *Buffer) Convert(dstRect image.Rectangle, src *image.RGBA,
-        srcPt image.Point) {
-    var idx1, idx2, idx1Step, idx2Step int
-
-    t1 := time.Now()
-    buf.dstRect = dstRect
-    idx1, idx1Step = 0, 4
-    idx2, idx2Step = 0, bytesPerPixel
-    for row:=srcPt.Y; row<srcPt.Y+dstRect.Dy(); row++ {
-        for col:=srcPt.X; col<srcPt.X+dstRect.Dx(); col++ {
-            idx1 = idx1Step * (row * src.Bounds().Dx() + col)
-
-            buf.pixBuf[idx2+0]  =  src.Pix[idx1+2]
-            buf.pixBuf[idx2+1]  =  src.Pix[idx1+1]
-            buf.pixBuf[idx2+2]  =  src.Pix[idx1+0]
-
-            idx2 += idx2Step
-        }
-    }
-    ConvTime += time.Since(t1)
-    NumConv++
-}
-*/

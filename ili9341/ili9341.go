@@ -113,7 +113,7 @@ type ILI9341 struct {
 
 // Damit wird die Verbindung zum ILI9341 geöffnet. Die Initialisierung des
 // Chips wird in einer separaten Funktion (Init()) durchgeführt!
-func Open(speedHz physic.Frequency) *ILI9341 {
+func Open(speedHz physic.Frequency) (*ILI9341) {
 	var err error
 	var d *ILI9341
 	var p spi.PortCloser
