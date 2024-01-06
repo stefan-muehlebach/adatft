@@ -36,7 +36,7 @@ var (
 
 func init() {
     Init()
-    disp = OpenDisplay(Rotate000)
+    disp = OpenDisplay(Rotate090)
 
     pixBuf = NewBuffer(Width, Height)
 
