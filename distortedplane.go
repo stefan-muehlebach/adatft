@@ -7,7 +7,7 @@ import (
     "math"
     "os"
     "path/filepath"
-    . "github.com/stefan-muehlebach/adatft/ili9341"
+    //. "github.com/stefan-muehlebach/adatft/ili9341"
 )
 
 var (
@@ -108,14 +108,14 @@ func (d *DistortedPlane) Transform(touchData TouchPosRaw) (touchPos TouchPos,
     touchPos.X = (1-tx) * d.PosList[0].X + tx * d.PosList[2].X
     touchPos.Y = (1-ty) * d.PosList[0].Y + ty * d.PosList[2].Y
 
-    if touchPos.X < 0.0 || touchPos.X >= ILI9341_WIDTH {
+    if touchPos.X < 0.0 || touchPos.X >= float64(Width) {
         touchPos.X = math.Max(touchPos.X, 0.0)
-        touchPos.X = math.Min(touchPos.X, ILI9341_WIDTH-1.0)
+        touchPos.X = math.Min(touchPos.X, float64(Width)-1.0)
         err = errors.New("coordinate outside reasonable range")
     }
-    if touchPos.Y < 0.0 || touchPos.Y >= ILI9341_HEIGHT {
+    if touchPos.Y < 0.0 || touchPos.Y >= float64(Height) {
         touchPos.Y = math.Max(touchPos.Y, 0.0)
-        touchPos.Y = math.Min(touchPos.Y, ILI9341_HEIGHT-1.0)
+        touchPos.Y = math.Min(touchPos.Y, float64(Height)-1.0)
         err = errors.New("coordinate outside reasonable range")
     }
     return touchPos, err

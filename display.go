@@ -167,10 +167,10 @@ func (dsp *Display) InitChannels() {
     }
 
     for i := 0; i < numBuffers; i++ {
-        buf = NewBuffer()
+        buf = NewBuffer(Width, Height)
         dsp.bufChan[toConv] <- buf
     }
-    dsp.staticBuf = NewBuffer()
+    dsp.staticBuf = NewBuffer(Width, Height)
 
     dsp.quitQ = make(chan bool)
     go dsp.displayer()

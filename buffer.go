@@ -22,11 +22,11 @@ type Buffer struct {
 
 // Erzeugt einen neuen Buffer, der fuer die Anzeige von image.RGBA Bildern
 // zwingend gebraucht wird.
-func NewBuffer() *Buffer {
+func NewBuffer(width, height int) *Buffer {
     buf := &Buffer{}
-    buf.bufLen = Width * Height
+    buf.bufLen = width * height
     buf.bufSize = bytesPerPixel * buf.bufLen
-    buf.strideLen = Width * bytesPerPixel
+    buf.strideLen = width * bytesPerPixel
     buf.pixBuf = make([]uint8, buf.bufSize)
     return buf
 }

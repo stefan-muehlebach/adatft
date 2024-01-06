@@ -38,7 +38,7 @@ func init() {
     Init()
     disp = OpenDisplay(Rotate000)
 
-    pixBuf = NewBuffer()
+    pixBuf = NewBuffer(Width, Height)
 
     fh, err := os.Open(imageFile)
     if err != nil {
