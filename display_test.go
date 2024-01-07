@@ -90,6 +90,12 @@ func TestDrawQuart(t *testing.T) {
     disp.DrawSync(gc.Image())
     disp.DrawSync(testImage.SubImage(rectQuart))
 }
+func TestDrawCust(t *testing.T) {
+    gc.SetFillColor(color.Black)
+    gc.Clear()
+    disp.DrawSync(gc.Image())
+    disp.DrawSync(testImage.SubImage(rectCust))
+}
 
 // Benchmark der Konvertierung von Touchscreen-Koordinaten nach Bildschirm-
 // Koordinaten. TO DO: ev. sollte die Erzeugung der Touchscreen-Koordinaten

@@ -1,6 +1,7 @@
 package adatft
 
 import (
+	"log"
 	"errors"
 	"image"
 	"image/draw"
@@ -188,6 +189,7 @@ func (dsp *Display) Bounds() image.Rectangle {
 // zum TFT gesendet wurden. Wichtig: img muss ein image.RGBA-Typ sein!
 func (dsp *Display) DrawSync(img image.Image) error {
 	// dsp.staticBuf.Convert(img.(*image.RGBA))
+    log.Printf("DrawSync(): img.Bounds(): %v", img.Bounds())
 	draw.Draw(dsp.staticBuf, dsp.staticBuf.Rect, img, image.Point{}, draw.Src)
     dsp.staticBuf.dstRect = dsp.staticBuf.Rect
 	dsp.drawBuffer(dsp.staticBuf)
