@@ -24,7 +24,7 @@ var (
     pixBuf *ILIImage
     fWidth, fHeight float64
     testImage *image.RGBA
-    rectFull, rectHalve, rectQuart, rectCust image.Rectangle
+    RectFull, RectHalve, RectQuart, RectCust image.Rectangle
     srcPoint image.Point
     gc *gg.Context
     err error
@@ -53,10 +53,10 @@ func init() {
     }
     testImage = tmp.(*image.RGBA)
 
-    rectFull  = image.Rect(  0,  0, Width, Height)
-    rectHalve = image.Rect(Width/4, Height/4, 3*Width/4, 3*Height/4)
-    rectQuart = image.Rect(3*Width/8, 3*Height/8, 5*Width/8, 5*Height/8)
-    rectCust  = image.Rect(20, 40, Width-60, Height-80)
+    RectFull  = image.Rect(  0,  0, Width, Height)
+    RectHalve = image.Rect(Width/4, Height/4, 3*Width/4, 3*Height/4)
+    RectQuart = image.Rect(3*Width/8, 3*Height/8, 5*Width/8, 5*Height/8)
+    RectCust  = image.Rect(0, 0, Width/2, Height/2)
 
     srcPoint = image.Pt(0, 0)
 
@@ -76,25 +76,25 @@ func TestDrawFull(t *testing.T) {
     gc.SetFillColor(color.Black)
     gc.Clear()
     disp.DrawSync(gc.Image())
-    disp.DrawSync(testImage.SubImage(rectFull))
+    disp.DrawSync(testImage.SubImage(RectFull))
 }
 func TestDrawHalve(t *testing.T) {
     gc.SetFillColor(color.Black)
     gc.Clear()
     disp.DrawSync(gc.Image())
-    disp.DrawSync(testImage.SubImage(rectHalve))
+    disp.DrawSync(testImage.SubImage(RectHalve))
 }
 func TestDrawQuart(t *testing.T) {
     gc.SetFillColor(color.Black)
     gc.Clear()
     disp.DrawSync(gc.Image())
-    disp.DrawSync(testImage.SubImage(rectQuart))
+    disp.DrawSync(testImage.SubImage(RectQuart))
 }
 func TestDrawCust(t *testing.T) {
     gc.SetFillColor(color.Black)
     gc.Clear()
     disp.DrawSync(gc.Image())
-    disp.DrawSync(testImage.SubImage(rectCust))
+    disp.DrawSync(testImage.SubImage(RectCust))
 }
 
 // Benchmark der Konvertierung von Touchscreen-Koordinaten nach Bildschirm-
@@ -116,25 +116,25 @@ func BenchmarkTransformPoint(b *testing.B) {
 // und Cust (siehe auch die Variablen dstRectXXX in der Funktion init()).
 //
 func BenchmarkConvertFull(b *testing.B) {
-    img := testImage.SubImage(rectFull).(*image.RGBA)
+    img := testImage.SubImage(RectFull).(*image.RGBA)
     for i := 0; i < b.N; i++ {
         pixBuf.Convert(img)
     }
 }
 func BenchmarkConvertHalve(b *testing.B) {
-    img := testImage.SubImage(rectHalve).(*image.RGBA)
+    img := testImage.SubImage(RectHalve).(*image.RGBA)
     for i := 0; i < b.N; i++ {
         pixBuf.Convert(img)
     }
 }
 func BenchmarkConvertQuart(b *testing.B) {
-    img := testImage.SubImage(rectQuart).(*image.RGBA)
+    img := testImage.SubImage(RectQuart).(*image.RGBA)
     for i := 0; i < b.N; i++ {
         pixBuf.Convert(img)
     }
 }
 func BenchmarkConvertCust(b *testing.B) {
-    img := testImage.SubImage(rectCust).(*image.RGBA)
+    img := testImage.SubImage(RectCust).(*image.RGBA)
     for i := 0; i < b.N; i++ {
         pixBuf.Convert(img)
     }
@@ -151,7 +151,7 @@ func BenchmarkDrawFull(b *testing.B) {
     disp.DrawSync(gc.Image())
     b.ResetTimer()
     for i := 0; i < b.N; i++ {
-        disp.DrawSync(testImage.SubImage(rectFull))
+        disp.DrawSync(testImage.SubImage(RectFull))
     }
 }
 func BenchmarkDrawHalve(b *testing.B) {
@@ -160,7 +160,7 @@ func BenchmarkDrawHalve(b *testing.B) {
     disp.DrawSync(gc.Image())
     b.ResetTimer()
     for i := 0; i < b.N; i++ {
-        disp.DrawSync(testImage.SubImage(rectHalve))
+        disp.DrawSync(testImage.SubImage(RectHalve))
     }
 }
 func BenchmarkDrawQuart(b *testing.B) {
@@ -169,7 +169,7 @@ func BenchmarkDrawQuart(b *testing.B) {
     disp.DrawSync(gc.Image())
     b.ResetTimer()
     for i := 0; i < b.N; i++ {
-        disp.DrawSync(testImage.SubImage(rectQuart))
+        disp.DrawSync(testImage.SubImage(RectQuart))
     }
 }
 func BenchmarkDrawCust(b *testing.B) {
@@ -178,7 +178,7 @@ func BenchmarkDrawCust(b *testing.B) {
     disp.DrawSync(gc.Image())
     b.ResetTimer()
     for i := 0; i < b.N; i++ {
-        disp.DrawSync(testImage.SubImage(rectCust))
+        disp.DrawSync(testImage.SubImage(RectCust))
     }
 }
 
