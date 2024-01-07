@@ -72,6 +72,12 @@ func init() {
 
 // Test-Funktionen.
 //
+func TestDrawFull(t *testing.T) {
+    gc.SetFillColor(color.Black)
+    gc.Clear()
+    disp.DrawSync(gc.Image())
+    disp.DrawSync(testImage.SubImage(rectFull))
+}
 func TestDrawQuart(t *testing.T) {
     gc.SetFillColor(color.Black)
     gc.Clear()
