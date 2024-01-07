@@ -356,8 +356,8 @@ func BenchmarkDrawCirclesFull(b *testing.B) {
     gc.SetStrokeWidth(borderWidth)
     b.ResetTimer()
     for i := 0; i< b.N; i++ {
-        x, y, r := fWidth/2*rand.Float64(), fHeight/2*rand.Float64(),
-                20+40*rand.Float64()
+        x, y, r := fWidth*rand.Float64(), fHeight*rand.Float64(),
+                fHeight/2*rand.Float64()
         gc.DrawCircle(x, y, r)
         gc.FillStroke()
         disp.DrawSync(img)
