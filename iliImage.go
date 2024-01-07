@@ -1,7 +1,6 @@
 package adatft
 
 import (
-	"image/draw"
 	"image"
 	"image/color"
 	"time"
@@ -93,7 +92,7 @@ func (b *ILIImage) SubImage(r image.Rectangle) image.Image {
 func convert(dst *ILIImage, srcImg image.Image) {
 	var src *image.RGBA
 	var row, col int
-	var srcIdx, dstIdx int
+	var srcBaseIdx, srcIdx, dstBaseIdx, dstIdx int
 
 	src = srcImg.(*image.RGBA)
 	// log.Printf("src.Bounds(): %v", src.Bounds())
@@ -101,12 +100,19 @@ func convert(dst *ILIImage, srcImg image.Image) {
 	// log.Printf("dst.Bounds(): %v", dst.Bounds())
 	// log.Printf("dst.Rect    : %v", dst.Rect)
 
+	srcBaseIdx = 0
+	dstBaseIdx = src.Rect.Min.Y*dst.Stride + src.Rect.Min.X*bytesPerPixel
+
 	for row = src.Rect.Min.Y; row < src.Rect.Max.Y; row++ {
-		col = src.Rect.Min.X
-		srcIdx = src.PixOffset(col, row)
-		dstIdx = dst.PixOffset(col, row)
+		// col = src.Rect.Min.X
+		// srcIdx = src.PixOffset(col, row)
+		// dstIdx = dst.PixOffset(col, row)
 		// log.Printf("col, row      : %3d, %3d", col, row)
 		// log.Printf("srcIdx, dstIdx: %6d, %6d", srcIdx, dstIdx)
+
+		srcIdx = srcBaseIdx
+		dstIdx = dstBaseIdx
+
 		for col = src.Rect.Min.X; col < src.Rect.Max.X; col++ {
 			dst.Pix[dstIdx+0] = src.Pix[srcIdx+2]
 			dst.Pix[dstIdx+1] = src.Pix[srcIdx+1]
@@ -114,13 +120,16 @@ func convert(dst *ILIImage, srcImg image.Image) {
 			srcIdx += 4
 			dstIdx += bytesPerPixel
 		}
+
+		srcBaseIdx += src.Stride
+		dstBaseIdx += dst.Stride
 	}
 }
 
 func (b *ILIImage) Convert(src image.Image) {
 	t1 := time.Now()
-    // convert(b, src)
-    draw.Draw(b, b.Rect, src, image.Point{}, draw.Src)
+	convert(b, src)
+	// draw.Draw(b, b.Rect, src, image.Point{}, draw.Src)
 	ConvTime += time.Since(t1)
 	NumConv++
 }
