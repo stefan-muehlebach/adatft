@@ -3,7 +3,6 @@ package adatft
 import (
 	"errors"
 	"image"
-	"log"
 	"time"
 
 	ili "github.com/stefan-muehlebach/adatft/ili9341"
@@ -98,7 +97,6 @@ type BufChanItem struct {
 // das Device-File und um die Channels zu den Go-Routinen, welche
 // die Konvertierung eines image.RGBA Bildes in ein ILI9341-konformes
 // Format vornehmen und die Daten via SPI-Bus an den ILI9341 sendet.
-//
 type Display struct {
 	dspi         DispInterface
 	bufChan      []chan *BufChanItem
@@ -220,10 +218,10 @@ func (dsp *Display) DrawSync(img image.Image) error {
 	// log.Printf("DrawSync(): img.Bounds(): %v", img.Bounds())
 	dsp.staticImg[0].Convert(img.(*image.RGBA))
 	rect := dsp.staticImg[0].Diff(dsp.staticImg[1])
-    if rect.Empty() {
-        return nil
-        // rect = img.Bounds()
-    }
+	if rect.Empty() {
+		return nil
+		// rect = img.Bounds()
+	}
 	// log.Printf("DrawSync(): rect: %v", rect)
 	dsp.drawBuffer(dsp.staticImg[0].SubImage(rect).(*ILIImage))
 	dsp.staticImg[0], dsp.staticImg[1] = dsp.staticImg[1], dsp.staticImg[0]
@@ -240,10 +238,10 @@ func (dsp *Display) Draw(img image.Image) error {
 	bufItem.img.Convert(img.(*image.RGBA))
 	if dsp.lastImg != nil {
 		bufItem.rect = bufItem.img.Diff(dsp.lastImg)
-        if bufItem.rect.Empty() {
-            dsp.bufChan[toConv] <- bufItem
-            return nil
-        }
+		if bufItem.rect.Empty() {
+			dsp.bufChan[toConv] <- bufItem
+			return nil
+		}
 	} else {
 		bufItem.rect = img.Bounds()
 	}
