@@ -105,6 +105,8 @@ func TestDrawSyncCust(t *testing.T) {
     rect = RectQuart.Add(image.Point{100, 100})
     draw.Draw(workImage, rect, testBild, rect.Min, draw.Src)
     disp.DrawSync(workImage)
+
+    disp.DrawSync(workImage)
 }
 
 // Async'ed Draw-Funktionen.
@@ -141,6 +143,7 @@ func TestDrawAsyncCust(t *testing.T) {
 
     rect = RectQuart.Add(image.Point{100, 100})
     draw.Draw(workImage, rect, testBild, rect.Min, draw.Src)
+    disp.Draw(workImage)
     disp.Draw(workImage)
     time.Sleep(time.Second)
 }
