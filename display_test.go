@@ -143,6 +143,12 @@ func TestImageDiff(t *testing.T) {
 
     rect := imageA.Diff(imageB)
     log.Printf("difference rectangle: %v", rect)
+
+    testImage.Set(100, 100, colornames.Navy)
+    imageB.Convert(testImage)
+
+    rect = imageA.Diff(imageB)
+    log.Printf("difference rectangle: %v", rect)
 }
 func BenchmarkImageDiff(b *testing.B) {
     imageA := NewILIImage(image.Rect(0, 0, Width, Height))
