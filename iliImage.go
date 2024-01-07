@@ -119,6 +119,10 @@ func convert(dst *ILIImage, srcImg image.Image) {
 	NumConv++
 }
 
+func (b *ILIImage) Convert(src image.Image) {
+    convert(b, src)
+}
+
 // Mit dieser Funktion wird ein Bild vom RGBA-Format (image.RGBA) in das
 // für den ILI9341 typische 666 (präferiert) oder 565 Format konvertiert.
 // Die Grösse von src (Breite, Höhe) muss der Grösse des TFT-Displays
@@ -126,41 +130,41 @@ func convert(dst *ILIImage, srcImg image.Image) {
 // sind vorgängig mit anderen Funktionen (bspw. aus dem Package gg oder
 // image/draw) durchzuführen. Die Zeitmessung über die Variablen 'ConvTime'
 // und 'NumConv' ist in dieser Funktion realisiert.
-func (b *ILIImage) Convert(src *image.RGBA) {
-	// var stride int
-	var srcIdx, dstIdx int
-	var row, col int
-	// var dst *ILIImage
+// func (b *ILIImage) Convert(src *image.RGBA) {
+// 	// var stride int
+// 	var srcIdx, dstIdx int
+// 	var row, col int
+// 	// var dst *ILIImage
 
-	// dst = b.SubImage(src.Rect).(*ILIImage)
+// 	// dst = b.SubImage(src.Rect).(*ILIImage)
 
-	// log.Printf("src.Bounds(): %v", src.Bounds())
-	// log.Printf("src.Rect    : %v", src.Rect)
-	// log.Printf("b.Bounds()  : %v", b.Bounds())
-	// log.Printf("b.Rect      : %v", b.Rect)
-	t1 := time.Now()
+// 	// log.Printf("src.Bounds(): %v", src.Bounds())
+// 	// log.Printf("src.Rect    : %v", src.Rect)
+// 	// log.Printf("b.Bounds()  : %v", b.Bounds())
+// 	// log.Printf("b.Rect      : %v", b.Rect)
+// 	t1 := time.Now()
 
-	b.dstRect = src.Bounds()
-	// b.Rect = src.Bounds()
-	r := src.Bounds()
-	// stride = r.Dx() * bytesPerPixel
-	// log.Printf("r: %v", r)
+// 	b.dstRect = src.Bounds()
+// 	// b.Rect = src.Bounds()
+// 	r := src.Bounds()
+// 	// stride = r.Dx() * bytesPerPixel
+// 	// log.Printf("r: %v", r)
 
-	for row = r.Min.Y; row < r.Max.Y; row++ {
-		col = r.Min.X
-		// srcIdx = (row-r.Min.Y)*src.Stride
-		srcIdx = src.PixOffset(col, row)
-		// dstIdx = (row-r.Min.Y)*stride
-		dstIdx = b.PixOffset(col, row)
-		// log.Printf("srcIdx, dstIdx: %6d, %6d", srcIdx, dstIdx)
-		for col = r.Min.X; col < r.Max.X; col++ {
-			b.Pix[dstIdx+0] = src.Pix[srcIdx+2]
-			b.Pix[dstIdx+1] = src.Pix[srcIdx+1]
-			b.Pix[dstIdx+2] = src.Pix[srcIdx+0]
-			srcIdx += 4
-			dstIdx += bytesPerPixel
-		}
-	}
-	ConvTime += time.Since(t1)
-	NumConv++
-}
+// 	for row = r.Min.Y; row < r.Max.Y; row++ {
+// 		col = r.Min.X
+// 		// srcIdx = (row-r.Min.Y)*src.Stride
+// 		srcIdx = src.PixOffset(col, row)
+// 		// dstIdx = (row-r.Min.Y)*stride
+// 		dstIdx = b.PixOffset(col, row)
+// 		// log.Printf("srcIdx, dstIdx: %6d, %6d", srcIdx, dstIdx)
+// 		for col = r.Min.X; col < r.Max.X; col++ {
+// 			b.Pix[dstIdx+0] = src.Pix[srcIdx+2]
+// 			b.Pix[dstIdx+1] = src.Pix[srcIdx+1]
+// 			b.Pix[dstIdx+2] = src.Pix[srcIdx+0]
+// 			srcIdx += 4
+// 			dstIdx += bytesPerPixel
+// 		}
+// 	}
+// 	ConvTime += time.Since(t1)
+// 	NumConv++
+// }
