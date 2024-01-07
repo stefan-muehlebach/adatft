@@ -1,6 +1,7 @@
 package adatft
 
 import (
+	"image/color"
     "image"
     "time"
 )
@@ -15,27 +16,48 @@ const (
 )
 
 type Buffer struct {
-    pixBuf []uint8
-    bufLen, bufSize, strideLen int
+    Pix []uint8
+    Stride int
+    Rect image.Rectangle
+    // bufLen, bufSize int
     dstRect image.Rectangle
 }
 
 // Erzeugt einen neuen Buffer, der fuer die Anzeige von image.RGBA Bildern
 // zwingend gebraucht wird.
-func NewBuffer(width, height int) *Buffer {
-    buf := &Buffer{}
-    buf.bufLen = width * height
-    buf.bufSize = bytesPerPixel * buf.bufLen
-    buf.strideLen = width * bytesPerPixel
-    buf.pixBuf = make([]uint8, buf.bufSize)
-    return buf
+func NewBuffer(r image.Rectangle) (*Buffer) {
+    b := &Buffer{}
+    b.Pix = make([]uint8, r.Dx() * r.Dy() * bytesPerPixel)
+    b.Stride = r.Dx() * bytesPerPixel
+    b.Rect = r
+
+    // b.bufLen = width * height
+    // b.bufSize = bytesPerPixel * b.bufLen
+    return b
 }
 
-func (buf *Buffer) Clear() {
-    for i, _ := range buf.pixBuf {
-        buf.pixBuf[i] = 0x00
-    }
+func (b *Buffer) ColorModel() (color.Model) {
+    return ILIModel
 }
+
+func (b *Buffer) Bounds() (image.Rectangle) {
+    return b.Rect
+}
+
+func (b *Buffer) At(x, y int) (color.Color) {
+    if !(image.Point{x, y}.In(b.Rect)) {
+        return ILIColor{}
+    }
+    i := (y-b.Rect.Min.Y)*b.Stride + (x-b.Rect.Min.X)*bytesPerPixel
+    s := b.Pix[i : i+3 : i+3]
+    return ILIColor{s[0], s[1], s[2]}
+}
+
+// func (b *Buffer) Clear() {
+//     for i, _ := range b.Pix {
+//         b.Pix[i] = 0x00
+//     }
+// }
 
 // Mit dieser Funktion wird ein Bild vom RGBA-Format (image.RGBA) in das
 // für den ILI9341 typische 666 (präferiert) oder 565 Format konvertiert.
@@ -44,20 +66,20 @@ func (buf *Buffer) Clear() {
 // sind vorgängig mit anderen Funktionen (bspw. aus dem Package gg oder
 // image/draw) durchzuführen. Die Zeitmessung über die Variablen 'ConvTime'
 // und 'NumConv' ist in dieser Funktion realisiert.
-func (buf *Buffer) Convert(src *image.RGBA) {
-    var srcIdx, dstIdx int
+func (b *Buffer) Convert(src *image.RGBA) {
+    var stride, srcIdx, dstIdx int
 
     t1 := time.Now()
-    buf.dstRect = src.Bounds()
-    buf.strideLen = buf.dstRect.Dx() * bytesPerPixel
+    b.dstRect = src.Bounds()
+    stride = b.dstRect.Dx() * bytesPerPixel
 
-    for row:=buf.dstRect.Min.Y; row<buf.dstRect.Max.Y; row++ {
-        srcIdx = (row-buf.dstRect.Min.Y)*src.Stride
-        dstIdx = (row-buf.dstRect.Min.Y)*buf.strideLen
-        for col:=buf.dstRect.Min.X; col<buf.dstRect.Max.X; col++ {
-            buf.pixBuf[dstIdx+0]  =  src.Pix[srcIdx+2]
-            buf.pixBuf[dstIdx+1]  =  src.Pix[srcIdx+1]
-            buf.pixBuf[dstIdx+2]  =  src.Pix[srcIdx+0]
+    for row:=b.dstRect.Min.Y; row<b.dstRect.Max.Y; row++ {
+        srcIdx = (row-b.dstRect.Min.Y)*src.Stride
+        dstIdx = (row-b.dstRect.Min.Y)*stride
+        for col:=b.dstRect.Min.X; col<b.dstRect.Max.X; col++ {
+            b.Pix[dstIdx+0]  =  src.Pix[srcIdx+2]
+            b.Pix[dstIdx+1]  =  src.Pix[srcIdx+1]
+            b.Pix[dstIdx+2]  =  src.Pix[srcIdx+0]
             srcIdx += 4
             dstIdx += bytesPerPixel
         }

@@ -149,9 +149,9 @@ func OpenDisplay(rot RotationType) (*Display) {
 func (dsp *Display) Close() {
     close(dsp.bufChan[toDisp])
     <- dsp.quitQ
-    dsp.staticBuf.Clear()
-    dsp.staticBuf.dstRect = dsp.Bounds()
-    dsp.drawBuffer(dsp.staticBuf)
+    // dsp.staticBuf.Clear()
+    // dsp.staticBuf.dstRect = dsp.Bounds()
+    // dsp.drawBuffer(dsp.staticBuf)
     dsp.dspi.Close()
 }
 
@@ -167,10 +167,10 @@ func (dsp *Display) InitChannels() {
     }
 
     for i := 0; i < numBuffers; i++ {
-        buf = NewBuffer(Width, Height)
+        buf = NewBuffer(image.Rect(0, 0, Width, Height))
         dsp.bufChan[toConv] <- buf
     }
-    dsp.staticBuf = NewBuffer(Width, Height)
+    dsp.staticBuf = NewBuffer(image.Rect(0, 0, Width, Height))
 
     dsp.quitQ = make(chan bool)
     go dsp.displayer()
@@ -214,7 +214,7 @@ func (dsp *Display) drawBuffer(buf *Buffer) {
     dsp.dspi.Cmd(ili.ILI9341_PASET)
     dsp.dspi.Data32(uint32((start.Y<<16) | (end.Y-1)))
     dsp.dspi.Cmd(ili.ILI9341_RAMWR)
-    dsp.dspi.DataArray(buf.pixBuf[:numBytes])
+    dsp.dspi.DataArray(buf.Pix[:numBytes])
     DispTime += time.Since(t1)
     NumDisp++
 }
