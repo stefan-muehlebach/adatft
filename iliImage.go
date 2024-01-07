@@ -85,25 +85,19 @@ func (b *ILIImage) Diff(img *ILIImage) (image.Rectangle) {
     xMin, xMax = 0, 0
     yMin, yMax = 0, 0
     for y := 0; y < b.Rect.Dy(); y++ {
-        for x := 0; x < b.Rect.Dx(); x++ {
-            pixIdx := y*b.Stride + x*bytesPerPixel
-            if b.Pix[pixIdx] != img.Pix[pixIdx] ||
-                    b.Pix[pixIdx+1] != img.Pix[pixIdx+1] ||
-                    b.Pix[pixIdx+2] != img.Pix[pixIdx+2] {
+        idx := y*b.Stride
+        for i, pix := range b.Pix[idx: idx+b.Stride] {
+            if pix != img.Pix[i] {
                 yMin = y
-                y = b.Rect.Dy()
                 break
             }
         }
     }
     for y := b.Rect.Dy()-1; y >= 0; y-- {
-        for x := 0; x < b.Rect.Dx(); x++ {
-            pixIdx := y*b.Stride + x*bytesPerPixel
-            if b.Pix[pixIdx] != img.Pix[pixIdx] ||
-                    b.Pix[pixIdx+1] != img.Pix[pixIdx+1] ||
-                    b.Pix[pixIdx+2] != img.Pix[pixIdx+2] {
+        idx := y*b.Stride
+        for i, pix := range b.Pix[idx: idx+b.Stride] {
+            if pix != img.Pix[i] {
                 yMax = y
-                y = -1
                 break
             }
         }
