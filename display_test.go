@@ -97,6 +97,7 @@ func TestDrawSyncCust(t *testing.T) {
     gc.Clear()
     disp.DrawSync(gc.Image())
     disp.DrawSync(testImage.SubImage(RectHalve))
+    disp.DrawSync(testImage.SubImage(RectQuart.Add(geom.Point{120, 120})))
 }
 
 // Async'ed Draw-Funktionen.
