@@ -99,11 +99,14 @@ func (b *ILIImage) SubImage(r image.Rectangle) image.Image {
 func (b *ILIImage) Convert(src *image.RGBA) {
 	var stride, srcIdx, srcIdx2, dstIdx, dstIdx2 int
     var row, col int
+    var dst *ILIImage
+
+    dst = b.SubImage(src.Rect).(*ILIImage)
 
 	log.Printf("src.Bounds(): %v", src.Bounds())
 	log.Printf("src.Rect    : %v", src.Rect)
-	log.Printf("b.Bounds()  : %v", b.Bounds())
-    log.Printf("b.Rect      : %v", b.Rect)
+	log.Printf("b.Bounds()  : %v", dst.Bounds())
+    log.Printf("b.Rect      : %v", dst.Rect)
 	t1 := time.Now()
 
 	b.dstRect = src.Bounds()
@@ -117,7 +120,7 @@ func (b *ILIImage) Convert(src *image.RGBA) {
 		srcIdx = (row-r.Min.Y)*src.Stride
 		srcIdx2 = src.PixOffset(col, row)
 		dstIdx = (row-r.Min.Y)*stride
-        dstIdx2 = b.PixOffset(col, row)
+        dstIdx2 = dst.PixOffset(col, row)
         log.Printf("srcIdx, srcIdx2, dstIdx, dstIdx2: %d, %d, %d, %d", srcIdx, srcIdx2, dstIdx, dstIdx2)
 		for col = r.Min.X; col < r.Max.X; col++ {
 			b.Pix[dstIdx+0] = src.Pix[srcIdx+2]
