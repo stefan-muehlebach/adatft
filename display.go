@@ -223,7 +223,8 @@ func (dsp *Display) DrawSync(img image.Image) error {
 	dsp.staticImg[0].Convert(img.(*image.RGBA))
 	rect := dsp.staticImg[0].Diff(dsp.staticImg[1])
     if rect.Empty() {
-        rect = img.Bounds()
+        return nil
+        // rect = img.Bounds()
     }
 	log.Printf("DrawSync(): rect: %v", rect)
 	dsp.drawBuffer(dsp.staticImg[0].SubImage(rect).(*ILIImage))
