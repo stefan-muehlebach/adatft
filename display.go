@@ -187,7 +187,7 @@ func (dsp *Display) Bounds() image.Rectangle {
 // erfolgt synchron, d.h. die Methode wartet so lange, bis alle Bilddaten
 // zum TFT gesendet wurden. Wichtig: img muss ein image.RGBA-Typ sein!
 func (dsp *Display) DrawSync(img image.Image) error {
-	log.Printf("img.Bounds(): %v, %v", img.Bounds())
+	log.Printf("img.Bounds(): %v", img.Bounds())
 	dsp.staticBuf.Convert(img.(*image.RGBA))
 	dsp.drawBuffer(dsp.staticBuf)
 	return nil
