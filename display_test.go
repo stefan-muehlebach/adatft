@@ -340,9 +340,9 @@ func BenchmarkDrawRectanglesFull(b *testing.B) {
 }
 
 // Zeichnet eine Anzahl zufälliger Rechtecke und aktualisiert nach jedem
-// Rechteck nur den Bereich, der sich verändert hat.
+// Rechteck den gesamten Bildschirm.
 //
-func BenchmarkDrawRectanglesSubImage(b *testing.B) {
+func BenchmarkDrawCirclesFull(b *testing.B) {
     var img *image.RGBA
 
     img = gc.Image().(*image.RGBA)
@@ -356,13 +356,11 @@ func BenchmarkDrawRectanglesSubImage(b *testing.B) {
     gc.SetStrokeWidth(borderWidth)
     b.ResetTimer()
     for i := 0; i< b.N; i++ {
-        x, y, w, h := fWidth/2*rand.Float64(), fHeight/2*rand.Float64(),
-                fWidth/2*rand.Float64(), fHeight/2*rand.Float64()
-        rect := image.Rect(int(x), int(y), int(x+w), int(y+h)).Inset(-1)
-        gc.DrawRectangle(x, y, w, h)
+        x, y, r := fWidth/2*rand.Float64(), fHeight/2*rand.Float64(),
+                20+40*rand.Float64()
+        gc.DrawCircle(x, y, r)
         gc.FillStroke()
-        // disp.DrawSync(img)
-        disp.DrawSync(img.SubImage(rect))
+        disp.DrawSync(img)
     }
 }
 
