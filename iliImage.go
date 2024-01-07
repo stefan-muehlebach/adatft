@@ -70,6 +70,19 @@ func (b *ILIImage) PixOffset(x, y int) int {
 	return (y-b.Rect.Min.Y)*b.Stride + (x-b.Rect.Min.X)*bytesPerPixel
 }
 
+func (b *ILIImage) SubImage(r image.Rectangle) image.Image {
+    r = r.Intersect(b.Rect)
+    if r.Empty() {
+        return &ILIImage{}
+    }
+    i := b.PixOffset(r.Min.X, r.Min.Y)
+    return &ILIImage{
+        Pix:    b.Pix[i:],
+        Stride: b.Stride,
+        Rect:   r,
+    }
+}
+
 // func (b *Buffer) Clear() {
 //     for i, _ := range b.Pix {
 //         b.Pix[i] = 0x00
