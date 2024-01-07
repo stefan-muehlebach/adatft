@@ -1,6 +1,7 @@
 package adatft
 
 import (
+	"time"
     "image"
     "image/png"
     "log"
@@ -103,24 +104,28 @@ func TestDrawAsyncFull(t *testing.T) {
     gc.Clear()
     disp.Draw(gc.Image())
     disp.Draw(testImage.SubImage(RectFull))
+    time.Sleep(time.Second)
 }
 func TestDrawAsyncHalve(t *testing.T) {
     gc.SetFillColor(color.Black)
     gc.Clear()
     disp.Draw(gc.Image())
     disp.Draw(testImage.SubImage(RectHalve))
+    time.Sleep(time.Second)
 }
 func TestDrawAsyncQuart(t *testing.T) {
     gc.SetFillColor(color.Black)
     gc.Clear()
     disp.Draw(gc.Image())
     disp.Draw(testImage.SubImage(RectQuart))
+    time.Sleep(time.Second)
 }
 func TestDrawAsyncCust(t *testing.T) {
     gc.SetFillColor(color.Black)
     gc.Clear()
     disp.Draw(gc.Image())
     disp.Draw(testImage.SubImage(RectCust))
+    time.Sleep(time.Second)
 }
 
 // Benchmark der Konvertierung von Touchscreen-Koordinaten nach Bildschirm-
