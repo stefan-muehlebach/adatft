@@ -90,6 +90,36 @@ func (b *ILIImage) SubImage(r image.Rectangle) image.Image {
 //     }
 // }
 
+func convert(dst *ILIImage, srcImg image.Image) {
+    var src *image.RGBA
+    var row, col int
+    var srcIdx, dstIdx int
+
+    src = srcImg.(*image.RGBA)
+	log.Printf("src.Bounds(): %v", src.Bounds())
+	log.Printf("src.Rect    : %v", src.Rect)
+	log.Printf("dst.Bounds(): %v", dst.Bounds())
+    log.Printf("dst.Rect    : %v", dst.Rect)
+
+	t1 := time.Now()
+    for row = src.Rect.Min.Y; row < src.Rect.Max.Y; row++ {
+        col = src.Rect.Min.X
+   		srcIdx = src.PixOffset(col, row)
+        dstIdx = dst.PixOffset(col, row)
+        log.Printf("col, row      : %3d, %3d", col, row)
+        log.Printf("srcIdx, dstIdx: %6d, %6d", srcIdx, dstIdx)
+		for col = src.Rect.Min.X; col < src.Rect.Max.X; col++ {
+			dst.Pix[dstIdx+0] = src.Pix[srcIdx+2]
+			dst.Pix[dstIdx+1] = src.Pix[srcIdx+1]
+			dst.Pix[dstIdx+2] = src.Pix[srcIdx+0]
+			srcIdx += 4
+			dstIdx += bytesPerPixel
+		}
+	}
+	ConvTime += time.Since(t1)
+	NumConv++
+}
+
 // Mit dieser Funktion wird ein Bild vom RGBA-Format (image.RGBA) in das
 // für den ILI9341 typische 666 (präferiert) oder 565 Format konvertiert.
 // Die Grösse von src (Breite, Höhe) muss der Grösse des TFT-Displays

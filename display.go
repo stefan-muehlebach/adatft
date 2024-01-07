@@ -1,10 +1,9 @@
 package adatft
 
 import (
-	"log"
 	"errors"
 	"image"
-	"image/draw"
+	"log"
 	"time"
 
 	ili "github.com/stefan-muehlebach/adatft/ili9341"
@@ -188,10 +187,11 @@ func (dsp *Display) Bounds() image.Rectangle {
 // erfolgt synchron, d.h. die Methode wartet so lange, bis alle Bilddaten
 // zum TFT gesendet wurden. Wichtig: img muss ein image.RGBA-Typ sein!
 func (dsp *Display) DrawSync(img image.Image) error {
+	log.Printf("DrawSync(): img.Bounds(): %v", img.Bounds())
+	convert(dsp.staticBuf, img)
 	// dsp.staticBuf.Convert(img.(*image.RGBA))
-    log.Printf("DrawSync(): img.Bounds(): %v", img.Bounds())
-	draw.Draw(dsp.staticBuf, dsp.staticBuf.Rect, img, image.Point{}, draw.Src)
-    dsp.staticBuf.dstRect = dsp.staticBuf.Rect
+	// draw.Draw(dsp.staticBuf, dsp.staticBuf.Rect, img, image.Point{}, draw.Src)
+	dsp.staticBuf.dstRect = dsp.staticBuf.Rect
 	// dsp.drawBuffer(dsp.staticBuf)
 	dsp.drawBuffer(dsp.staticBuf.SubImage(img.Bounds()))
 	return nil
@@ -211,26 +211,26 @@ func (dsp *Display) Draw(img image.Image) error {
 
 // Mit dieser Funktion wird ein Bild auf dem TFT angezeigt.
 func (dsp *Display) drawBuffer(img image.Image) {
-// func (dsp *Display) drawBuffer(buf *ILIImage) {
-    iliImg := img.(*ILIImage)
-    log.Printf("drawBuffer(): buf.Bounds(): %v", iliImg.Bounds())
-    log.Printf("drawBuffer(): buf.Rect    : %v", iliImg.Rect)
+	// func (dsp *Display) drawBuffer(buf *ILIImage) {
+	iliImg := img.(*ILIImage)
+	log.Printf("drawBuffer(): buf.Bounds(): %v", iliImg.Bounds())
+	log.Printf("drawBuffer(): buf.Rect    : %v", iliImg.Rect)
 
 	t1 := time.Now()
 
 	start := iliImg.Rect.Min
 	end := iliImg.Rect.Max
-    idx := iliImg.PixOffset(start.X, start.Y)
+	idx := iliImg.PixOffset(start.X, start.Y)
 	numBytes := iliImg.Rect.Dx() * iliImg.Rect.Dy() * bytesPerPixel
 
-    log.Printf("from, to, numBytes: %v, %v, %v", start, end, numBytes)
+	log.Printf("from, to, numBytes: %v, %v, %v", start, end, numBytes)
 
 	dsp.dspi.Cmd(ili.ILI9341_CASET)
 	dsp.dspi.Data32(uint32((start.X << 16) | (end.X - 1)))
 	dsp.dspi.Cmd(ili.ILI9341_PASET)
 	dsp.dspi.Data32(uint32((start.Y << 16) | (end.Y - 1)))
 	dsp.dspi.Cmd(ili.ILI9341_RAMWR)
-	dsp.dspi.DataArray(iliImg.Pix[idx:idx+numBytes])
+	dsp.dspi.DataArray(iliImg.Pix[idx : idx+numBytes])
 	DispTime += time.Since(t1)
 	NumDisp++
 }
