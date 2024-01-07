@@ -218,6 +218,7 @@ func (dsp *Display) drawBuffer(buf *ILIImage) {
 
 	start := buf.dstRect.Min
 	end := buf.dstRect.Max
+    idx := buf.PixOffset(start.X, start.Y)
 	numBytes := buf.dstRect.Dx() * buf.dstRect.Dy() * bytesPerPixel
 
     log.Printf("from, to, numBytes: %v, %v, %v", start, end, numBytes)
@@ -227,7 +228,7 @@ func (dsp *Display) drawBuffer(buf *ILIImage) {
 	dsp.dspi.Cmd(ili.ILI9341_PASET)
 	dsp.dspi.Data32(uint32((start.Y << 16) | (end.Y - 1)))
 	dsp.dspi.Cmd(ili.ILI9341_RAMWR)
-	dsp.dspi.DataArray(buf.Pix[:numBytes])
+	dsp.dspi.DataArray(buf.Pix[idx:idx+numBytes])
 	DispTime += time.Since(t1)
 	NumDisp++
 }
