@@ -211,6 +211,7 @@ func (dsp *Display) Draw(img image.Image) error {
 // Mit dieser Funktion wird ein Bild auf dem TFT angezeigt.
 func (dsp *Display) drawBuffer(buf *ILIImage) {
     log.Printf("drawBuffer(): buf.Bounds(): %v", buf.Bounds())
+    log.Printf("drawBuffer(): buf.Rect    : %v", buf.Rect)
 
 	t1 := time.Now()
 
