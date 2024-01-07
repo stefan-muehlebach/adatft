@@ -88,7 +88,7 @@ func convert(dst *ILIImage, src *image.RGBA) {
 	// log.Printf("dst.Bounds(): %v", dst.Bounds())
 	// log.Printf("dst.Rect    : %v", dst.Rect)
 
-    dst.Rect = src.Rect
+    // dst.Rect = src.Rect
 
 	srcBaseIdx = 0
 	dstBaseIdx = src.Rect.Min.Y*dst.Stride + src.Rect.Min.X*bytesPerPixel
