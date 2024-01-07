@@ -97,7 +97,7 @@ func (b *ILIImage) Convert(src *image.RGBA) {
 	for row := r.Min.Y; row < r.Max.Y; row++ {
 		// dstIdx = b.PixOffset(0, row)
 		srcIdx = (row-r.Min.Y)*src.Stride
-		srcIdx2 = src.PixOffset(0, row-r.Min.Y)
+		srcIdx2 = src.PixOffset(0, row)
 		dstIdx = (row-r.Min.Y)*stride
         dstIdx2 = b.PixOffset(0, row-r.Min.Y)
         log.Printf("srcIdx, srcIdx2, dstIdx, dstIdx2: %d, %d, %d, %d", srcIdx, srcIdx2, dstIdx, dstIdx2)
