@@ -200,6 +200,7 @@ func (dsp *Display) Draw(img image.Image) error {
 
 	buf = <-dsp.bufChan[toConv]
 	buf.Convert(img.(*image.RGBA))
+    buf.Rect = img.Bounds()
 	dsp.bufChan[toDisp] <- buf
 	return nil
 }
