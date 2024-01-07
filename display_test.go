@@ -78,6 +78,12 @@ func TestDrawFull(t *testing.T) {
     disp.DrawSync(gc.Image())
     disp.DrawSync(testImage.SubImage(rectFull))
 }
+func TestDrawHalve(t *testing.T) {
+    gc.SetFillColor(color.Black)
+    gc.Clear()
+    disp.DrawSync(gc.Image())
+    disp.DrawSync(testImage.SubImage(rectHalve))
+}
 func TestDrawQuart(t *testing.T) {
     gc.SetFillColor(color.Black)
     gc.Clear()
