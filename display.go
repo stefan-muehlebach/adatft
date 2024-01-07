@@ -230,7 +230,7 @@ func (dsp *Display) drawBuffer(img *ILIImage) {
     if numBytes == img.Stride {
         dsp.dspi.DataArray(img.Pix[:])
     } else {
-        idx := start.Y*img.Stride + start.X*bytesPerPixel
+        idx := 0
     	for y := start.Y; y < end.Y; y++ {
     		dsp.dspi.DataArray(img.Pix[idx : idx+numBytes])
             idx += img.Stride
