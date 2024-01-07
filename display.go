@@ -189,6 +189,7 @@ func (dsp *Display) Bounds() image.Rectangle {
 func (dsp *Display) DrawSync(img image.Image) error {
 	// dsp.staticBuf.Convert(img.(*image.RGBA))
 	draw.Draw(dsp.staticBuf, dsp.staticBuf.Rect, img, image.Point{}, draw.Src)
+    dsp.staticBuf.dstRect = dsp.staticBuf.Rect
 	dsp.drawBuffer(dsp.staticBuf)
 	return nil
 }
