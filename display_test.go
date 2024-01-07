@@ -56,7 +56,7 @@ func init() {
     RectFull  = image.Rect(  0,  0, Width, Height)
     RectHalve = image.Rect(Width/4, Height/4, 3*Width/4, 3*Height/4)
     RectQuart = image.Rect(3*Width/8, 3*Height/8, 5*Width/8, 5*Height/8)
-    RectCust  = image.Rect(0, 0, Width/2, Height/2)
+    RectCust  = image.Rect(0, 0, Width/3, Height/3)
 
     srcPoint = image.Pt(0, 0)
 
