@@ -193,7 +193,7 @@ func (dsp *Display) DrawSync(img image.Image) error {
 	// draw.Draw(dsp.staticBuf, dsp.staticBuf.Rect, img, image.Point{}, draw.Src)
 	dsp.staticBuf.dstRect = dsp.staticBuf.Rect
 	// dsp.drawBuffer(dsp.staticBuf)
-	dsp.drawBuffer(dsp.staticBuf.SubImage(img.Bounds()))
+	dsp.drawBuffer(dsp.staticBuf)
 	return nil
 }
 
