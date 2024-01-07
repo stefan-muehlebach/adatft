@@ -2,7 +2,6 @@ package adatft
 
 import (
     "image"
-    //"image/color"
     "image/png"
     "log"
     "math/rand"
@@ -70,31 +69,58 @@ func init() {
     borderWidth = 5.0
 }
 
-// Test-Funktionen.
+// Sync'ed Draw-Funktionen.
 //
-func TestDrawFull(t *testing.T) {
+func TestDrawSyncFull(t *testing.T) {
     gc.SetFillColor(color.Black)
     gc.Clear()
     disp.DrawSync(gc.Image())
     disp.DrawSync(testImage.SubImage(RectFull))
 }
-func TestDrawHalve(t *testing.T) {
+func TestDrawSyncHalve(t *testing.T) {
     gc.SetFillColor(color.Black)
     gc.Clear()
     disp.DrawSync(gc.Image())
     disp.DrawSync(testImage.SubImage(RectHalve))
 }
-func TestDrawQuart(t *testing.T) {
+func TestDrawSyncQuart(t *testing.T) {
     gc.SetFillColor(color.Black)
     gc.Clear()
     disp.DrawSync(gc.Image())
     disp.DrawSync(testImage.SubImage(RectQuart))
 }
-func TestDrawCust(t *testing.T) {
+func TestDrawSyncCust(t *testing.T) {
     gc.SetFillColor(color.Black)
     gc.Clear()
     disp.DrawSync(gc.Image())
     disp.DrawSync(testImage.SubImage(RectCust))
+}
+
+// Async'ed Draw-Funktionen.
+//
+func TestDrawAsyncFull(t *testing.T) {
+    gc.SetFillColor(color.Black)
+    gc.Clear()
+    disp.Draw(gc.Image())
+    disp.Draw(testImage.SubImage(RectFull))
+}
+func TestDrawAsyncHalve(t *testing.T) {
+    gc.SetFillColor(color.Black)
+    gc.Clear()
+    disp.Draw(gc.Image())
+    disp.Draw(testImage.SubImage(RectHalve))
+}
+func TestDrawAsyncQuart(t *testing.T) {
+    gc.SetFillColor(color.Black)
+    gc.Clear()
+    disp.Draw(gc.Image())
+    disp.Draw(testImage.SubImage(RectQuart))
+}
+func TestDrawAsyncCust(t *testing.T) {
+    gc.SetFillColor(color.Black)
+    gc.Clear()
+    disp.Draw(gc.Image())
+    disp.Draw(testImage.SubImage(RectCust))
 }
 
 // Benchmark der Konvertierung von Touchscreen-Koordinaten nach Bildschirm-

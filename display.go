@@ -187,11 +187,7 @@ func (dsp *Display) Bounds() image.Rectangle {
 // zum TFT gesendet wurden. Wichtig: img muss ein image.RGBA-Typ sein!
 func (dsp *Display) DrawSync(img image.Image) error {
 	// log.Printf("DrawSync(): img.Bounds(): %v", img.Bounds())
-	// convert(dsp.staticBuf, img)
 	dsp.staticBuf.Convert(img.(*image.RGBA))
-	// draw.Draw(dsp.staticBuf, dsp.staticBuf.Rect, img, image.Point{}, draw.Src)
-	// dsp.staticBuf.dstRect = dsp.staticBuf.Rect
-	// dsp.drawBuffer(dsp.staticBuf)
 	dsp.drawBuffer(dsp.staticBuf.SubImage(img.Bounds()).(*ILIImage))
 	return nil
 }
@@ -210,16 +206,9 @@ func (dsp *Display) Draw(img image.Image) error {
 
 // Mit dieser Funktion wird ein Bild auf dem TFT angezeigt.
 func (dsp *Display) drawBuffer(img *ILIImage) {
-	// func (dsp *Display) drawBuffer(buf *ILIImage) {
-	// iliImg := img.(*ILIImage)
-	// log.Printf("drawBuffer(): buf.Bounds(): %v", iliImg.Bounds())
-	// log.Printf("drawBuffer(): buf.Rect    : %v", iliImg.Rect)
-
 	t1 := time.Now()
 	start, end := img.Rect.Min, img.Rect.Max
 	numBytes := img.Rect.Dx() * bytesPerPixel
-
-	// log.Printf("from, to, numBytes: %v, %v, %v", start, end, numBytes)
 
 	dsp.dspi.Cmd(ili.ILI9341_CASET)
 	dsp.dspi.Data32(uint32((start.X << 16) | (end.X - 1)))
@@ -244,15 +233,15 @@ func (dsp *Display) drawBuffer(img *ILIImage) {
 // zuständig ist. Sie läuft als Go-Routine und wartet, bis über den Channel
 // bufChan[toDisp] Bilder zur Anzeige eintreffen.
 func (dsp *Display) displayer() {
-	var buf *ILIImage
+	var img *ILIImage
 	var ok bool
 
 	for {
-		if buf, ok = <-dsp.bufChan[toDisp]; !ok {
+		if img, ok = <-dsp.bufChan[toDisp]; !ok {
 			break
 		}
-		dsp.drawBuffer(buf)
-		dsp.bufChan[toConv] <- buf
+		dsp.drawBuffer(img.SubImage(img.Rect).(*ILIImage))
+		dsp.bufChan[toConv] <- img
 	}
 	close(dsp.bufChan[toConv])
 	dsp.quitQ <- true
