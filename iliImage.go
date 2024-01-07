@@ -85,6 +85,7 @@ func (b *ILIImage) PixOffset(x, y int) int {
 // und 'NumConv' ist in dieser Funktion realisiert.
 func (b *ILIImage) Convert(src *image.RGBA) {
 	var stride, srcIdx, srcIdx2, dstIdx, dstIdx2 int
+    var row, col int
 
 	log.Printf("src.Bounds(): %v", src.Bounds())
 	log.Printf("src.Rect    : %v", src.Rect)
@@ -98,14 +99,14 @@ func (b *ILIImage) Convert(src *image.RGBA) {
 	stride = r.Dx() * bytesPerPixel
     log.Printf("r: %v", r)
 
-	for row := r.Min.Y; row < r.Max.Y; row++ {
-		// dstIdx = b.PixOffset(0, row)
+	for row = r.Min.Y; row < r.Max.Y; row++ {
+        col = r.Min.X
 		srcIdx = (row-r.Min.Y)*src.Stride
-		srcIdx2 = src.PixOffset(0, row)
+		srcIdx2 = src.PixOffset(col, row)
 		dstIdx = (row-r.Min.Y)*stride
-        dstIdx2 = b.PixOffset(0, row)
+        dstIdx2 = b.PixOffset(col, row)
         log.Printf("srcIdx, srcIdx2, dstIdx, dstIdx2: %d, %d, %d, %d", srcIdx, srcIdx2, dstIdx, dstIdx2)
-		for col := r.Min.X; col < r.Max.X; col++ {
+		for col = r.Min.X; col < r.Max.X; col++ {
 			b.Pix[dstIdx+0] = src.Pix[srcIdx+2]
 			b.Pix[dstIdx+1] = src.Pix[srcIdx+1]
 			b.Pix[dstIdx+2] = src.Pix[srcIdx+0]
