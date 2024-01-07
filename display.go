@@ -191,9 +191,9 @@ func (dsp *Display) DrawSync(img image.Image) error {
 	convert(dsp.staticBuf, img)
 	// dsp.staticBuf.Convert(img.(*image.RGBA))
 	// draw.Draw(dsp.staticBuf, dsp.staticBuf.Rect, img, image.Point{}, draw.Src)
-	dsp.staticBuf.dstRect = dsp.staticBuf.Rect
+	// dsp.staticBuf.dstRect = dsp.staticBuf.Rect
 	// dsp.drawBuffer(dsp.staticBuf)
-	dsp.drawBuffer(dsp.staticBuf)
+	dsp.drawBuffer(dsp.staticBuf.SubImage(img.Bounds()))
 	return nil
 }
 
