@@ -87,7 +87,9 @@ func (b *ILIImage) Convert(src *image.RGBA) {
 	var stride, srcIdx, srcIdx2, dstIdx, dstIdx2 int
 
 	log.Printf("src.Bounds(): %v", src.Bounds())
-	log.Printf("buf.Bounds(): %v", b.Bounds())
+	log.Printf("src.Rect    : %v", src.Rect)
+	log.Printf("b.Bounds()  : %v", b.Bounds())
+    log.Printf("b.Rect      : %v", b.Rect)
 	t1 := time.Now()
 
 	b.dstRect = src.Bounds()

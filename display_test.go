@@ -24,7 +24,7 @@ var (
     pixBuf *ILIImage
     fWidth, fHeight float64
     testImage *image.RGBA
-    dstRectFull, dstRectHalve, dstRectQuart, dstRectCust image.Rectangle
+    rectFull, rectHalve, rectQuart, rectCust image.Rectangle
     srcPoint image.Point
     gc *gg.Context
     err error
@@ -53,10 +53,10 @@ func init() {
     }
     testImage = tmp.(*image.RGBA)
 
-    dstRectFull  = image.Rect(  0,  0, Width, Height)
-    dstRectHalve = image.Rect(Width/4, Height/4, 3*Width/4, 3*Height/4)
-    dstRectQuart = image.Rect(3*Width/8, 3*Height/8, 5*Width/8, 5*Height/8)
-    dstRectCust  = image.Rect(20, 40, Width-60, Height-80)
+    rectFull  = image.Rect(  0,  0, Width, Height)
+    rectHalve = image.Rect(Width/4, Height/4, 3*Width/4, 3*Height/4)
+    rectQuart = image.Rect(3*Width/8, 3*Height/8, 5*Width/8, 5*Height/8)
+    rectCust  = image.Rect(20, 40, Width-60, Height-80)
 
     srcPoint = image.Pt(0, 0)
 
@@ -89,25 +89,25 @@ func BenchmarkTransformPoint(b *testing.B) {
 // und Cust (siehe auch die Variablen dstRectXXX in der Funktion init()).
 //
 func BenchmarkConvertFull(b *testing.B) {
-    img := testImage.SubImage(dstRectFull).(*image.RGBA)
+    img := testImage.SubImage(rectFull).(*image.RGBA)
     for i := 0; i < b.N; i++ {
         pixBuf.Convert(img)
     }
 }
 func BenchmarkConvertHalve(b *testing.B) {
-    img := testImage.SubImage(dstRectHalve).(*image.RGBA)
+    img := testImage.SubImage(rectHalve).(*image.RGBA)
     for i := 0; i < b.N; i++ {
         pixBuf.Convert(img)
     }
 }
 func BenchmarkConvertQuart(b *testing.B) {
-    img := testImage.SubImage(dstRectQuart).(*image.RGBA)
+    img := testImage.SubImage(rectQuart).(*image.RGBA)
     for i := 0; i < b.N; i++ {
         pixBuf.Convert(img)
     }
 }
 func BenchmarkConvertCust(b *testing.B) {
-    img := testImage.SubImage(dstRectCust).(*image.RGBA)
+    img := testImage.SubImage(rectCust).(*image.RGBA)
     for i := 0; i < b.N; i++ {
         pixBuf.Convert(img)
     }
@@ -124,7 +124,7 @@ func BenchmarkDrawFull(b *testing.B) {
     disp.DrawSync(gc.Image())
     b.ResetTimer()
     for i := 0; i < b.N; i++ {
-        disp.DrawSync(testImage.SubImage(dstRectFull))
+        disp.DrawSync(testImage.SubImage(rectFull))
     }
 }
 func BenchmarkDrawHalve(b *testing.B) {
@@ -133,7 +133,7 @@ func BenchmarkDrawHalve(b *testing.B) {
     disp.DrawSync(gc.Image())
     b.ResetTimer()
     for i := 0; i < b.N; i++ {
-        disp.DrawSync(testImage.SubImage(dstRectHalve))
+        disp.DrawSync(testImage.SubImage(rectHalve))
     }
 }
 func BenchmarkDrawQuart(b *testing.B) {
@@ -142,7 +142,7 @@ func BenchmarkDrawQuart(b *testing.B) {
     disp.DrawSync(gc.Image())
     b.ResetTimer()
     for i := 0; i < b.N; i++ {
-        disp.DrawSync(testImage.SubImage(dstRectQuart))
+        disp.DrawSync(testImage.SubImage(rectQuart))
     }
 }
 func BenchmarkDrawCust(b *testing.B) {
@@ -151,7 +151,7 @@ func BenchmarkDrawCust(b *testing.B) {
     disp.DrawSync(gc.Image())
     b.ResetTimer()
     for i := 0; i < b.N; i++ {
-        disp.DrawSync(testImage.SubImage(dstRectCust))
+        disp.DrawSync(testImage.SubImage(rectCust))
     }
 }
 
