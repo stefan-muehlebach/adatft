@@ -79,9 +79,11 @@ func (b *ILIImage) SubImage(r image.Rectangle) image.Image {
 	}
 }
 
-func convert(dst *ILIImage, src *image.RGBA) {
+func (b *ILIImage) Convert(src *image.RGBA) {
 	var row, col int
 	var srcBaseIdx, srcIdx, dstBaseIdx, dstIdx int
+
+	t1 := time.Now()
 
 	// log.Printf("src.Bounds(): %v", src.Bounds())
 	// log.Printf("src.Rect    : %v", src.Rect)
@@ -91,27 +93,22 @@ func convert(dst *ILIImage, src *image.RGBA) {
     // dst.Rect = src.Rect
 
 	srcBaseIdx = 0
-	dstBaseIdx = src.Rect.Min.Y*dst.Stride + src.Rect.Min.X*bytesPerPixel
+	dstBaseIdx = src.Rect.Min.Y*b.Stride + src.Rect.Min.X*bytesPerPixel
 	for row = src.Rect.Min.Y; row < src.Rect.Max.Y; row++ {
 		srcIdx = srcBaseIdx
 		dstIdx = dstBaseIdx
 
 		for col = src.Rect.Min.X; col < src.Rect.Max.X; col++ {
-			dst.Pix[dstIdx+0] = src.Pix[srcIdx+2]
-			dst.Pix[dstIdx+1] = src.Pix[srcIdx+1]
-			dst.Pix[dstIdx+2] = src.Pix[srcIdx+0]
+			b.Pix[dstIdx+0] = src.Pix[srcIdx+2]
+			b.Pix[dstIdx+1] = src.Pix[srcIdx+1]
+			b.Pix[dstIdx+2] = src.Pix[srcIdx+0]
 			srcIdx += 4
 			dstIdx += bytesPerPixel
 		}
 
 		srcBaseIdx += src.Stride
-		dstBaseIdx += dst.Stride
+		dstBaseIdx += b.Stride
 	}
-}
-
-func (b *ILIImage) Convert(src *image.RGBA) {
-	t1 := time.Now()
-	convert(b, src)
 	ConvTime += time.Since(t1)
 	NumConv++
 }
