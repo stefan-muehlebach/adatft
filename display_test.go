@@ -98,10 +98,12 @@ func TestDrawSyncCust(t *testing.T) {
     gc.Clear()
     disp.DrawSync(gc.Image())
 
-    draw.Draw(workImage, RectHalve, testBild, image.Point{}, draw.Src)
+    rect := RectHalve
+    draw.Draw(workImage, rect, testBild, rect.Min, draw.Src)
     disp.DrawSync(workImage)
 
-    draw.Draw(workImage, RectQuart.Add(image.Point{120, 120}), testBild, image.Point{}, draw.Src)
+    rect = RectQuart.Add(image.Point{100, 100})
+    draw.Draw(workImage, rect, testBild, rect.Min, draw.Src)
     disp.DrawSync(workImage)
 }
 
