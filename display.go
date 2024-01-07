@@ -96,11 +96,9 @@ type BufChanItem struct {
 // Dies ist der Datentyp, welche für die Verbindung zum ILI9341 via SPI
 // steht. Im Wesentlichen handelt es sich dabei um den Filedescriptor auf
 // das Device-File und um die Channels zu den Go-Routinen, welche
-// a) die Konvertierung eines image.RGBA Bildes in ein ILI9341-konformes
+// die Konvertierung eines image.RGBA Bildes in ein ILI9341-konformes
+// Format vornehmen und die Daten via SPI-Bus an den ILI9341 sendet.
 //
-//	Format vornimmt und
-//
-// b) die Daten via SPI-Bus an den ILI9341 sendet.
 type Display struct {
 	dspi         DispInterface
 	bufChan      []chan *BufChanItem
