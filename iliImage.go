@@ -89,7 +89,9 @@ func (b *ILIImage) Convert(src *image.RGBA) {
 	log.Printf("src.Bounds(): %v", src.Bounds())
 	log.Printf("buf.Bounds(): %v", b.Bounds())
 	t1 := time.Now()
+
 	b.dstRect = src.Bounds()
+    b.Rect = src.Bounds()
 	r := src.Bounds()
 	stride = r.Dx() * bytesPerPixel
     log.Printf("r: %v", r)
@@ -97,7 +99,7 @@ func (b *ILIImage) Convert(src *image.RGBA) {
 	for row := r.Min.Y; row < r.Max.Y; row++ {
 		// dstIdx = b.PixOffset(0, row)
 		srcIdx = (row-r.Min.Y)*src.Stride
-		srcIdx2 = src.PixOffset(0, row)
+		srcIdx2 = src.PixOffset(0, row-r.Min.Y)
 		dstIdx = (row-r.Min.Y)*stride
         dstIdx2 = b.PixOffset(0, row-r.Min.Y)
         log.Printf("srcIdx, srcIdx2, dstIdx, dstIdx2: %d, %d, %d, %d", srcIdx, srcIdx2, dstIdx, dstIdx2)
