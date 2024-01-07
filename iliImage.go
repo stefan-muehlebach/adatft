@@ -94,7 +94,7 @@ func (b *ILIImage) Convert(src *image.RGBA) {
 	t1 := time.Now()
 
 	b.dstRect = src.Bounds()
-    b.Rect = src.Bounds()
+    // b.Rect = src.Bounds()
 	r := src.Bounds()
 	stride = r.Dx() * bytesPerPixel
     log.Printf("r: %v", r)
