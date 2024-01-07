@@ -332,7 +332,7 @@ func BenchmarkDrawRectanglesFull(b *testing.B) {
     b.ResetTimer()
     for i := 0; i< b.N; i++ {
         x, y, w, h := fWidth/2*rand.Float64(), fHeight/2*rand.Float64(),
-                fWidth/2*rand.Float64(), fHeight/2*rand.Float64()
+                fWidth*rand.Float64(), fHeight*rand.Float64()
         gc.DrawRectangle(x, y, w, h)
         gc.FillStroke()
         disp.DrawSync(img)
