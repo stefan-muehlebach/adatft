@@ -216,9 +216,11 @@ func (dsp *Display) drawBuffer(buf *ILIImage) {
 
 	t1 := time.Now()
 
-	start := buf.Rect.Min
-	end := buf.Rect.Max
-	numBytes := buf.Rect.Dx() * buf.Rect.Dy() * bytesPerPixel
+	start := buf.dstRect.Min
+	end := buf.dstRect.Max
+	numBytes := buf.dstRect.Dx() * buf.dstRect.Dy() * bytesPerPixel
+
+    log.Printf("from, to, numBytes: %v, %v, %v", start, end, numBytes)
 
 	dsp.dspi.Cmd(ili.ILI9341_CASET)
 	dsp.dspi.Data32(uint32((start.X << 16) | (end.X - 1)))
