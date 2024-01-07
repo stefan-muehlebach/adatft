@@ -1,6 +1,7 @@
 package adatft
 
 import (
+	"image/draw"
 	"image"
 	"image/color"
 	"time"
@@ -100,7 +101,6 @@ func convert(dst *ILIImage, srcImg image.Image) {
 	// log.Printf("dst.Bounds(): %v", dst.Bounds())
 	// log.Printf("dst.Rect    : %v", dst.Rect)
 
-	t1 := time.Now()
 	for row = src.Rect.Min.Y; row < src.Rect.Max.Y; row++ {
 		col = src.Rect.Min.X
 		srcIdx = src.PixOffset(col, row)
@@ -115,12 +115,14 @@ func convert(dst *ILIImage, srcImg image.Image) {
 			dstIdx += bytesPerPixel
 		}
 	}
-	ConvTime += time.Since(t1)
-	NumConv++
 }
 
 func (b *ILIImage) Convert(src image.Image) {
-    convert(b, src)
+	t1 := time.Now()
+    // convert(b, src)
+    draw.Draw(b, b.Rect, src, image.Point{}, draw.Src)
+	ConvTime += time.Since(t1)
+	NumConv++
 }
 
 // Mit dieser Funktion wird ein Bild vom RGBA-Format (image.RGBA) in das
