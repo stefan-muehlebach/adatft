@@ -3,6 +3,7 @@ package adatft
 import (
 	"image"
 	"image/color"
+	"log"
 	"time"
 )
 
@@ -73,43 +74,45 @@ func (b *ILIImage) SubImage(r image.Rectangle) image.Image {
 	}
 	i := b.PixOffset(r.Min.X, r.Min.Y)
 	return &ILIImage{
-		Pix: b.Pix[i:],
+		Pix:    b.Pix[i:],
 		Stride: b.Stride,
 		Rect:   r,
 	}
 }
 
-func (b *ILIImage) Diff(img *ILIImage) (image.Rectangle) {
-    var xMin, xMax, yMin, yMax int
+func (b *ILIImage) Diff(img *ILIImage) image.Rectangle {
+	var xMin, xMax, yMin, yMax int
 
-    xMin, xMax = 0, 0
-    yMin, yMax = 0, 0
-    for y := 0; y < b.Rect.Dy(); y++ {
-        idx := y*b.Stride
-        for i, pix := range b.Pix[idx: idx+b.Stride] {
-            if pix != img.Pix[i] {
-                yMin = y
-                break
-            }
-        }
-    }
-    for y := b.Rect.Dy()-1; y >= 0; y-- {
-        idx := y*b.Stride
-        for i, pix := range b.Pix[idx: idx+b.Stride] {
-            if pix != img.Pix[i] {
-                yMax = y
-                break
-            }
-        }
-    }
+	xMin, xMax = 0, 0
+	yMin, yMax = 0, 0
+	for y := 0; y < b.Rect.Dy(); y++ {
+		idx := y * b.Stride
+		for i, pix := range b.Pix[idx : idx+b.Stride] {
+			// log.Printf("idx, i: %d, %d", idx, i)
+			if pix != img.Pix[i] {
+				yMin = y
+				break
+			}
+		}
+	}
+	for y := b.Rect.Dy() - 1; y >= 0; y-- {
+		idx := y * b.Stride
+		for i, pix := range b.Pix[idx : idx+b.Stride] {
+			log.Printf("idx, i: %d, %d", idx, i)
+			if pix != img.Pix[i] {
+				yMax = y
+				break
+			}
+		}
+	}
 
-    return image.Rect(xMin, yMin, xMax, yMax)
+	return image.Rect(xMin, yMin, xMax, yMax)
 }
 
 func (b *ILIImage) Clear() {
-    for i := range b.Pix {
-        b.Pix[i] = 0x00
-    }
+	for i := range b.Pix {
+		b.Pix[i] = 0x00
+	}
 }
 
 func (b *ILIImage) Convert(src *image.RGBA) {
@@ -123,7 +126,7 @@ func (b *ILIImage) Convert(src *image.RGBA) {
 	// log.Printf("dst.Bounds(): %v", dst.Bounds())
 	// log.Printf("dst.Rect    : %v", dst.Rect)
 
-    // dst.Rect = src.Rect
+	// dst.Rect = src.Rect
 
 	srcBaseIdx = 0
 	dstBaseIdx = src.Rect.Min.Y*b.Stride + src.Rect.Min.X*bytesPerPixel
