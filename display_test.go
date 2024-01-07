@@ -23,7 +23,7 @@ var (
     disp *Display
     pixBuf *ILIImage
     fWidth, fHeight float64
-    testImage *image.RGBA
+    testBild, workImage *image.RGBA
     RectFull, RectHalve, RectQuart, RectCust image.Rectangle
     srcPoint image.Point
     rect image.Rectangle
@@ -52,7 +52,8 @@ func init() {
     if err != nil {
         log.Fatal(err)
     }
-    testImage = tmp.(*image.RGBA)
+    testBild  = tmp.(*image.RGBA)
+    workImage = image.NewRGBA(image.Rect(0, 0, Width, Height))
 
     RectFull  = image.Rect(  0,  0, Width, Height)
     RectHalve = image.Rect(Width/4, Height/4, 3*Width/4, 3*Height/4)
@@ -78,26 +79,30 @@ func TestDrawSyncFull(t *testing.T) {
     gc.SetFillColor(color.Black)
     gc.Clear()
     disp.DrawSync(gc.Image())
-    disp.DrawSync(testImage.SubImage(RectFull))
+    disp.DrawSync(testBild.SubImage(RectFull))
 }
 func TestDrawSyncHalve(t *testing.T) {
     gc.SetFillColor(color.Black)
     gc.Clear()
     disp.DrawSync(gc.Image())
-    disp.DrawSync(testImage.SubImage(RectHalve))
+    disp.DrawSync(testBild.SubImage(RectHalve))
 }
 func TestDrawSyncQuart(t *testing.T) {
     gc.SetFillColor(color.Black)
     gc.Clear()
     disp.DrawSync(gc.Image())
-    disp.DrawSync(testImage.SubImage(RectQuart))
+    disp.DrawSync(testBild.SubImage(RectQuart))
 }
 func TestDrawSyncCust(t *testing.T) {
     gc.SetFillColor(color.Black)
     gc.Clear()
     disp.DrawSync(gc.Image())
-    disp.DrawSync(testImage.SubImage(RectHalve))
-    disp.DrawSync(testImage.SubImage(RectQuart.Add(image.Point{120, 120})))
+
+    draw.Draw(workImage, RectHalve, testBild, image.Point{}, draw.Src)
+    disp.DrawSync(workImage)
+
+    draw.Draw(workImage, RectQuart.Add(image.Point{120, 120}), testBild, image.Point{}, draw.Src)
+    disp.DrawSync(workImage)
 }
 
 // Async'ed Draw-Funktionen.
@@ -106,30 +111,30 @@ func TestDrawAsyncFull(t *testing.T) {
     gc.SetFillColor(color.Black)
     gc.Clear()
     disp.Draw(gc.Image())
-    disp.Draw(testImage.SubImage(RectFull))
+    disp.Draw(testBild.SubImage(RectFull))
     time.Sleep(time.Second)
 }
 func TestDrawAsyncHalve(t *testing.T) {
     gc.SetFillColor(color.Black)
     gc.Clear()
     disp.Draw(gc.Image())
-    disp.Draw(testImage.SubImage(RectHalve))
+    disp.Draw(testBild.SubImage(RectHalve))
     time.Sleep(time.Second)
 }
 func TestDrawAsyncQuart(t *testing.T) {
     gc.SetFillColor(color.Black)
     gc.Clear()
     disp.Draw(gc.Image())
-    disp.Draw(testImage.SubImage(RectQuart))
+    disp.Draw(testBild.SubImage(RectQuart))
     time.Sleep(time.Second)
 }
 func TestDrawAsyncCust(t *testing.T) {
     gc.SetFillColor(color.Black)
     gc.Clear()
     disp.Draw(gc.Image())
-    disp.Draw(testImage.SubImage(RectCust))
-    disp.Draw(testImage.SubImage(RectCust.Add(image.Pt(120,60))))
-    disp.Draw(testImage.SubImage(RectCust.Add(image.Pt(200,150))))
+    disp.Draw(testBild.SubImage(RectCust))
+    disp.Draw(testBild.SubImage(RectCust.Add(image.Pt(120,60))))
+    disp.Draw(testBild.SubImage(RectCust.Add(image.Pt(200,150))))
     time.Sleep(time.Second)
 }
 
@@ -137,8 +142,8 @@ func TestImageDiff(t *testing.T) {
     imageA := NewILIImage(image.Rect(0, 0, Width, Height))
     imageB := NewILIImage(image.Rect(0, 0, Width, Height))
 
-    imageA.Convert(testImage)
-    imageB.Convert(testImage)
+    imageA.Convert(testBild)
+    imageB.Convert(testBild)
 
     rect := imageA.Diff(imageB)
     log.Printf("difference rectangle: %v", rect)
@@ -151,7 +156,7 @@ func TestImageDiff(t *testing.T) {
     rect = imageA.Diff(imageB)
     log.Printf("difference rectangle: %v", rect)
 
-    imageB.Convert(testImage)
+    imageB.Convert(testBild)
     imageB.Set(100, 100, colornames.Navy)
     imageB.Set(100, 210, colornames.Navy)
     rect = imageA.Diff(imageB)
@@ -163,8 +168,8 @@ func BenchmarkDiffFull(b *testing.B) {
     imageA := NewILIImage(image.Rect(0, 0, Width, Height))
     imageB := NewILIImage(image.Rect(0, 0, Width, Height))
 
-    imageA.Convert(testImage)
-    imageB.Convert(testImage)
+    imageA.Convert(testBild)
+    imageB.Convert(testBild)
 
     b.ResetTimer()
     for i:=0; i<b.N; i++ {
@@ -175,8 +180,8 @@ func BenchmarkDiffHalve(b *testing.B) {
     imageA := NewILIImage(image.Rect(0, 0, Width, Height))
     imageB := NewILIImage(image.Rect(0, 0, Width, Height))
 
-    imageA.Convert(testImage)
-    imageB.Convert(testImage)
+    imageA.Convert(testBild)
+    imageB.Convert(testBild)
 
     imageB.Set(Width/4, Height/4, colornames.Navy)
     imageB.Set(3*Width/4, 3*Height/4, colornames.Navy)
@@ -206,25 +211,25 @@ func BenchmarkTransformPoint(b *testing.B) {
 // und Cust (siehe auch die Variablen dstRectXXX in der Funktion init()).
 //
 func BenchmarkConvertFull(b *testing.B) {
-    img := testImage.SubImage(RectFull).(*image.RGBA)
+    img := testBild.SubImage(RectFull).(*image.RGBA)
     for i := 0; i < b.N; i++ {
         pixBuf.Convert(img)
     }
 }
 func BenchmarkConvertHalve(b *testing.B) {
-    img := testImage.SubImage(RectHalve).(*image.RGBA)
+    img := testBild.SubImage(RectHalve).(*image.RGBA)
     for i := 0; i < b.N; i++ {
         pixBuf.Convert(img)
     }
 }
 func BenchmarkConvertQuart(b *testing.B) {
-    img := testImage.SubImage(RectQuart).(*image.RGBA)
+    img := testBild.SubImage(RectQuart).(*image.RGBA)
     for i := 0; i < b.N; i++ {
         pixBuf.Convert(img)
     }
 }
 func BenchmarkConvertCust(b *testing.B) {
-    img := testImage.SubImage(RectCust).(*image.RGBA)
+    img := testBild.SubImage(RectCust).(*image.RGBA)
     for i := 0; i < b.N; i++ {
         pixBuf.Convert(img)
     }
@@ -241,7 +246,7 @@ func BenchmarkDrawFull(b *testing.B) {
     disp.DrawSync(gc.Image())
     b.ResetTimer()
     for i := 0; i < b.N; i++ {
-        disp.DrawSync(testImage.SubImage(RectFull))
+        disp.DrawSync(testBild.SubImage(RectFull))
     }
 }
 func BenchmarkDrawHalve(b *testing.B) {
@@ -250,7 +255,7 @@ func BenchmarkDrawHalve(b *testing.B) {
     disp.DrawSync(gc.Image())
     b.ResetTimer()
     for i := 0; i < b.N; i++ {
-        disp.DrawSync(testImage.SubImage(RectHalve))
+        disp.DrawSync(testBild.SubImage(RectHalve))
     }
 }
 func BenchmarkDrawQuart(b *testing.B) {
@@ -259,7 +264,7 @@ func BenchmarkDrawQuart(b *testing.B) {
     disp.DrawSync(gc.Image())
     b.ResetTimer()
     for i := 0; i < b.N; i++ {
-        disp.DrawSync(testImage.SubImage(RectQuart))
+        disp.DrawSync(testBild.SubImage(RectQuart))
     }
 }
 func BenchmarkDrawCust(b *testing.B) {
@@ -268,7 +273,7 @@ func BenchmarkDrawCust(b *testing.B) {
     disp.DrawSync(gc.Image())
     b.ResetTimer()
     for i := 0; i < b.N; i++ {
-        disp.DrawSync(testImage.SubImage(RectCust))
+        disp.DrawSync(testBild.SubImage(RectCust))
     }
 }
 
@@ -327,7 +332,7 @@ func BenchmarkDrawImageGG(b *testing.B) {
     disp.DrawSync(gc.Image())
     b.ResetTimer()
     for i := 0; i< b.N; i++ {
-        gc.DrawImage(testImage, 0, 0)
+        gc.DrawImage(testBild, 0, 0)
     }
     b.StopTimer()
     disp.DrawSync(gc.Image())
@@ -339,7 +344,7 @@ func BenchmarkDrawImageGo(b *testing.B) {
     disp.DrawSync(gc.Image())
     b.ResetTimer()
     for i := 0; i< b.N; i++ {
-        draw.Draw(out, out.Bounds(), testImage, image.Point{0, 0}, draw.Src)
+        draw.Draw(out, out.Bounds(), testBild, image.Point{0, 0}, draw.Src)
     }
     b.StopTimer()
     disp.DrawSync(gc.Image())
@@ -351,7 +356,7 @@ func BenchmarkCopyImageGo(b *testing.B) {
     disp.DrawSync(gc.Image())
     b.ResetTimer()
     for i := 0; i< b.N; i++ {
-        draw.Copy(out, image.Point{0, 0}, testImage, testImage.Bounds(), draw.Src, nil)
+        draw.Copy(out, image.Point{0, 0}, testBild, testBild.Bounds(), draw.Src, nil)
     }
     b.StopTimer()
     disp.DrawSync(gc.Image())
