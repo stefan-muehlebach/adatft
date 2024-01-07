@@ -97,7 +97,8 @@ func (b *ILIImage) SubImage(r image.Rectangle) image.Image {
 // image/draw) durchzuführen. Die Zeitmessung über die Variablen 'ConvTime'
 // und 'NumConv' ist in dieser Funktion realisiert.
 func (b *ILIImage) Convert(src *image.RGBA) {
-	var stride, srcIdx, dstIdx, dstIdx2 int
+	// var stride int
+    var srcIdx, dstIdx int
     var row, col int
     var dst *ILIImage
 
@@ -112,16 +113,16 @@ func (b *ILIImage) Convert(src *image.RGBA) {
 	b.dstRect = src.Bounds()
     // b.Rect = src.Bounds()
 	r := src.Bounds()
-	stride = r.Dx() * bytesPerPixel
+	// stride = r.Dx() * bytesPerPixel
     log.Printf("r: %v", r)
 
 	for row = r.Min.Y; row < r.Max.Y; row++ {
         col = r.Min.X
 		// srcIdx = (row-r.Min.Y)*src.Stride
 		srcIdx = src.PixOffset(col, row)
-		dstIdx = (row-r.Min.Y)*stride
-        dstIdx2 = dst.PixOffset(col, row)
-        log.Printf("srcIdx, dstIdx, dstIdx2: %6d, %6d, %6d", srcIdx, dstIdx, dstIdx2)
+		// dstIdx = (row-r.Min.Y)*stride
+        dstIdx = dst.PixOffset(col, row)
+        log.Printf("srcIdx, dstIdx: %6d, %6d", srcIdx, dstIdx)
 		for col = r.Min.X; col < r.Max.X; col++ {
 			dst.Pix[dstIdx+0] = src.Pix[srcIdx+2]
 			dst.Pix[dstIdx+1] = src.Pix[srcIdx+1]
