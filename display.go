@@ -221,9 +221,12 @@ func (dsp *Display) Bounds() image.Rectangle {
 func (dsp *Display) DrawSync(img image.Image) error {
 	// log.Printf("DrawSync(): img.Bounds(): %v", img.Bounds())
 	dsp.staticImg[0].Convert(img.(*image.RGBA))
-	clipRect := dsp.staticImg[0].Diff(dsp.staticImg[1])
-	log.Printf("DrawSync(): clipRect: %v", clipRect)
-	dsp.drawBuffer(dsp.staticImg[0].SubImage(clipRect).(*ILIImage))
+	rect := dsp.staticImg[0].Diff(dsp.staticImg[1])
+    if rect.Empty() {
+        rect = img.Bounds()
+    }
+	log.Printf("DrawSync(): rect: %v", rect)
+	dsp.drawBuffer(dsp.staticImg[0].SubImage(rect).(*ILIImage))
 	dsp.staticImg[0], dsp.staticImg[1] = dsp.staticImg[1], dsp.staticImg[0]
 	return nil
 }
