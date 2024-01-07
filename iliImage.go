@@ -130,7 +130,8 @@ Loop4:
 		}
 	}
 
-	return image.Rectangle{image.Point{xMin, yMin}, image.Point{xMax, yMax}}
+	rect := image.Rectangle{image.Point{xMin, yMin}, image.Point{xMax, yMax}}
+    return rect.Intersect(b.Rect)
 }
 
 func (b *ILIImage) Clear() {
