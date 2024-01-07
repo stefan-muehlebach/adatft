@@ -87,6 +87,11 @@ var (
 	}
 )
 
+type BufChanItem struct {
+    img *ILIImage
+    rect image.Rectangle
+}
+
 // Dies ist der Datentyp, welche für die Verbindung zum ILI9341 via SPI
 // steht. Im Wesentlichen handelt es sich dabei um den Filedescriptor auf
 // das Device-File und um die Channels zu den Go-Routinen, welche
@@ -97,7 +102,8 @@ var (
 // b) die Daten via SPI-Bus an den ILI9341 sendet.
 type Display struct {
 	dspi      DispInterface
-	bufChan   []chan *ILIImage
+	// bufChan   []chan *ILIImage
+    bufChan   []chan *BufChanItem
 	staticBuf *ILIImage
 	quitQ     chan bool
 }
@@ -161,22 +167,44 @@ func (dsp *Display) Close() {
 // und Anzeige auf und retourniert einen Channel, auf welchem die Pointer
 // auf die RGBA-Images zur Anzeige gesendet werden.
 func (dsp *Display) InitChannels() {
-	var buf *ILIImage
+	var bufItem *BufChanItem
+    var rect image.Rectangle
 
-	dsp.bufChan = make([]chan *ILIImage, 2)
+	dsp.bufChan = make([]chan *BufChanItem, 2)
 	for i := 0; i < len(dsp.bufChan); i++ {
-		dsp.bufChan[i] = make(chan *ILIImage, numBuffers+1)
+		dsp.bufChan[i] = make(chan *BufChanItem, numBuffers+1)
 	}
 
+    rect = image.Rect(0, 0, Width, Height)
 	for i := 0; i < numBuffers; i++ {
-		buf = NewILIImage(image.Rect(0, 0, Width, Height))
-		dsp.bufChan[toConv] <- buf
+        bufItem = &BufChanItem{}
+
+        bufItem.img = NewILIImage(rect)
+        bufItem.rect = rect
+		dsp.bufChan[toConv] <- bufItem
 	}
 	dsp.staticBuf = NewILIImage(image.Rect(0, 0, Width, Height))
 
 	dsp.quitQ = make(chan bool)
 	go dsp.displayer()
 }
+// func (dsp *Display) InitChannels() {
+// 	var buf *ILIImage
+
+// 	dsp.bufChan = make([]chan *ILIImage, 2)
+// 	for i := 0; i < len(dsp.bufChan); i++ {
+// 		dsp.bufChan[i] = make(chan *ILIImage, numBuffers+1)
+// 	}
+
+// 	for i := 0; i < numBuffers; i++ {
+// 		buf = NewILIImage(image.Rect(0, 0, Width, Height))
+// 		dsp.bufChan[toConv] <- buf
+// 	}
+// 	dsp.staticBuf = NewILIImage(image.Rect(0, 0, Width, Height))
+
+// 	dsp.quitQ = make(chan bool)
+// 	go dsp.displayer()
+// }
 
 func (dsp *Display) Bounds() image.Rectangle {
 	return image.Rect(0, 0, Width, Height)
@@ -196,12 +224,12 @@ func (dsp *Display) DrawSync(img image.Image) error {
 // erfolgt asynchron, d.h. die Methode wartet nur, bis das Bild konvertiert
 // wurde. Wichtig: img muss ein image.RGBA-Typ sein!
 func (dsp *Display) Draw(img image.Image) error {
-	var buf *ILIImage
+	var bufItem *BufChanItem
 
-	buf = <-dsp.bufChan[toConv]
-	buf.Convert(img.(*image.RGBA))
-    buf.Rect = img.Bounds()
-	dsp.bufChan[toDisp] <- buf
+	bufItem = <-dsp.bufChan[toConv]
+	bufItem.img.Convert(img.(*image.RGBA))
+    bufItem.rect = img.Bounds()
+	dsp.bufChan[toDisp] <- bufItem
 	return nil
 }
 
@@ -234,15 +262,15 @@ func (dsp *Display) drawBuffer(img *ILIImage) {
 // zuständig ist. Sie läuft als Go-Routine und wartet, bis über den Channel
 // bufChan[toDisp] Bilder zur Anzeige eintreffen.
 func (dsp *Display) displayer() {
-	var img *ILIImage
+	var bufItem *BufChanItem
 	var ok bool
 
 	for {
-		if img, ok = <-dsp.bufChan[toDisp]; !ok {
+		if bufItem, ok = <-dsp.bufChan[toDisp]; !ok {
 			break
 		}
-		dsp.drawBuffer(img.SubImage(img.Rect).(*ILIImage))
-		dsp.bufChan[toConv] <- img
+		dsp.drawBuffer(bufItem.img.SubImage(bufItem.rect).(*ILIImage))
+		dsp.bufChan[toConv] <- bufItem
 	}
 	close(dsp.bufChan[toConv])
 	dsp.quitQ <- true
