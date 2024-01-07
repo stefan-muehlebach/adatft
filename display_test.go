@@ -132,6 +132,17 @@ func TestDrawAsyncCust(t *testing.T) {
     time.Sleep(time.Second)
 }
 
+func TestImageDiff(t *testing.T) {
+    imageA := NewILIImage(image.Rect(0, 0, Width, Height))
+    imageB := NewILIImage(image.Rect(0, 0, Width, Height))
+
+    imageA.Convert(testImage)
+    imageB.Convert(testImage)
+
+    rect := imageA.Diff(imageB)
+    log.Printf("difference rectangle: %v", rect)
+}
+
 // Benchmark der Konvertierung von Touchscreen-Koordinaten nach Bildschirm-
 // Koordinaten. TO DO: ev. sollte die Erzeugung der Touchscreen-Koordinaten
 // aus der Zeitmessung entfernt werden.
