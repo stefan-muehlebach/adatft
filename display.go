@@ -242,6 +242,10 @@ func (dsp *Display) Draw(img image.Image) error {
 	bufItem.img.Convert(img.(*image.RGBA))
 	if dsp.lastImg != nil {
 		bufItem.rect = bufItem.img.Diff(dsp.lastImg)
+        if bufItem.rect.Empty() {
+            dsp.bufChan[toConv] <- bufItem
+            return nil
+        }
 	} else {
 		bufItem.rect = img.Bounds()
 	}
