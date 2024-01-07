@@ -11,7 +11,7 @@ import (
 
 type ChannelDir int
 
-// Konstanten, die bei diesem Display halt einfach so sind wie sie sind...
+// Konstanten, die bei diesem Display halt einfach so sind wie sie sind.
 const (
 	toConv ChannelDir = iota
 	toDisp
