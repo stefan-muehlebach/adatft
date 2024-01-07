@@ -26,6 +26,7 @@ var (
     testImage *image.RGBA
     RectFull, RectHalve, RectQuart, RectCust image.Rectangle
     srcPoint image.Point
+    rect image.Rectangle
     gc *gg.Context
     err error
     plane *DistortedPlane
@@ -59,6 +60,7 @@ func init() {
     RectCust  = image.Rect(0, 0, Width/3, Height/3)
 
     srcPoint = image.Pt(0, 0)
+    rect = image.Rectangle{}
 
     plane = &DistortedPlane{}
     plane.ReadConfig()
@@ -141,6 +143,17 @@ func TestImageDiff(t *testing.T) {
 
     rect := imageA.Diff(imageB)
     log.Printf("difference rectangle: %v", rect)
+}
+func BenchmarkImageDiff(b *testing.B) {
+    imageA := NewILIImage(image.Rect(0, 0, Width, Height))
+    imageB := NewILIImage(image.Rect(0, 0, Width, Height))
+
+    imageA.Convert(testImage)
+    imageB.Convert(testImage)
+
+    for i:=0; i<b.N; i++ {
+        rect = imageA.Diff(imageB)
+    }
 }
 
 // Benchmark der Konvertierung von Touchscreen-Koordinaten nach Bildschirm-
