@@ -70,6 +70,15 @@ func init() {
     borderWidth = 5.0
 }
 
+// Test-Funktionen.
+//
+func TestDrawQuart(t *testing.T) {
+    gc.SetFillColor(color.Black)
+    gc.Clear()
+    disp.DrawSync(gc.Image())
+    disp.DrawSync(testImage.SubImage(rectQuart))
+}
+
 // Benchmark der Konvertierung von Touchscreen-Koordinaten nach Bildschirm-
 // Koordinaten. TO DO: ev. sollte die Erzeugung der Touchscreen-Koordinaten
 // aus der Zeitmessung entfernt werden.
