@@ -89,12 +89,10 @@ func (b *ILIImage) SubImage(r image.Rectangle) image.Image {
 //     }
 // }
 
-func convert(dst *ILIImage, srcImg image.Image) {
-	var src *image.RGBA
+func convert(dst *ILIImage, src *image.RGBA) {
 	var row, col int
 	var srcBaseIdx, srcIdx, dstBaseIdx, dstIdx int
 
-	src = srcImg.(*image.RGBA)
 	// log.Printf("src.Bounds(): %v", src.Bounds())
 	// log.Printf("src.Rect    : %v", src.Rect)
 	// log.Printf("dst.Bounds(): %v", dst.Bounds())
@@ -126,7 +124,7 @@ func convert(dst *ILIImage, srcImg image.Image) {
 	}
 }
 
-func (b *ILIImage) Convert(src image.Image) {
+func (b *ILIImage) Convert(src *image.RGBA) {
 	t1 := time.Now()
 	convert(b, src)
 	// draw.Draw(b, b.Rect, src, image.Point{}, draw.Src)
