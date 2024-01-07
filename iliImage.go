@@ -3,7 +3,6 @@ package adatft
 import (
 	"image"
 	"image/color"
-	"log"
 	"time"
 )
 
@@ -71,17 +70,17 @@ func (b *ILIImage) PixOffset(x, y int) int {
 }
 
 func (b *ILIImage) SubImage(r image.Rectangle) image.Image {
-    r = r.Intersect(b.Rect)
-    if r.Empty() {
-        return &ILIImage{}
-    }
-    i := b.PixOffset(r.Min.X, r.Min.Y)
-    return &ILIImage{
-        Pix:    b.Pix[i:],
-        // Stride: r.Dx() * bytesPerPixel,
-        Stride: b.Stride,
-        Rect:   r,
-    }
+	r = r.Intersect(b.Rect)
+	if r.Empty() {
+		return &ILIImage{}
+	}
+	i := b.PixOffset(r.Min.X, r.Min.Y)
+	return &ILIImage{
+		Pix: b.Pix[i:],
+		// Stride: r.Dx() * bytesPerPixel,
+		Stride: b.Stride,
+		Rect:   r,
+	}
 }
 
 // func (b *Buffer) Clear() {
@@ -91,23 +90,23 @@ func (b *ILIImage) SubImage(r image.Rectangle) image.Image {
 // }
 
 func convert(dst *ILIImage, srcImg image.Image) {
-    var src *image.RGBA
-    var row, col int
-    var srcIdx, dstIdx int
+	var src *image.RGBA
+	var row, col int
+	var srcIdx, dstIdx int
 
-    src = srcImg.(*image.RGBA)
-	log.Printf("src.Bounds(): %v", src.Bounds())
-	log.Printf("src.Rect    : %v", src.Rect)
-	log.Printf("dst.Bounds(): %v", dst.Bounds())
-    log.Printf("dst.Rect    : %v", dst.Rect)
+	src = srcImg.(*image.RGBA)
+	// log.Printf("src.Bounds(): %v", src.Bounds())
+	// log.Printf("src.Rect    : %v", src.Rect)
+	// log.Printf("dst.Bounds(): %v", dst.Bounds())
+	// log.Printf("dst.Rect    : %v", dst.Rect)
 
 	t1 := time.Now()
-    for row = src.Rect.Min.Y; row < src.Rect.Max.Y; row++ {
-        col = src.Rect.Min.X
-   		srcIdx = src.PixOffset(col, row)
-        dstIdx = dst.PixOffset(col, row)
-        log.Printf("col, row      : %3d, %3d", col, row)
-        log.Printf("srcIdx, dstIdx: %6d, %6d", srcIdx, dstIdx)
+	for row = src.Rect.Min.Y; row < src.Rect.Max.Y; row++ {
+		col = src.Rect.Min.X
+		srcIdx = src.PixOffset(col, row)
+		dstIdx = dst.PixOffset(col, row)
+		// log.Printf("col, row      : %3d, %3d", col, row)
+		// log.Printf("srcIdx, dstIdx: %6d, %6d", srcIdx, dstIdx)
 		for col = src.Rect.Min.X; col < src.Rect.Max.X; col++ {
 			dst.Pix[dstIdx+0] = src.Pix[srcIdx+2]
 			dst.Pix[dstIdx+1] = src.Pix[srcIdx+1]
@@ -129,31 +128,31 @@ func convert(dst *ILIImage, srcImg image.Image) {
 // und 'NumConv' ist in dieser Funktion realisiert.
 func (b *ILIImage) Convert(src *image.RGBA) {
 	// var stride int
-    var srcIdx, dstIdx int
-    var row, col int
-    // var dst *ILIImage
+	var srcIdx, dstIdx int
+	var row, col int
+	// var dst *ILIImage
 
-    // dst = b.SubImage(src.Rect).(*ILIImage)
+	// dst = b.SubImage(src.Rect).(*ILIImage)
 
-	log.Printf("src.Bounds(): %v", src.Bounds())
-	log.Printf("src.Rect    : %v", src.Rect)
-	log.Printf("b.Bounds()  : %v", b.Bounds())
-    log.Printf("b.Rect      : %v", b.Rect)
+	// log.Printf("src.Bounds(): %v", src.Bounds())
+	// log.Printf("src.Rect    : %v", src.Rect)
+	// log.Printf("b.Bounds()  : %v", b.Bounds())
+	// log.Printf("b.Rect      : %v", b.Rect)
 	t1 := time.Now()
 
 	b.dstRect = src.Bounds()
-    // b.Rect = src.Bounds()
+	// b.Rect = src.Bounds()
 	r := src.Bounds()
 	// stride = r.Dx() * bytesPerPixel
-    log.Printf("r: %v", r)
+	// log.Printf("r: %v", r)
 
 	for row = r.Min.Y; row < r.Max.Y; row++ {
-        col = r.Min.X
+		col = r.Min.X
 		// srcIdx = (row-r.Min.Y)*src.Stride
 		srcIdx = src.PixOffset(col, row)
 		// dstIdx = (row-r.Min.Y)*stride
-        dstIdx = b.PixOffset(col, row)
-        log.Printf("srcIdx, dstIdx: %6d, %6d", srcIdx, dstIdx)
+		dstIdx = b.PixOffset(col, row)
+		// log.Printf("srcIdx, dstIdx: %6d, %6d", srcIdx, dstIdx)
 		for col = r.Min.X; col < r.Max.X; col++ {
 			b.Pix[dstIdx+0] = src.Pix[srcIdx+2]
 			b.Pix[dstIdx+1] = src.Pix[srcIdx+1]

@@ -3,7 +3,6 @@ package adatft
 import (
 	"errors"
 	"image"
-	"log"
 	"time"
 
 	ili "github.com/stefan-muehlebach/adatft/ili9341"
@@ -187,7 +186,7 @@ func (dsp *Display) Bounds() image.Rectangle {
 // erfolgt synchron, d.h. die Methode wartet so lange, bis alle Bilddaten
 // zum TFT gesendet wurden. Wichtig: img muss ein image.RGBA-Typ sein!
 func (dsp *Display) DrawSync(img image.Image) error {
-	log.Printf("DrawSync(): img.Bounds(): %v", img.Bounds())
+	// log.Printf("DrawSync(): img.Bounds(): %v", img.Bounds())
 	convert(dsp.staticBuf, img)
 	// dsp.staticBuf.Convert(img.(*image.RGBA))
 	// draw.Draw(dsp.staticBuf, dsp.staticBuf.Rect, img, image.Point{}, draw.Src)
@@ -213,8 +212,8 @@ func (dsp *Display) Draw(img image.Image) error {
 func (dsp *Display) drawBuffer(img image.Image) {
 	// func (dsp *Display) drawBuffer(buf *ILIImage) {
 	iliImg := img.(*ILIImage)
-	log.Printf("drawBuffer(): buf.Bounds(): %v", iliImg.Bounds())
-	log.Printf("drawBuffer(): buf.Rect    : %v", iliImg.Rect)
+	// log.Printf("drawBuffer(): buf.Bounds(): %v", iliImg.Bounds())
+	// log.Printf("drawBuffer(): buf.Rect    : %v", iliImg.Rect)
 
 	t1 := time.Now()
 
@@ -222,7 +221,7 @@ func (dsp *Display) drawBuffer(img image.Image) {
 	end := iliImg.Rect.Max
 	numBytes := iliImg.Rect.Dx() * bytesPerPixel
 
-	log.Printf("from, to, numBytes: %v, %v, %v", start, end, numBytes)
+	// log.Printf("from, to, numBytes: %v, %v, %v", start, end, numBytes)
 
 	dsp.dspi.Cmd(ili.ILI9341_CASET)
 	dsp.dspi.Data32(uint32((start.X << 16) | (end.X - 1)))
@@ -230,10 +229,10 @@ func (dsp *Display) drawBuffer(img image.Image) {
 	dsp.dspi.Data32(uint32((start.Y << 16) | (end.Y - 1)))
 	dsp.dspi.Cmd(ili.ILI9341_RAMWR)
 
-    for y := start.Y; y < end.Y; y++ {
-    	idx := iliImg.PixOffset(start.X, y)
-	    dsp.dspi.DataArray(iliImg.Pix[idx : idx+numBytes])
-    }
+	for y := start.Y; y < end.Y; y++ {
+		idx := iliImg.PixOffset(start.X, y)
+		dsp.dspi.DataArray(iliImg.Pix[idx : idx+numBytes])
+	}
 	DispTime += time.Since(t1)
 	NumDisp++
 }
