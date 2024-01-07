@@ -188,7 +188,6 @@ func BenchmarkDiffHalve(b *testing.B) {
     }
 }
 
-
 // Benchmark der Konvertierung von Touchscreen-Koordinaten nach Bildschirm-
 // Koordinaten. TO DO: ev. sollte die Erzeugung der Touchscreen-Koordinaten
 // aus der Zeitmessung entfernt werden.
@@ -274,50 +273,10 @@ func BenchmarkDrawCust(b *testing.B) {
     }
 }
 
-// Misst die Zeit für das Zeichnen von zufälligen Rechtecken. Damit wird im
-// Wesentlichen die Performance der Zeichenoperationen in gg gemessen
-// TO DO: Ev. sollten diese Benchmarks in das Package gg verschoben werden.
-//
-func BenchmarkDrawRectangle(b *testing.B) {
-    gc.Clear()
-    disp.DrawSync(gc.Image())
-    b.ResetTimer()
-    for i := 0; i< b.N; i++ {
-        x, y, w, h := fWidth/2*rand.Float64(), fHeight/2*rand.Float64(),
-                fWidth/2*rand.Float64(), fHeight/2*rand.Float64()
-        gc.DrawRectangle(x, y, w, h)
-        gc.SetStrokeWidth(2.0)
-        gc.SetFillColor(fillColor)
-        gc.SetStrokeColor(borderColor)
-        gc.FillStroke()
-    }
-    b.StopTimer()
-    disp.DrawSync(gc.Image())
-}
-
-func BenchmarkDrawRectangleClipped(b *testing.B) {
-    gc.Clear()
-    disp.DrawSync(gc.Image())
-    b.ResetTimer()
-    for i := 0; i< b.N; i++ {
-        x, y, w, h := fWidth/2*rand.Float64(), fHeight/2*rand.Float64(),
-                fWidth/2*rand.Float64(), fHeight/2*rand.Float64()
-        gc.DrawRectangle(x, y, w, h)
-        gc.ClipPreserve()
-        gc.SetStrokeWidth(2.0)
-        gc.SetFillColor(fillColor)
-        gc.SetStrokeColor(borderColor)
-        gc.FillStroke()
-        gc.ResetClip()
-    }
-    b.StopTimer()
-    disp.DrawSync(gc.Image())
-}
-
 // Zeichnet eine Anzahl zufälliger Rechtecke und aktualisiert nach jedem
 // Rechteck den gesamten Bildschirm.
 //
-func BenchmarkDrawRectanglesFull(b *testing.B) {
+func BenchmarkDrawRectangles(b *testing.B) {
     var img *image.RGBA
 
     img = gc.Image().(*image.RGBA)
@@ -342,7 +301,7 @@ func BenchmarkDrawRectanglesFull(b *testing.B) {
 // Zeichnet eine Anzahl zufälliger Rechtecke und aktualisiert nach jedem
 // Rechteck den gesamten Bildschirm.
 //
-func BenchmarkDrawCirclesFull(b *testing.B) {
+func BenchmarkDrawCircles(b *testing.B) {
     var img *image.RGBA
 
     img = gc.Image().(*image.RGBA)
@@ -362,42 +321,6 @@ func BenchmarkDrawCirclesFull(b *testing.B) {
         gc.FillStroke()
         disp.DrawSync(img)
     }
-}
-
-func BenchmarkDrawCircle(b *testing.B) {
-    gc.Clear()
-    disp.DrawSync(gc.Image())
-    b.ResetTimer()
-    for i := 0; i< b.N; i++ {
-        x, y, r := fWidth*rand.Float64(), fHeight*rand.Float64(),
-                20.0+40.0*rand.Float64()
-        gc.DrawCircle(x, y, r)
-        gc.SetStrokeWidth(2.0)
-        gc.SetFillColor(fillColor)
-        gc.SetStrokeColor(borderColor)
-        gc.FillStroke()
-    }
-    b.StopTimer()
-    disp.DrawSync(gc.Image())
-}
-
-func BenchmarkDrawCircleClipped(b *testing.B) {
-    gc.Clear()
-    disp.DrawSync(gc.Image())
-    b.ResetTimer()
-    for i := 0; i< b.N; i++ {
-        x, y, r := fWidth*rand.Float64(), fHeight*rand.Float64(),
-                20.0+40.0*rand.Float64()
-        gc.DrawCircle(x, y, r)
-        gc.ClipPreserve()
-        gc.SetStrokeWidth(2.0)
-        gc.SetFillColor(fillColor)
-        gc.SetStrokeColor(borderColor)
-        gc.FillStroke()
-        gc.ResetClip()
-    }
-    b.StopTimer()
-    disp.DrawSync(gc.Image())
 }
 
 func BenchmarkDrawImageGG(b *testing.B) {
