@@ -140,14 +140,12 @@ func OpenDisplay(rot RotationType) *Display {
 
 	Width = rotDat[rot].width
 	Height = rotDat[rot].height
-
 	calibDataFile = rotDat[rot].calibDataFile
 
 	dsp = &Display{}
 	dsp.dspi = ili.Open(dspSpeedHz)
 	dsp.dspi.Init([]any{false, rotDat[rot].iliParam})
 
-	// dsp.InitDisplay(rot)
 	dsp.InitChannels()
 
 	return dsp

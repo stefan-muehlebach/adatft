@@ -7,7 +7,6 @@ import (
     "math"
     "os"
     "path/filepath"
-    //. "github.com/stefan-muehlebach/adatft/ili9341"
 )
 
 var (
