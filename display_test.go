@@ -96,9 +96,7 @@ func TestDrawSyncCust(t *testing.T) {
     gc.SetFillColor(color.Black)
     gc.Clear()
     disp.DrawSync(gc.Image())
-    disp.DrawSync(testImage.SubImage(RectCust))
-    // disp.DrawSync(testImage.SubImage(RectCust.Add(image.Pt(120,60))))
-//    disp.DrawSync(testImage.SubImage(RectCust.Add(image.Pt(200,150))))
+    disp.DrawSync(testImage.SubImage(RectHalve))
 }
 
 // Async'ed Draw-Funktionen.

@@ -3,6 +3,7 @@ package adatft
 import (
 	"errors"
 	"image"
+	"log"
 	"time"
 
 	ili "github.com/stefan-muehlebach/adatft/ili9341"
@@ -184,7 +185,7 @@ func (dsp *Display) InitChannels() {
 	dsp.staticImg = make([]*ILIImage, 2)
 	dsp.staticImg[0] = NewILIImage(image.Rect(0, 0, Width, Height))
 	dsp.staticImg[1] = NewILIImage(image.Rect(0, 0, Width, Height))
-    dsp.staticImgIdx = 0
+	dsp.staticImgIdx = 0
 
 	dsp.lastImg = nil
 
@@ -221,8 +222,9 @@ func (dsp *Display) DrawSync(img image.Image) error {
 	// log.Printf("DrawSync(): img.Bounds(): %v", img.Bounds())
 	dsp.staticImg[0].Convert(img.(*image.RGBA))
 	clipRect := dsp.staticImg[0].Diff(dsp.staticImg[1])
+	log.Printf("DrawSync(): clipRect: %v", clipRect)
 	dsp.drawBuffer(dsp.staticImg[0].SubImage(clipRect).(*ILIImage))
-    dsp.staticImg[0], dsp.staticImg[1] = dsp.staticImg[1], dsp.staticImg[0]
+	dsp.staticImg[0], dsp.staticImg[1] = dsp.staticImg[1], dsp.staticImg[0]
 	return nil
 }
 
