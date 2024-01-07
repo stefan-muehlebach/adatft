@@ -3,7 +3,6 @@ package adatft
 import (
 	"image"
 	"image/color"
-	"log"
 	"time"
 )
 
@@ -83,25 +82,48 @@ func (b *ILIImage) SubImage(r image.Rectangle) image.Image {
 func (b *ILIImage) Diff(img *ILIImage) image.Rectangle {
 	var xMin, xMax, yMin, yMax int
 
-	xMin, xMax = 0, 0
-	yMin, yMax = 0, 0
+	xMin, xMax = b.Rect.Dx(), 0
+	yMin, yMax = b.Rect.Dy(), 0
+
+Loop1:
 	for y := 0; y < b.Rect.Dy(); y++ {
 		idx := y * b.Stride
 		for i, pix := range b.Pix[idx : idx+b.Stride] {
 			// log.Printf("idx, i: %d, %d", idx, i)
-			if pix != img.Pix[i] {
+			if pix != img.Pix[idx+i] {
 				yMin = y
-				break
+				break Loop1
 			}
 		}
 	}
-	for y := b.Rect.Dy() - 1; y >= 0; y-- {
+Loop2:
+	for y := b.Rect.Dy() - 1; y > yMin; y-- {
 		idx := y * b.Stride
 		for i, pix := range b.Pix[idx : idx+b.Stride] {
-			log.Printf("idx, i: %d, %d", idx, i)
-			if pix != img.Pix[i] {
+			// log.Printf("idx, i: %d, %d", idx, i)
+			if pix != img.Pix[idx+i] {
 				yMax = y
-				break
+				break Loop2
+			}
+		}
+	}
+Loop3:
+	for x := 0; x < b.Rect.Dx(); x++ {
+		idx := x * bytesPerPixel
+		for i := 0; i < b.Rect.Dy()*b.Stride; i += b.Stride {
+			if b.Pix[idx+i] != img.Pix[idx+i] {
+				xMin = x
+				break Loop3
+			}
+		}
+	}
+Loop4:
+	for x := b.Rect.Dx() - 1; x > xMin; x-- {
+		idx := x * bytesPerPixel
+		for i := 0; i < b.Rect.Dy()*b.Stride; i += b.Stride {
+			if b.Pix[idx+i] != img.Pix[idx+i] {
+				xMax = x
+				break Loop4
 			}
 		}
 	}
