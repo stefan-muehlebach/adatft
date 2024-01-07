@@ -92,6 +92,7 @@ Loop1:
 			// log.Printf("idx, i: %d, %d", idx, i)
 			if pix != img.Pix[idx+i] {
 				yMin = y
+                yMax = y
 				break Loop1
 			}
 		}
@@ -113,6 +114,7 @@ Loop3:
 		for i := 0; i < b.Rect.Dy()*b.Stride; i += b.Stride {
 			if b.Pix[idx+i] != img.Pix[idx+i] {
 				xMin = x
+                xMax = x
 				break Loop3
 			}
 		}
@@ -147,8 +149,6 @@ func (b *ILIImage) Convert(src *image.RGBA) {
 	// log.Printf("src.Rect    : %v", src.Rect)
 	// log.Printf("dst.Bounds(): %v", dst.Bounds())
 	// log.Printf("dst.Rect    : %v", dst.Rect)
-
-	// dst.Rect = src.Rect
 
 	srcBaseIdx = 0
 	dstBaseIdx = src.Rect.Min.Y*b.Stride + src.Rect.Min.X*bytesPerPixel

@@ -144,23 +144,50 @@ func TestImageDiff(t *testing.T) {
     rect := imageA.Diff(imageB)
     log.Printf("difference rectangle: %v", rect)
 
-    testImage.Set(100, 100, colornames.Navy)
-    imageB.Convert(testImage)
-
+    imageB.Set(100, 100, colornames.Navy)
     rect = imageA.Diff(imageB)
     log.Printf("difference rectangle: %v", rect)
+
+    imageB.Set(250, 100, colornames.Navy)
+    rect = imageA.Diff(imageB)
+    log.Printf("difference rectangle: %v", rect)
+
+    imageB.Convert(testImage)
+    imageB.Set(100, 100, colornames.Navy)
+    imageB.Set(100, 210, colornames.Navy)
+    rect = imageA.Diff(imageB)
+    log.Printf("difference rectangle: %v", rect)
+
+
 }
-func BenchmarkImageDiff(b *testing.B) {
+func BenchmarkDiffFull(b *testing.B) {
     imageA := NewILIImage(image.Rect(0, 0, Width, Height))
     imageB := NewILIImage(image.Rect(0, 0, Width, Height))
 
     imageA.Convert(testImage)
     imageB.Convert(testImage)
 
+    b.ResetTimer()
     for i:=0; i<b.N; i++ {
         rect = imageA.Diff(imageB)
     }
 }
+func BenchmarkDiffHalve(b *testing.B) {
+    imageA := NewILIImage(image.Rect(0, 0, Width, Height))
+    imageB := NewILIImage(image.Rect(0, 0, Width, Height))
+
+    imageA.Convert(testImage)
+    imageB.Convert(testImage)
+
+    imageB.Set(Width/4, Height/4, colornames.Navy)
+    imageB.Set(3*Width/4, 3*Height/4, colornames.Navy)
+
+    b.ResetTimer()
+    for i:=0; i<b.N; i++ {
+        rect = imageA.Diff(imageB)
+    }
+}
+
 
 // Benchmark der Konvertierung von Touchscreen-Koordinaten nach Bildschirm-
 // Koordinaten. TO DO: ev. sollte die Erzeugung der Touchscreen-Koordinaten

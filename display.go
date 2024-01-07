@@ -88,8 +88,8 @@ var (
 )
 
 type BufChanItem struct {
-    img *ILIImage
-    rect image.Rectangle
+	img  *ILIImage
+	rect image.Rectangle
 }
 
 // Dies ist der Datentyp, welche für die Verbindung zum ILI9341 via SPI
@@ -101,10 +101,12 @@ type BufChanItem struct {
 //
 // b) die Daten via SPI-Bus an den ILI9341 sendet.
 type Display struct {
-	dspi      DispInterface
-    bufChan   []chan *BufChanItem
-	staticBuf *ILIImage
-	quitQ     chan bool
+	dspi         DispInterface
+	bufChan      []chan *BufChanItem
+	staticImg    []*ILIImage
+	staticImgIdx int
+	lastImg      *ILIImage
+	quitQ        chan bool
 }
 
 var (
@@ -154,8 +156,8 @@ func OpenDisplay(rot RotationType) *Display {
 func (dsp *Display) Close() {
 	close(dsp.bufChan[toDisp])
 	<-dsp.quitQ
-	dsp.staticBuf.Clear()
-	dsp.drawBuffer(dsp.staticBuf)
+	dsp.staticImg[0].Clear()
+	dsp.drawBuffer(dsp.staticImg[0])
 	dsp.dspi.Close()
 }
 
@@ -164,26 +166,32 @@ func (dsp *Display) Close() {
 // auf die RGBA-Images zur Anzeige gesendet werden.
 func (dsp *Display) InitChannels() {
 	var bufItem *BufChanItem
-    var rect image.Rectangle
+	var rect image.Rectangle
 
 	dsp.bufChan = make([]chan *BufChanItem, 2)
 	for i := 0; i < len(dsp.bufChan); i++ {
 		dsp.bufChan[i] = make(chan *BufChanItem, numBuffers+1)
 	}
 
-    rect = image.Rect(0, 0, Width, Height)
+	rect = image.Rect(0, 0, Width, Height)
 	for i := 0; i < numBuffers; i++ {
-        bufItem = &BufChanItem{}
+		bufItem = &BufChanItem{}
 
-        bufItem.img = NewILIImage(rect)
-        bufItem.rect = rect
+		bufItem.img = NewILIImage(rect)
+		bufItem.rect = rect
 		dsp.bufChan[toConv] <- bufItem
 	}
-	dsp.staticBuf = NewILIImage(image.Rect(0, 0, Width, Height))
+	dsp.staticImg = make([]*ILIImage, 2)
+	dsp.staticImg[0] = NewILIImage(image.Rect(0, 0, Width, Height))
+	dsp.staticImg[1] = NewILIImage(image.Rect(0, 0, Width, Height))
+    dsp.staticImgIdx = 0
+
+	dsp.lastImg = nil
 
 	dsp.quitQ = make(chan bool)
 	go dsp.displayer()
 }
+
 // func (dsp *Display) InitChannels() {
 // 	var buf *ILIImage
 
@@ -211,8 +219,10 @@ func (dsp *Display) Bounds() image.Rectangle {
 // zum TFT gesendet wurden. Wichtig: img muss ein image.RGBA-Typ sein!
 func (dsp *Display) DrawSync(img image.Image) error {
 	// log.Printf("DrawSync(): img.Bounds(): %v", img.Bounds())
-	dsp.staticBuf.Convert(img.(*image.RGBA))
-	dsp.drawBuffer(dsp.staticBuf.SubImage(img.Bounds()).(*ILIImage))
+	dsp.staticImg[0].Convert(img.(*image.RGBA))
+	clipRect := dsp.staticImg[0].Diff(dsp.staticImg[1])
+	dsp.drawBuffer(dsp.staticImg[0].SubImage(clipRect).(*ILIImage))
+    dsp.staticImg[0], dsp.staticImg[1] = dsp.staticImg[1], dsp.staticImg[0]
 	return nil
 }
 
@@ -224,7 +234,12 @@ func (dsp *Display) Draw(img image.Image) error {
 
 	bufItem = <-dsp.bufChan[toConv]
 	bufItem.img.Convert(img.(*image.RGBA))
-    bufItem.rect = img.Bounds()
+	if dsp.lastImg != nil {
+		bufItem.rect = bufItem.img.Diff(dsp.lastImg)
+	} else {
+		bufItem.rect = img.Bounds()
+	}
+	dsp.lastImg = bufItem.img
 	dsp.bufChan[toDisp] <- bufItem
 	return nil
 }
@@ -241,15 +256,15 @@ func (dsp *Display) drawBuffer(img *ILIImage) {
 	dsp.dspi.Data32(uint32((start.Y << 16) | (end.Y - 1)))
 	dsp.dspi.Cmd(ili.ILI9341_RAMWR)
 
-    if numBytes == img.Stride {
-        dsp.dspi.DataArray(img.Pix[:])
-    } else {
-        idx := 0
-    	for y := start.Y; y < end.Y; y++ {
-    		dsp.dspi.DataArray(img.Pix[idx : idx+numBytes])
-            idx += img.Stride
-    	}
-    }
+	if numBytes == img.Stride {
+		dsp.dspi.DataArray(img.Pix[:])
+	} else {
+		idx := 0
+		for y := start.Y; y < end.Y; y++ {
+			dsp.dspi.DataArray(img.Pix[idx : idx+numBytes])
+			idx += img.Stride
+		}
+	}
 	DispTime += time.Since(t1)
 	NumDisp++
 }
