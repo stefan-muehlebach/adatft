@@ -40,7 +40,7 @@ func init() {
     disp = OpenDisplay(Rotate000)
     fWidth, fHeight = float64(Width), float64(Height)
 
-    pixBuf = NewBuffer(Width, Height)
+    pixBuf = NewBuffer(image.Rect(0, 0, Width, Height))
 
     fh, err := os.Open(imageFile)
     if err != nil {
