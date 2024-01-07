@@ -84,7 +84,7 @@ func (b *ILIImage) PixOffset(x, y int) int {
 // image/draw) durchzuführen. Die Zeitmessung über die Variablen 'ConvTime'
 // und 'NumConv' ist in dieser Funktion realisiert.
 func (b *ILIImage) Convert(src *image.RGBA) {
-	var stride, srcIdx, dstIdx int
+	var stride, srcIdx, srcIdx2, dstIdx int
 
 	log.Printf("src.Bounds(): %v", src.Bounds())
 	log.Printf("buf.Bounds(): %v", b.Bounds())
@@ -95,11 +95,11 @@ func (b *ILIImage) Convert(src *image.RGBA) {
     log.Printf("r: %v", r)
 
 	for row := r.Min.Y; row < r.Max.Y; row++ {
-		// srcIdx = src.PixOffset(0, row)
 		// dstIdx = b.PixOffset(0, row)
 		srcIdx = (row-r.Min.Y)*src.Stride
+		srcIdx2 = src.PixOffset(0, row)
 		dstIdx = (row-r.Min.Y)*stride
-        log.Printf("srcIdx, dstIdx: %d, %d", srcIdx, dstIdx)
+        log.Printf("srcIdx, srcIdx2, dstIdx: %d, %d", srcIdx, srcIdx2, dstIdx)
 		for col := r.Min.X; col < r.Max.X; col++ {
 			b.Pix[dstIdx+0] = src.Pix[srcIdx+2]
 			b.Pix[dstIdx+1] = src.Pix[srcIdx+1]
