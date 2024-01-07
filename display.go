@@ -3,7 +3,7 @@ package adatft
 import (
 	"errors"
 	"image"
-	"log"
+	"image/draw"
 	"time"
 
 	ili "github.com/stefan-muehlebach/adatft/ili9341"
@@ -187,8 +187,8 @@ func (dsp *Display) Bounds() image.Rectangle {
 // erfolgt synchron, d.h. die Methode wartet so lange, bis alle Bilddaten
 // zum TFT gesendet wurden. Wichtig: img muss ein image.RGBA-Typ sein!
 func (dsp *Display) DrawSync(img image.Image) error {
-	log.Printf("img.Bounds(): %v", img.Bounds())
-	dsp.staticBuf.Convert(img.(*image.RGBA))
+	// dsp.staticBuf.Convert(img.(*image.RGBA))
+	draw.Draw(dsp.staticBuf, dsp.staticBuf.Rect, img, image.Point{}, draw.Src)
 	dsp.drawBuffer(dsp.staticBuf)
 	return nil
 }
