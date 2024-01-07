@@ -95,8 +95,8 @@ var (
 // b) die Daten via SPI-Bus an den ILI9341 sendet.
 type Display struct {
     dspi    DispInterface
-    bufChan []chan *Buffer
-    staticBuf *Buffer
+    bufChan []chan *ILIImage
+    staticBuf *ILIImage
     quitQ chan bool
 }
 
@@ -159,18 +159,18 @@ func (dsp *Display) Close() {
 // und Anzeige auf und retourniert einen Channel, auf welchem die Pointer
 // auf die RGBA-Images zur Anzeige gesendet werden.
 func (dsp *Display) InitChannels() {
-    var buf *Buffer
+    var buf *ILIImage
 
-    dsp.bufChan = make([]chan *Buffer, 2)
+    dsp.bufChan = make([]chan *ILIImage, 2)
     for i := 0; i < len(dsp.bufChan); i++ {
-        dsp.bufChan[i] = make(chan *Buffer, numBuffers+1)
+        dsp.bufChan[i] = make(chan *ILIImage, numBuffers+1)
     }
 
     for i := 0; i < numBuffers; i++ {
-        buf = NewBuffer(image.Rect(0, 0, Width, Height))
+        buf = NewILIImage(image.Rect(0, 0, Width, Height))
         dsp.bufChan[toConv] <- buf
     }
-    dsp.staticBuf = NewBuffer(image.Rect(0, 0, Width, Height))
+    dsp.staticBuf = NewILIImage(image.Rect(0, 0, Width, Height))
 
     dsp.quitQ = make(chan bool)
     go dsp.displayer()
@@ -193,7 +193,7 @@ func (dsp *Display) DrawSync(img image.Image) (error) {
 // erfolgt asynchron, d.h. die Methode wartet nur, bis das Bild konvertiert
 // wurde. Wichtig: img muss ein image.RGBA-Typ sein!
 func (dsp *Display) Draw(img image.Image) (error) {
-    var buf *Buffer
+    var buf *ILIImage
 
     buf = <-dsp.bufChan[toConv]
     buf.Convert(img.(*image.RGBA))
@@ -202,7 +202,7 @@ func (dsp *Display) Draw(img image.Image) (error) {
 }
 
 // Mit dieser Funktion wird ein Bild auf dem TFT angezeigt.
-func (dsp *Display) drawBuffer(buf *Buffer) {
+func (dsp *Display) drawBuffer(buf *ILIImage) {
     t1 := time.Now()
 
     start := buf.dstRect.Min
@@ -223,7 +223,7 @@ func (dsp *Display) drawBuffer(buf *Buffer) {
 // zuständig ist. Sie läuft als Go-Routine und wartet, bis über den Channel
 // bufChan[toDisp] Bilder zur Anzeige eintreffen.
 func (dsp *Display) displayer() {
-    var buf *Buffer
+    var buf *ILIImage
     var ok bool
 
     for {

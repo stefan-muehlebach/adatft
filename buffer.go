@@ -15,7 +15,7 @@ const (
     bytesPerPixel = 3
 )
 
-type Buffer struct {
+type ILIImage struct {
     Pix []uint8
     Stride int
     Rect image.Rectangle
@@ -25,8 +25,8 @@ type Buffer struct {
 
 // Erzeugt einen neuen Buffer, der fuer die Anzeige von image.RGBA Bildern
 // zwingend gebraucht wird.
-func NewBuffer(r image.Rectangle) (*Buffer) {
-    b := &Buffer{}
+func NewILIImage(r image.Rectangle) (*ILIImage) {
+    b := &ILIImage{}
     b.Pix = make([]uint8, r.Dx() * r.Dy() * bytesPerPixel)
     b.Stride = r.Dx() * bytesPerPixel
     b.Rect = r
@@ -36,15 +36,15 @@ func NewBuffer(r image.Rectangle) (*Buffer) {
     return b
 }
 
-func (b *Buffer) ColorModel() (color.Model) {
+func (b *ILIImage) ColorModel() (color.Model) {
     return ILIModel
 }
 
-func (b *Buffer) Bounds() (image.Rectangle) {
+func (b *ILIImage) Bounds() (image.Rectangle) {
     return b.Rect
 }
 
-func (b *Buffer) At(x, y int) (color.Color) {
+func (b *ILIImage) At(x, y int) (color.Color) {
     if !(image.Point{x, y}.In(b.Rect)) {
         return ILIColor{}
     }
@@ -66,7 +66,7 @@ func (b *Buffer) At(x, y int) (color.Color) {
 // sind vorgängig mit anderen Funktionen (bspw. aus dem Package gg oder
 // image/draw) durchzuführen. Die Zeitmessung über die Variablen 'ConvTime'
 // und 'NumConv' ist in dieser Funktion realisiert.
-func (b *Buffer) Convert(src *image.RGBA) {
+func (b *ILIImage) Convert(src *image.RGBA) {
     var stride, srcIdx, dstIdx int
 
     t1 := time.Now()
