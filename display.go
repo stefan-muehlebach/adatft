@@ -185,10 +185,10 @@ func (dsp *Display) Bounds() image.Rectangle {
 // Damit wird das Bild img auf dem Bildschirm dargestellt. Die Darstellung
 // erfolgt synchron, d.h. die Methode wartet so lange, bis alle Bilddaten
 // zum TFT gesendet wurden. Wichtig: img muss ein image.RGBA-Typ sein!
-func (dsp *Display) DrawSync(img *image.RGBA) error {
+func (dsp *Display) DrawSync(img image.Image) error {
 	// log.Printf("DrawSync(): img.Bounds(): %v", img.Bounds())
 	// convert(dsp.staticBuf, img)
-	dsp.staticBuf.Convert(img)
+	dsp.staticBuf.Convert(img.(*image.RGBA))
 	// draw.Draw(dsp.staticBuf, dsp.staticBuf.Rect, img, image.Point{}, draw.Src)
 	// dsp.staticBuf.dstRect = dsp.staticBuf.Rect
 	// dsp.drawBuffer(dsp.staticBuf)
