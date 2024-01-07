@@ -108,7 +108,11 @@ func OpenTouch() (*Touch) {
     var revNr uint8
 
     tch = &Touch{}
-    tch.tspi = stmpe.Open(tchSpeedHz)
+    if isRaspberry {
+        tch.tspi = stmpe.Open(tchSpeedHz)
+    } else {
+        tch.tspi = stmpe.OpenDummy(tchSpeedHz)
+    }
 
     revNr = tch.tspi.ReadReg8(stmpe.STMPE610_ID_VER)
     devId = tch.tspi.ReadReg16(stmpe.STMPE610_CHIP_ID)

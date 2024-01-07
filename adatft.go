@@ -49,6 +49,8 @@ var (
 	// Enthält den absoluten Pfad des AdaTFT-spezifischen Konfigurations-
 	// verzeichnisses.
 	confDir string
+
+    isRaspberry bool
 )
 
 // Damit wird die 'periph.io'-Umgebung initialisiert. Diese Funktion muss
@@ -59,10 +61,16 @@ func Init() {
 	var driverStates *driverreg.State
 	var err error
 
+    isRaspberry = false
 	if driverStates, err = host.Init(); err != nil {
 		log.Fatalf("host.Init(): %v", err)
 	}
-	log.Printf("%+v", driverStates)
+	for _, drv := range driverStates.Loaded {
+        if drv.String() == "rpi" {
+            isRaspberry = true
+            break
+        }
+    }
 
 	if userConfDir, err = os.UserConfigDir(); err != nil {
 		log.Fatalf("os.UserConfigDir(): %v", err)

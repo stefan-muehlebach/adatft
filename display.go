@@ -141,7 +141,11 @@ func OpenDisplay(rot RotationType) *Display {
 	calibDataFile = rotDat[rot].calibDataFile
 
 	dsp = &Display{}
-	dsp.dspi = ili.OpenDummy(dspSpeedHz)
+    if isRaspberry {
+	    dsp.dspi = ili.Open(dspSpeedHz)
+    } else {
+	    dsp.dspi = ili.OpenDummy(dspSpeedHz)
+    }
 	dsp.dspi.Init([]any{false, rotDat[rot].iliParam})
 
 	dsp.InitChannels()
