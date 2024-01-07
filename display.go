@@ -192,8 +192,8 @@ func (dsp *Display) DrawSync(img image.Image) error {
     log.Printf("DrawSync(): img.Bounds(): %v", img.Bounds())
 	draw.Draw(dsp.staticBuf, dsp.staticBuf.Rect, img, image.Point{}, draw.Src)
     dsp.staticBuf.dstRect = dsp.staticBuf.Rect
-	dsp.drawBuffer(dsp.staticBuf)
-	// dsp.drawBuffer(dsp.staticBuf.SubImage(img.Bounds()).(*ILIImage))
+	// dsp.drawBuffer(dsp.staticBuf)
+	dsp.drawBuffer(dsp.staticBuf.SubImage(img.Bounds()))
 	return nil
 }
 
@@ -218,10 +218,10 @@ func (dsp *Display) drawBuffer(img image.Image) {
 
 	t1 := time.Now()
 
-	start := iliImg.dstRect.Min
-	end := iliImg.dstRect.Max
+	start := iliImg.Rect.Min
+	end := iliImg.Rect.Max
     idx := iliImg.PixOffset(start.X, start.Y)
-	numBytes := iliImg.dstRect.Dx() * iliImg.dstRect.Dy() * bytesPerPixel
+	numBytes := iliImg.Rect.Dx() * iliImg.Rect.Dy() * bytesPerPixel
 
     log.Printf("from, to, numBytes: %v, %v, %v", start, end, numBytes)
 
