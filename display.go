@@ -102,7 +102,6 @@ type BufChanItem struct {
 // b) die Daten via SPI-Bus an den ILI9341 sendet.
 type Display struct {
 	dspi      DispInterface
-	// bufChan   []chan *ILIImage
     bufChan   []chan *BufChanItem
 	staticBuf *ILIImage
 	quitQ     chan bool
@@ -155,9 +154,8 @@ func OpenDisplay(rot RotationType) *Display {
 func (dsp *Display) Close() {
 	close(dsp.bufChan[toDisp])
 	<-dsp.quitQ
-	// dsp.staticBuf.Clear()
-	// dsp.staticBuf.dstRect = dsp.Bounds()
-	// dsp.drawBuffer(dsp.staticBuf)
+	dsp.staticBuf.Clear()
+	dsp.drawBuffer(dsp.staticBuf)
 	dsp.dspi.Close()
 }
 

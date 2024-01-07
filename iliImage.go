@@ -79,6 +79,12 @@ func (b *ILIImage) SubImage(r image.Rectangle) image.Image {
 	}
 }
 
+func (b *ILIImage) Clear() {
+    for i := range b.Pix {
+        b.Pix[i] = 0x00
+    }
+}
+
 func (b *ILIImage) Convert(src *image.RGBA) {
 	var row, col int
 	var srcBaseIdx, srcIdx, dstBaseIdx, dstIdx int
