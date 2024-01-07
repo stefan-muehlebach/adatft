@@ -210,16 +210,18 @@ func (dsp *Display) Draw(img image.Image) error {
 }
 
 // Mit dieser Funktion wird ein Bild auf dem TFT angezeigt.
-func (dsp *Display) drawBuffer(buf *ILIImage) {
-    log.Printf("drawBuffer(): buf.Bounds(): %v", buf.Bounds())
-    log.Printf("drawBuffer(): buf.Rect    : %v", buf.Rect)
+func (dsp *Display) drawBuffer(img image.Image) {
+// func (dsp *Display) drawBuffer(buf *ILIImage) {
+    iliImg := img.(*ILIImage)
+    log.Printf("drawBuffer(): buf.Bounds(): %v", iliImg.Bounds())
+    log.Printf("drawBuffer(): buf.Rect    : %v", iliImg.Rect)
 
 	t1 := time.Now()
 
-	start := buf.dstRect.Min
-	end := buf.dstRect.Max
-    idx := buf.PixOffset(start.X, start.Y)
-	numBytes := buf.dstRect.Dx() * buf.dstRect.Dy() * bytesPerPixel
+	start := iliImg.dstRect.Min
+	end := iliImg.dstRect.Max
+    idx := iliImg.PixOffset(start.X, start.Y)
+	numBytes := iliImg.dstRect.Dx() * iliImg.dstRect.Dy() * bytesPerPixel
 
     log.Printf("from, to, numBytes: %v, %v, %v", start, end, numBytes)
 
@@ -228,7 +230,7 @@ func (dsp *Display) drawBuffer(buf *ILIImage) {
 	dsp.dspi.Cmd(ili.ILI9341_PASET)
 	dsp.dspi.Data32(uint32((start.Y << 16) | (end.Y - 1)))
 	dsp.dspi.Cmd(ili.ILI9341_RAMWR)
-	dsp.dspi.DataArray(buf.Pix[idx:idx+numBytes])
+	dsp.dspi.DataArray(iliImg.Pix[idx:idx+numBytes])
 	DispTime += time.Since(t1)
 	NumDisp++
 }
