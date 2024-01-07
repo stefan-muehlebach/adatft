@@ -229,9 +229,10 @@ func (dsp *Display) drawBuffer(img image.Image) {
 	dsp.dspi.Data32(uint32((start.Y << 16) | (end.Y - 1)))
 	dsp.dspi.Cmd(ili.ILI9341_RAMWR)
 
+    idx := iliImg.PixOffset(start.X, start.Y)
 	for y := start.Y; y < end.Y; y++ {
-		idx := iliImg.PixOffset(start.X, y)
 		dsp.dspi.DataArray(iliImg.Pix[idx : idx+numBytes])
+        idx += iliImg.Stride
 	}
 	DispTime += time.Since(t1)
 	NumDisp++
