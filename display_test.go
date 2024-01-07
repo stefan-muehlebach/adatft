@@ -98,7 +98,7 @@ func TestDrawSyncCust(t *testing.T) {
     gc.Clear()
     disp.DrawSync(gc.Image())
 
-    rect := RectHalve
+    rect := RectQuart
     draw.Draw(workImage, rect, testBild, rect.Min, draw.Src)
     disp.DrawSync(workImage)
 
@@ -134,9 +134,14 @@ func TestDrawAsyncCust(t *testing.T) {
     gc.SetFillColor(color.Black)
     gc.Clear()
     disp.Draw(gc.Image())
-    disp.Draw(testBild.SubImage(RectCust))
-    disp.Draw(testBild.SubImage(RectCust.Add(image.Pt(120,60))))
-    disp.Draw(testBild.SubImage(RectCust.Add(image.Pt(200,150))))
+
+    rect := RectQuart
+    draw.Draw(workImage, rect, testBild, rect.Min, draw.Src)
+    disp.Draw(workImage)
+
+    rect = RectQuart.Add(image.Point{100, 100})
+    draw.Draw(workImage, rect, testBild, rect.Min, draw.Src)
+    disp.Draw(workImage)
     time.Sleep(time.Second)
 }
 
