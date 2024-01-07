@@ -128,7 +128,7 @@ Loop4:
 		}
 	}
 
-	return image.Rect(xMin, yMin, xMax, yMax)
+	return image.Rectangle{image.Point{xMin, yMin}, image.Point{xMax, yMax}}
 }
 
 func (b *ILIImage) Clear() {
