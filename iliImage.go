@@ -103,7 +103,7 @@ Loop2:
 		for i, pix := range b.Pix[idx : idx+b.Stride] {
 			// log.Printf("idx, i: %d, %d", idx, i)
 			if pix != img.Pix[idx+i] {
-				yMax = y
+				yMax = y+1
 				break Loop2
 			}
 		}
@@ -124,14 +124,14 @@ Loop4:
 		idx := x * bytesPerPixel
 		for i := 0; i < b.Rect.Dy()*b.Stride; i += b.Stride {
 			if b.Pix[idx+i] != img.Pix[idx+i] {
-				xMax = x
+				xMax = x+1
 				break Loop4
 			}
 		}
 	}
 
 	rect := image.Rectangle{image.Point{xMin, yMin}, image.Point{xMax, yMax}}
-    return rect.Intersect(b.Rect)
+    return rect
 }
 
 func (b *ILIImage) Clear() {
