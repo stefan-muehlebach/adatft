@@ -143,7 +143,7 @@ func OpenDisplay(rot RotationType) *Display {
 	calibDataFile = rotDat[rot].calibDataFile
 
 	dsp = &Display{}
-	dsp.dspi = ili.Open(dspSpeedHz)
+	dsp.dspi = ili.OpenDummy(dspSpeedHz)
 	dsp.dspi.Init([]any{false, rotDat[rot].iliParam})
 
 	dsp.InitChannels()
@@ -224,7 +224,7 @@ func (dsp *Display) DrawSync(img image.Image) error {
         return nil
         // rect = img.Bounds()
     }
-	log.Printf("DrawSync(): rect: %v", rect)
+	// log.Printf("DrawSync(): rect: %v", rect)
 	dsp.drawBuffer(dsp.staticImg[0].SubImage(rect).(*ILIImage))
 	dsp.staticImg[0], dsp.staticImg[1] = dsp.staticImg[1], dsp.staticImg[0]
 	return nil
