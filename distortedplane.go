@@ -3,7 +3,6 @@ package adatft
 import (
     "errors"
     "encoding/json"
-    "log"
     "math"
     "os"
     "path/filepath"
@@ -42,11 +41,11 @@ func (d *DistortedPlane) WriteConfig() {
 func (d *DistortedPlane) WriteConfigFile(fileName string) {
     data, err := json.MarshalIndent(d, "", "  ")
     if err != nil {
-        log.Fatal(err)
+        adalog.Fatal(err)
     }
     err = os.WriteFile(fileName, data, 0644)
     if err != nil {
-        log.Fatal(err)
+        adalog.Fatal(err)
     }
 }
 
@@ -63,11 +62,11 @@ func (d *DistortedPlane) ReadConfig() {
 func (d *DistortedPlane) ReadConfigFile(fileName string) {
     data, err := os.ReadFile(fileName)
     if err != nil {
-        log.Fatal(err)
+        adalog.Fatal(err)
     }
     err = json.Unmarshal(data, d)
     if err != nil {
-        log.Fatal(err)
+        adalog.Fatal(err)
     }
     d.update()
 }

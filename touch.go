@@ -2,7 +2,6 @@ package adatft
 
 import (
     "fmt"
-    "log"
     "time"
     stmpe "github.com/stefan-muehlebach/adatft/stmpe610"
 )
@@ -117,7 +116,7 @@ func OpenTouch() (*Touch) {
     revNr = tch.tspi.ReadReg8(stmpe.STMPE610_ID_VER)
     devId = tch.tspi.ReadReg16(stmpe.STMPE610_CHIP_ID)
     if (devId != 0x0811) || (revNr != 0x03) {
-        log.Fatalf("device id and/or revision numbers are not as expected: got (0x%04x, 0x%02x) should be (0x0811, 0x03)\n", devId, revNr)
+        adalog.Fatalf("device id and/or revision numbers are not as expected: got (0x%04x, 0x%02x) should be (0x0811, 0x03)\n", devId, revNr)
     }
 
     // Initialisiere die Queue für applikatorische Events und setze den
@@ -146,15 +145,15 @@ func (tch *Touch) Close() {
 // dass bei einem Fehler ein Runtime-Panic ausgelöst wird.
 //
 func (tch *Touch) enqueueEvent(event PenEvent) {
-    //defer func() {
-    //    if x := recover(); x != nil {
-    //        log.Printf("runtime panic: %v", x)
-    //    }
-    //}()
+    defer func() {
+        if x := recover(); x != nil {
+            adalog.Printf("Runtime panic: %v", x)
+        }
+    }()
     select {
         case tch.EventQ <- event:
         default:
-            log.Printf("Sending not possible: event queue full!\n")
+            adalog.Printf("Sending not possible: event queue full!\n")
     }
 }
 

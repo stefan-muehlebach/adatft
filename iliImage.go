@@ -3,117 +3,215 @@ package adatft
 import (
     "image"
     "image/color"
-//    "log"
     "time"
 )
 
+//----------------------------------------------------------------------------
+
+// Dies ist die Implementation des ILI-Farbtyps mit je 6 Bit pro Farbe, resp.
+// 3 Bytes pro Pixel.
+type ILIColor struct {
+    R, G, B uint8
+}
+
+func (c ILIColor) RGBA() (r, g, b, a uint32) {
+    r = uint32(c.R)
+    r |= r << 8
+    g = uint32(c.G)
+    g |= g << 8
+    b = uint32(c.B)
+    b |= b << 8
+    a = 0xffff
+    return
+}
+
+func iliModel(c color.Color) (color.Color) {
+    if _, ok := c.(ILIColor); ok {
+        return c
+    }
+    r, g, b, a := c.RGBA()
+    if a == 0xffff {
+        return ILIColor{uint8(r >> 8), uint8(g >> 8), uint8(b >> 8)}
+    }
+    if a == 0x0000 {
+        return ILIColor{0, 0, 0}
+    }
+    r = (r * 0xffff) / a
+    g = (g * 0xffff) / a
+    b = (b * 0xffff) / a
+    return ILIColor{uint8(r >> 8), uint8(g >> 8), uint8(b >> 8)}
+}
+
+var (
+    ILIModel color.Model = color.ModelFunc(iliModel)
+)
+
+// Dies ist die Implementation des 565-Farbtyps.
+//
+// type ILIcolor struct {
+//     R, G, B uint8
+// }
+
+// func (c ILIcolor) RGBA() (r, g, b, a uint32) {
+//     r = uint32(c.R)
+//     r |= r << 8
+//     g = uint32(c.G)
+//     g |= g << 8
+//     b = uint32(c.B)
+//     b |= b << 8
+//     a = 0xffff
+//     return
+// }
+
+// func iliModel(c color.Color) (color.Color) {
+//     if _, ok := c.(ILIcolor); ok {
+//         return c
+//     }
+//     r, g, b, a := c.RGBA()
+//     if a == 0xffff {
+//         return ILIcolor{uint8(r >> 8), uint8(g >> 8), uint8(b >> 8)}
+//     }
+//     if a == 0x0000 {
+//         return ILIcolor{0, 0, 0}
+//     }
+// 	r = (r * 0xffff) / a
+// 	g = (g * 0xffff) / a
+// 	b = (b * 0xffff) / a
+//     return ILIcolor{uint8(r >> 8), uint8(g >> 8), uint8(b >> 8)}
+// }
+
 //-----------------------------------------------------------------------------
 
-// Dieser Record wird fuer die Konvertierung der Bilddaten in ein von
-// ILI9341 unterstuetztes Format verwendet.
 const (
     //bytesPerPixel = 2
     bytesPerPixel = 3
 )
 
+// Diese Datenstruktur stellt ein Bild dar, welches auf dem TFT direkt
+// dargestellt werden kann und implementiert alle Interfaces, welche Go
+// fuer Bild-Typen kennt.
 type ILIImage struct {
     Pix    []uint8
     Stride int
     Rect   image.Rectangle
-    // bufLen, bufSize int
-    // dstRect image.Rectangle
 }
 
-// Erzeugt einen neuen Buffer, der fuer die Anzeige von image.RGBA Bildern
-// zwingend gebraucht wird.
 func NewILIImage(r image.Rectangle) *ILIImage {
-    b := &ILIImage{}
-    b.Pix = make([]uint8, r.Dx()*r.Dy()*bytesPerPixel)
-    b.Stride = r.Dx() * bytesPerPixel
-    b.Rect = r
-    return b
+    stride := r.Dx() * bytesPerPixel
+    length := r.Dy() * stride
+    return &ILIImage{
+        Pix:    make([]uint8, length),
+        Stride: stride,
+        Rect:   r,
+    }
 }
 
-func (b *ILIImage) ColorModel() color.Model {
+// ColorModel, Bounds und At werden vom Interface image.Image gefordert.
+func (p *ILIImage) ColorModel() color.Model {
     return ILIModel
 }
-
-func (b *ILIImage) Bounds() image.Rectangle {
-    return b.Rect
+func (p *ILIImage) Bounds() image.Rectangle {
+    return p.Rect
+}
+func (p *ILIImage) At(x, y int) color.Color {
+    return p.ILIAt(x, y)
 }
 
-func (b *ILIImage) At(x, y int) color.Color {
-    if !(image.Point{x, y}.In(b.Rect)) {
-        return ILIColor{}
-    }
-    i := b.PixOffset(x, y)
-    s := b.Pix[i : i+3 : i+3]
-    return ILIColor{s[0], s[1], s[2]}
-}
-
-func (b *ILIImage) Set(x, y int, c color.Color) {
-    if !(image.Point{x, y}.In(b.Rect)) {
+// Set wird ausserdem von draw.Image gefordert.
+func (p *ILIImage) Set(x, y int, c color.Color) {
+    if !(image.Point{x, y}.In(p.Rect)) {
         return
     }
-    i := b.PixOffset(x, y)
-    s := b.Pix[i : i+3 : i+3]
+    i := p.PixOffset(x, y)
     c1 := ILIModel.Convert(c).(ILIColor)
+    s := p.Pix[i : i+3 : i+3]
     s[0] = c1.R
     s[1] = c1.G
     s[2] = c1.B
 }
 
-func (b *ILIImage) PixOffset(x, y int) int {
-    return (y-b.Rect.Min.Y)*b.Stride + (x-b.Rect.Min.X)*bytesPerPixel
+func (p *ILIImage) PixOffset(x, y int) int {
+    return (y-p.Rect.Min.Y)*p.Stride + (x-p.Rect.Min.X)*bytesPerPixel
 }
 
-func (b *ILIImage) SubImage(r image.Rectangle) image.Image {
-    r = r.Intersect(b.Rect)
+func (p *ILIImage) ILIAt(x, y int) ILIColor {
+    if !(image.Point{x, y}.In(p.Rect)) {
+        return ILIColor{}
+    }
+    i := p.PixOffset(x, y)
+    s := p.Pix[i : i+3 : i+3]
+    return ILIColor{s[0], s[1], s[2]}
+}
+
+func (p *ILIImage) SetILI(x, y int, c ILIColor) {
+    if !(image.Point{x, y}.In(p.Rect)) {
+        return
+    }
+    i := p.PixOffset(x, y)
+    s := p.Pix[i : i+3 : i+3]
+    s[0] = c.R
+    s[1] = c.G
+    s[2] = c.B
+}
+
+func (p *ILIImage) SubImage(r image.Rectangle) image.Image {
+    r = r.Intersect(p.Rect)
     if r.Empty() {
         return &ILIImage{}
     }
-    i := b.PixOffset(r.Min.X, r.Min.Y)
+    i := p.PixOffset(r.Min.X, r.Min.Y)
     return &ILIImage{
-        Pix:    b.Pix[i:],
-        Stride: b.Stride,
+        Pix:    p.Pix[i:len(p.Pix):len(p.Pix)],
+        Stride: p.Stride,
         Rect:   r,
     }
 }
 
-func (b *ILIImage) Diff(img *ILIImage) image.Rectangle {
+func (p *ILIImage) Opaque() bool {
+    return true
+}
+
+//----------------------------------------------------------------------------
+
+func (p *ILIImage) Diff(img *ILIImage) image.Rectangle {
     var xMin, xMax, yMin, yMax int
 
-    xMin, xMax = b.Rect.Dx(), 0
-    yMin, yMax = b.Rect.Dy(), 0
+    xMin, xMax = p.Rect.Dx(), 0
+    yMin, yMax = p.Rect.Dy(), 0
 
 Loop1:
-    for y := 0; y < b.Rect.Dy(); y++ {
-        idx := y * b.Stride
-        for i, pix := range b.Pix[idx : idx+b.Stride] {
-            // log.Printf("idx, i: %d, %d", idx, i)
-            if pix != img.Pix[idx+i] {
+    for y := 0; y < p.Rect.Dy(); y++ {
+        idx := y * p.Stride
+        s := p.Pix[idx : idx+p.Stride : idx+p.Stride]
+        d := img.Pix[idx : idx+img.Stride : idx+img.Stride]
+        for i := 0; i < p.Stride; i++ {
+            if s[i] != d[i] {
                 yMin = y
                 yMax = y
                 break Loop1
             }
         }
     }
+    if yMin > yMax {
+        return image.Rectangle{}
+    }
 Loop2:
-    for y := b.Rect.Dy() - 1; y > yMin; y-- {
-        idx := y * b.Stride
-        for i, pix := range b.Pix[idx : idx+b.Stride] {
-            // log.Printf("idx, i: %d, %d", idx, i)
-            if pix != img.Pix[idx+i] {
+    for y := p.Rect.Dy() - 1; y > yMin; y-- {
+        idx := y * p.Stride
+        s := p.Pix[idx : idx+p.Stride : idx+p.Stride]
+        d := img.Pix[idx : idx+img.Stride : idx+img.Stride]
+        for i := 0; i < p.Stride; i++ {
+            if s[i] != d[i] {
                 yMax = y+1
                 break Loop2
             }
         }
     }
 Loop3:
-    for x := 0; x < b.Rect.Dx(); x++ {
+    for x := 0; x < p.Rect.Dx(); x++ {
         idx := x * bytesPerPixel
-        for i := 0; i < b.Rect.Dy()*b.Stride; i += b.Stride {
-            if b.Pix[idx+i] != img.Pix[idx+i] {
+        for i := yMin*p.Stride; i < yMax*p.Stride; i += p.Stride {
+            if p.Pix[idx+i] != img.Pix[idx+i] {
                 xMin = x
                 xMax = x
                 break Loop3
@@ -121,52 +219,72 @@ Loop3:
         }
     }
 Loop4:
-    for x := b.Rect.Dx() - 1; x > xMin; x-- {
+    for x := p.Rect.Dx() - 1; x > xMin; x-- {
         idx := x * bytesPerPixel
-        for i := 0; i < b.Rect.Dy()*b.Stride; i += b.Stride {
-            if b.Pix[idx+i] != img.Pix[idx+i] {
+        for i := yMin*p.Stride; i < yMax*p.Stride; i += p.Stride {
+            if p.Pix[idx+i] != img.Pix[idx+i] {
                 xMax = x+1
                 break Loop4
             }
         }
     }
-
-    rect := image.Rectangle{image.Point{xMin, yMin}, image.Point{xMax, yMax}}
-    return rect
+    return image.Rectangle{image.Point{xMin, yMin}, image.Point{xMax, yMax}}
 }
 
-func (b *ILIImage) Clear() {
-    for i := range b.Pix {
-        b.Pix[i] = 0x00
+func (p *ILIImage) Clear() {
+    for i := range p.Pix {
+        p.Pix[i] = 0x00
     }
 }
 
-func (b *ILIImage) Convert(src *image.RGBA) {
+// Konvertierung, welche vom Rect (d.h. Bounds()) des darzustellenden Bildes
+// (img) abhaengig ist.
+func (p *ILIImage) Convert(src *image.RGBA) {
     var row, col int
     var srcBaseIdx, srcIdx, dstBaseIdx, dstIdx int
 
     t1 := time.Now()
 
-//    log.Printf("src.Rect: %v", src.Rect)
-//    log.Printf("dst.Rect: %v", b.Rect)
-
     srcBaseIdx = 0
-    dstBaseIdx = src.Rect.Min.Y*b.Stride + src.Rect.Min.X*bytesPerPixel
+    dstBaseIdx = src.Rect.Min.Y*p.Stride + src.Rect.Min.X*bytesPerPixel
     for row = src.Rect.Min.Y; row < src.Rect.Max.Y; row++ {
         srcIdx = srcBaseIdx
         dstIdx = dstBaseIdx
 
         for col = src.Rect.Min.X; col < src.Rect.Max.X; col++ {
-            b.Pix[dstIdx+0] = src.Pix[srcIdx+2]
-            b.Pix[dstIdx+1] = src.Pix[srcIdx+1]
-            b.Pix[dstIdx+2] = src.Pix[srcIdx+0]
+            s := src.Pix[srcIdx : srcIdx+3 : srcIdx+3]
+            d := p.Pix[dstIdx : dstIdx+3 : dstIdx+3]
+            d[0] = s[2]
+            d[1] = s[1]
+            d[2] = s[0]
             srcIdx += 4
             dstIdx += bytesPerPixel
         }
 
         srcBaseIdx += src.Stride
-        dstBaseIdx += b.Stride
+        dstBaseIdx += p.Stride
     }
     ConvTime += time.Since(t1)
     NumConv++
 }
+
+// Konvertierung des gesamten Bildes. Und ohne Zeitmessung.
+// func (p *ILIImage) ConvertFull(src *image.RGBA) {
+//     var row, col int
+//     var srcIdx, dstIdx int
+// 
+//     srcIdx = 0
+//     dstIdx = 0
+//     for row = 0; row < Height; row++ {
+//         for col = 0; col < Width; col++ {
+//             s := src.Pix[srcIdx : srcIdx+3 : srcIdx+3]
+//             d := p.Pix[dstIdx : dstIdx+3 : dstIdx+3]
+//             d[0] = s[2]
+//             d[1] = s[1]
+//             d[2] = s[0]
+//             srcIdx += 4
+//             dstIdx += bytesPerPixel
+//         }
+//     }
+// }
+// 
