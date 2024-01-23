@@ -2,15 +2,15 @@
 //
 // Mit diesem Package kann das 2.8” TFT-Display mit Touchscreen von Adafruit
 // via Go angesprochen werden.
-// 
+//
 // Das Package besteht im Wesentlichen aus 2 Teilen
-// 
+//
 // - Einer Sammlung von Typen und Funktionen für das Ansteuern des Bildschirms.
 // - Und einem Teil für die Ansteuerung des Touchscreens.
 //
 // Jeder Teil ist dabei in eine hardwarenahe Implementation und ein etwas
 // abstraketeres API unterteilt. Konkret:
-// 
+//
 // - ili9341/ili9341.go: enthält alles, was für die Ansteuerung dieses
 //   konkreten Chips via SPI notwendig ist.
 // - display.go: enthält den Typ 'Display', der ein "high level API" anbietet.
@@ -62,7 +62,8 @@ func init() {
     var driverStates *driverreg.State
     var err error
 
-    // Erstellt ggf. Konfigurations- und Log-Verzeichnisse.
+    // Erstellt Verzeichnisse fuer Konfigurations- und Log-Dateien (falls
+    // noch nicht vorhanden).
     if userConfDir, err = os.UserConfigDir(); err != nil {
         log.Fatalf("os.UserConfigDir(): %v", err)
     }
@@ -86,9 +87,9 @@ func init() {
         log.Fatalf("os.OpenFile(): %v", err)
     }
     adalog = log.New(fh, "", log.Ltime | log.Lshortfile)
-    
+
     // Initialisiere die 'periph.io'-Umgebung und halte fest, ob wir
-    // auf einem rechten RaspberryPi laufen.
+    // auf einem echten RaspberryPi laufen.
     isRaspberry = false
     if driverStates, err = host.Init(); err != nil {
         log.Fatalf("host.Init(): %v", err)

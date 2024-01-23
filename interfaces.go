@@ -1,14 +1,20 @@
 package adatft
 
-// Es ist möglich, verschiedene Libraries für die SPI-Anbindung des
-// ILI-Chips zu verwenden. Dieses Interface beschreibt alle Methoden, welche
-// von einer SPI-Anbindung implementiert werden müssen.
+// Es ist vorstellbar, den TFT-Display ueber andere Schnittstellen als SPI
+// anzusteuern und andere Chips fuer die Ansteuerung als den ILI9341 zu
+// verwenden. Dieses Interface beschreibt alle Methoden, welche
+// von einer Display-Ansteuerung implementiert werden muessen. Da bisher
+// nur der ILI9341 via SPI angesteuert wurde, ist es sehr wahrscheinlich,
+// dass dieses Interface noch stark angepasst werden muss.
 type DispInterface interface {
+    // Damit die Initialisierung so flexibel wie moeglich bleibt, wird der
+    // Init-Methode ein Slice von beliebigen Parametern uebergeben. Wie die
+    // Werte interpretiert werden, ist Interface-spezifisch.
+	Init(initParams []any)
+
 	// Schliesst die Verbindung zum ILI-Chip und gibt alle Ressourcen in
 	// Zusammenhang mit dieser Verbindung frei.
 	Close()
-
-	Init(initParams []any)
 
 	// Sendet einen Befehl (Command) zum Chip. Das ist in der Regel ein
 	// 8 Bit Wert.
@@ -28,13 +34,15 @@ type DispInterface interface {
 // Wie für den Display, so gibt es auch für den Touchscreen-Controller
 // verschiedene Ausführungen. Dieses Interface beschreibt alle Methoden,
 // welche von einer Touchscreen-Anbindung implementiert werden müssen.
-//
 type TouchInterface interface {
+    // Damit die Initialisierung so flexibel wie moeglich bleibt, wird der
+    // Init-Methode ein Slice von beliebigen Parametern uebergeben. Wie die
+    // Werte interpretiert werden, ist Interface-spezifisch.
+	Init(initParams []any)
+
     // Schliesst die Verbindung zum Touchscreen-Controller und gibt alle
     // Ressourcen im Zusammenhang mit dieser Verbindung frei.
     Close()
-
-	Init(initParams []any)
 
     // Mit den folgenden vier Methoden können die Register des Controller
     // ausgelesen oder beschrieben werden. Es stehen Methoden für 8-Bit oder
@@ -47,11 +55,10 @@ type TouchInterface interface {
     // Mit ReadData kann die aktuelle Position auf dem Touchscreen ermittelt
     // werden. Diese Methode sollte nur dann aufgerufen werden, wenn auch
     // Positionsdaten vorhanden sind.
-    //
     ReadData() (x, y uint16)
 
     // Damit wird die Funktion cbFunc als Handler für alle Interrupts im
-    // Zusammenhang mit dem Touchscreen hinterlegt.
-    //
+    // Zusammenhang mit dem Touchscreen hinterlegt. Der Funktion wird beim
+    // Aufruf der Paramter cbData uebergeben.
     SetCallback(cbFunc func(any), cbData any)
 }

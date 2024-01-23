@@ -6,21 +6,29 @@ import (
     stmpe "github.com/stefan-muehlebach/adatft/stmpe610"
 )
 
+// Mit diesen Konstanten wird einerseits die Frequenz fuer den SPI-Bus
+// definiert und die Groesse der Queue fuer die Touch-Events festgelegt.
 const (
     tchSpeedHz     = 1_000_000
     eventQueueSize = 30
 )
 
 // Dies sind alle Pen- oder Touch-Events, auf welche man sich abonnieren kann.
-// Vom SMTPE610 gibt es nur 3 Events: Press, Move und Release. Die anderen
-// Events (wie Tap, DoubleTap, Enter oder Leave) sind virtuelle Events und
-// werden im Package 'adagui' durch den Screen-Typ erzeugt.
+// Aktuell sind dies 3 Events: Press, Drag und Release, wobei die Reihenfolge
+// der Events immer die folgende ist:
+//
+//   Press -> Drag -> Drag -> ... -> Release
 //
 type PenEventType uint8
 
 const (
+    // PenPress wird erzeugt, wenn der Touch-Screen gedrueckt wird.
     PenPress PenEventType = iota
+    // PenDrag wird erzeugt, wenn sich die Position des Drucks auf dem
+    // Touchscreen veraendert.
     PenDrag
+    // PenRelease wird erzeugt, wenn der Druck auf dem Touch-Screen nicht
+    // mehr gemessen werden kann.
     PenRelease
     numEvents
     sampleTime = 5 * time.Millisecond
@@ -39,7 +47,6 @@ func (pet PenEventType) String() (string) {
 }
 
 // Dieser Typ steht fuer das SPI Interface zum STMPE - dem Touchscreen.
-//
 type Touch struct {
     tspi TouchInterface
     EventQ PenEventChannelType
@@ -143,7 +150,6 @@ func (tch *Touch) Close() {
 //
 // Mit dem auskommentierten Code kann für Testzwecke dafür gesorgt werden,
 // dass bei einem Fehler ein Runtime-Panic ausgelöst wird.
-//
 func (tch *Touch) enqueueEvent(event PenEvent) {
     defer func() {
         if x := recover(); x != nil {
