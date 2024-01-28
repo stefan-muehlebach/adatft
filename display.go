@@ -1,7 +1,6 @@
 package adatft
 
 import (
-    "errors"
     "image"
     "time"
 
@@ -23,69 +22,6 @@ var (
     Width, Height int
 )
 
-// Rotationsmöglichkeiten des Displays. Es gibt (logischerweise) 4
-// Möglichkeiten das Display zu rotieren. Dies hat Auswirkungen auf die
-// Initialisierung des Displays, auf die globalen Variablen Width und Height
-// und auf die Konfigurationsdateien, in welchen die Daten für die
-// Transformation von Touch-Koordinaten auf Display-Koordianten abgelegt
-// sind, etc.
-type RotationType int
-
-const (
-    Rotate000 RotationType = iota
-    Rotate090
-    Rotate180
-    Rotate270
-)
-
-func (rot RotationType) String() string {
-    switch rot {
-    case Rotate000:
-        return "Rotate000"
-    case Rotate090:
-        return "Rotate090"
-    case Rotate180:
-        return "Rotate180"
-    case Rotate270:
-        return "Rotate270"
-    default:
-        return "(unknown rotation)"
-    }
-}
-
-func (rot *RotationType) Set(s string) error {
-    switch s {
-    case "Rotate000":
-        *rot = Rotate000
-    case "Rotate090":
-        *rot = Rotate090
-    case "Rotate180":
-        *rot = Rotate180
-    case "Rotate270":
-        *rot = Rotate270
-    default:
-        return errors.New("Unknown rotation: " + s)
-    }
-    return nil
-}
-
-// In RotationData sind nun alle von der Rotation abhängigen Einstellungen
-// abgelegt. Es ist ein interner Datentyp, der wohl verwendet, aber nicht
-// verändert werden kann.
-type RotationData struct {
-    iliParam      uint8
-    calibDataFile string
-    width, height int
-}
-
-var (
-    rotDat = []RotationData{
-        RotationData{0xe0, "Rotate000.json", ili.LONG_SIDE, ili.SHORT_SIDE},
-        RotationData{0x80, "Rotate090.json", ili.SHORT_SIDE, ili.LONG_SIDE},
-        RotationData{0x20, "Rotate180.json", ili.LONG_SIDE, ili.SHORT_SIDE},
-        RotationData{0x40, "Rotate270.json", ili.SHORT_SIDE, ili.LONG_SIDE},
-    }
-)
 
 //type BufChanItem struct {
 //    img  *ILIImage
@@ -134,6 +70,8 @@ var (
 // Anzeigen notwendig sind.
 func OpenDisplay(rot RotationType) *Display {
     var dsp *Display
+    var rect image.Rectangle
+    var img *ILIImage
 
     Width = rotDat[rot].width
     Height = rotDat[rot].height
@@ -146,27 +84,6 @@ func OpenDisplay(rot RotationType) *Display {
         dsp.dspi = ili.OpenDummy(dspSpeedHz)
     }
     dsp.dspi.Init([]any{false, rotDat[rot].iliParam})
-
-    dsp.InitChannels()
-
-    return dsp
-}
-
-// Schliesst die Verbindung zum ILI9341.
-func (dsp *Display) Close() {
-    close(dsp.imgChan[toDisp])
-    <-dsp.quitQ
-    dsp.syncImg.Clear()
-    dsp.sendImage(dsp.syncImg)
-    dsp.dspi.Close()
-}
-
-// Diese Routine baut die GO-Routinen fuer die parallelisierte Konvertierung
-// und Anzeige auf und retourniert einen Channel, auf welchem die Pointer
-// auf die RGBA-Images zur Anzeige gesendet werden.
-func (dsp *Display) InitChannels() {
-    var rect image.Rectangle
-    var img *ILIImage
 
     dsp.imgChan = make([]chan *ILIImage, 2)
     for i := 0; i < len(dsp.imgChan); i++ {
@@ -182,6 +99,17 @@ func (dsp *Display) InitChannels() {
 
     dsp.quitQ = make(chan bool)
     go dsp.displayer()
+
+    return dsp
+}
+
+// Schliesst die Verbindung zum ILI9341.
+func (dsp *Display) Close() {
+    close(dsp.imgChan[toDisp])
+    <-dsp.quitQ
+    dsp.syncImg.Clear()
+    dsp.sendImage(dsp.syncImg)
+    dsp.dspi.Close()
 }
 
 // func (dsp *Display) InitChannels() {
