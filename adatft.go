@@ -27,9 +27,11 @@ import (
     "os"
     "path/filepath"
 
-    //"periph.io/x/host/v3"
-    "periph.io/x/conn/driver/driverreg"
-    "periph.io/x/host"
+    "periph.io/x/host/v3"
+    "periph.io/x/conn/v3/driver/driverreg"
+
+    //"periph.io/x/conn/driver/driverreg"
+    //"periph.io/x/host"
 )
 
 const (

@@ -1,9 +1,9 @@
 package ili9341
 
 import (
-    "periph.io/x/conn/gpio"
-    "periph.io/x/conn/physic"
-    "periph.io/x/conn/spi"
+    "periph.io/x/conn/v3/gpio"
+    "periph.io/x/conn/v3/physic"
+    "periph.io/x/conn/v3/spi"
 )
 
 // Dies ist der Datentyp, welche für die Verbindung zum ILI9341 via SPI
