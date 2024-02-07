@@ -131,7 +131,7 @@ func Open(speedHz physic.Frequency) (*ILI9341) {
 
 // Schliesst die Verbindung zum ILI9341.
 func (d *ILI9341) Close() {
-    // err := d.spi.Close()
+    // d.spi.Close()
     // check("Close(): error in spi.Close()", err)
 }
 

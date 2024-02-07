@@ -31,6 +31,9 @@ const (
     // mehr gemessen werden kann.
     PenRelease
     numEvents
+)
+
+const (
     sampleTime = 5 * time.Millisecond
 )
 

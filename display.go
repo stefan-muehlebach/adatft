@@ -2,17 +2,10 @@ package adatft
 
 import (
     "image"
-    "time"
-
     ili "github.com/stefan-muehlebach/adatft/ili9341"
 )
 
-type channelDir int
-
-// Konstanten, die bei diesem Display halt einfach so sind wie sie sind.
 const (
-    toConv channelDir = iota
-    toDisp
     dspSpeedHz       = 65_000_000
     numBuffers  int  = 3
     initMinimal bool = false
@@ -22,11 +15,17 @@ var (
     Width, Height int
 )
 
+// Es gibt zwei Channels, welche fuer darzustellende Bilder verwendet
+// werden: einen der vom Converter zur Displayer fuehrt und einen, der vom
+// Displayer wieder zurueck zum Converter fuehrt. Mit dem Typ channelDir und
+// den Konstanten toConv und toDisp werden die beiden Channels angesprochen.
+type channelDir int
 
-//type BufChanItem struct {
-//    img  *ILIImage
-//    rect image.Rectangle
-//}
+const (
+    toConv channelDir = iota
+    toDisp
+    numChannels
+)
 
 // Dies ist der Datentyp, welche für die Verbindung zum ILI9341 via SPI
 // steht. Im Wesentlichen handelt es sich dabei um den Filedescriptor auf
@@ -35,33 +34,10 @@ var (
 // Format vornehmen und die Daten via SPI-Bus an den ILI9341 sendet.
 type Display struct {
     dspi         DispInterface
-    //bufChan      []chan *BufChanItem
     imgChan      []chan *ILIImage
-    syncImg      *ILIImage
+    syncImg, activeImg *ILIImage
     quitQ        chan bool
 }
-
-var (
-    // ConvTime enthält die kumulierte Zeit, welche für das Konvertieren der
-    // Bilder vom RGBA-Format in das 565-/666-Format verwendet wird.
-    // Misst im Wesentlichen die aktive Zeit der Methode 'Convert'.
-    ConvTime time.Duration
-    // NumConv enthält die Anzahl Aufrufe von 'Convert'.
-    NumConv int
-    // DispTime enthält die kumulierte Zeit, welche für das Senden der Bilder
-    // zum Display verwendet wird. Misst im Wesentlichen die aktive Zeit
-    // der Methode 'sendImage'.
-    DispTime time.Duration
-    // NumDisp enthält die Anzahl Aufrufe von 'sendImage'.
-    NumDisp int
-    // PaintTime kann von der Applikation verwendet werden, um die kumulierte
-    // Zeit zu erfassen, die von der Applikation selber zum Zeichnen des
-    // Bildschirms verwendet wird.
-    PaintTime time.Duration
-    // In NumPaint kann die Applikation festhalten, wie oft der Bildschirm-
-    // inhalt (oder Teile davon) neu gezeichnet wird.
-    NumPaint int
-)
 
 // OpenDisplay initialisiert die Hardware, damit ein Zeichnen auf dem TFT
 // erst möglich wird. Als einziger Parameter muss die gewünschte Rotation des
@@ -85,7 +61,7 @@ func OpenDisplay(rot RotationType) *Display {
     }
     dsp.dspi.Init([]any{false, rotDat[rot].iliParam})
 
-    dsp.imgChan = make([]chan *ILIImage, 2)
+    dsp.imgChan = make([]chan *ILIImage, numChannels)
     for i := 0; i < len(dsp.imgChan); i++ {
         dsp.imgChan[i] = make(chan *ILIImage, numBuffers+1)
     }
@@ -95,7 +71,9 @@ func OpenDisplay(rot RotationType) *Display {
         img = NewILIImage(rect)
         dsp.imgChan[toConv] <- img
     }
-    dsp.syncImg = NewILIImage(rect)
+    dsp.syncImg   = NewILIImage(rect)
+    dsp.activeImg = NewILIImage(rect)
+    dsp.sendImage(dsp.activeImg)
 
     dsp.quitQ = make(chan bool)
     go dsp.displayer()
@@ -112,24 +90,10 @@ func (dsp *Display) Close() {
     dsp.dspi.Close()
 }
 
-// func (dsp *Display) InitChannels() {
-//     var buf *ILIImage
-
-//     dsp.bufChan = make([]chan *ILIImage, 2)
-//     for i := 0; i < len(dsp.bufChan); i++ {
-//         dsp.bufChan[i] = make(chan *ILIImage, numBuffers+1)
-//     }
-
-//     for i := 0; i < numBuffers; i++ {
-//         buf = NewILIImage(image.Rect(0, 0, Width, Height))
-//         dsp.bufChan[toConv] <- buf
-//     }
-//     dsp.staticBuf = NewILIImage(image.Rect(0, 0, Width, Height))
-
-//     dsp.quitQ = make(chan bool)
-//     go dsp.displayer()
-// }
-
+// Die Methode Bounds kann verwendet werden, um die Breite und Hoehe des
+// Displays zu ermitteln. Das Resultat ist ein image.Rectangle Wert, d.h.
+// es wird kein geom.Rectangle Wert zurueckgegeben, da dieser float64-Werte
+// enthaelt.
 func (dsp *Display) Bounds() image.Rectangle {
     return image.Rect(0, 0, Width, Height)
 }
@@ -139,7 +103,9 @@ func (dsp *Display) Bounds() image.Rectangle {
 // zum TFT gesendet wurden. Wichtig: img muss ein image.RGBA-Typ sein!
 func (dsp *Display) DrawSync(img image.Image) error {
     dsp.syncImg.Convert(img.(*image.RGBA))
-    dsp.sendImage(dsp.syncImg)
+    rect := dsp.activeImg.Diff(dsp.syncImg)
+    dsp.sendImage(dsp.syncImg.SubImage(rect).(*ILIImage))
+    dsp.activeImg, dsp.syncImg = dsp.syncImg, dsp.activeImg
     return nil
 }
 
@@ -155,36 +121,39 @@ func (dsp *Display) Draw(img image.Image) error {
     return nil
 }
 
-// Mit dieser Funktion wird ein Bild auf dem TFT angezeigt.
+// Mit dieser Funktion wird ein Bild im ILI-Format auf dem TFT dargestellt,
+// d.h. die Bilddaten werden via SPI-Bus zum ILI9341 gesendet.
 func (dsp *Display) sendImage(img *ILIImage) {
-    t1 := time.Now()
-    start, end := img.Rect.Min, img.Rect.Max
-    bytesPerLine := img.Rect.Dx() * bytesPerPixel
+    var len int
+    
+    DispWatch.Start()
+    rect := img.Rect
+    bytesPerLine := rect.Dx() * bytesPerPixel
 
     dsp.dspi.Cmd(ili.ILI9341_CASET)
-    dsp.dspi.Data32(uint32((start.X << 16) | (end.X - 1)))
+    dsp.dspi.Data32(uint32((rect.Min.X << 16) | (rect.Max.X - 1)))
     dsp.dspi.Cmd(ili.ILI9341_PASET)
-    dsp.dspi.Data32(uint32((start.Y << 16) | (end.Y - 1)))
+    dsp.dspi.Data32(uint32((rect.Min.Y << 16) | (rect.Max.Y - 1)))
     dsp.dspi.Cmd(ili.ILI9341_RAMWR)
 
     if bytesPerLine == img.Stride {
-        dsp.dspi.DataArray(img.Pix[:img.Rect.Dy() * img.Stride])
+        len = rect.Dy() * img.Stride
+        dsp.dspi.DataArray(img.Pix[: len : len])
     } else {
         idx := 0
-        for y := start.Y; y < end.Y; y++ {
-            dsp.dspi.DataArray(img.Pix[idx : idx+bytesPerLine])
+        for y := rect.Min.Y; y < rect.Max.Y; y++ {
+            dsp.dspi.DataArray(img.Pix[idx : idx+bytesPerLine : idx+bytesPerLine])
             idx += img.Stride
         }
     }
-    DispTime += time.Since(t1)
-    NumDisp++
+    DispWatch.Stop()
 }
 
 // Das ist die Funktion, welche im Hintergrund für die Anzeige der Bilder
 // zuständig ist. Sie läuft als Go-Routine und wartet, bis über den Channel
 // bufChan[toDisp] Bilder zur Anzeige eintreffen.
 func (dsp *Display) displayer() {
-    var img, lastImg *ILIImage
+    var img *ILIImage
     var rect image.Rectangle
     var ok bool
 
@@ -192,14 +161,12 @@ func (dsp *Display) displayer() {
         if img, ok = <-dsp.imgChan[toDisp]; !ok {
             break
         }
-        if lastImg != nil {
-            rect = img.Diff(lastImg)
+        rect = dsp.activeImg.Diff(img)
+        if !rect.Empty() {
             dsp.sendImage(img.SubImage(rect).(*ILIImage))
-            dsp.imgChan[toConv] <- lastImg
-        } else {
-            dsp.sendImage(img)
+            dsp.activeImg, img = img, dsp.activeImg
         }
-        lastImg = img
+        dsp.imgChan[toConv] <- img
     }
     close(dsp.imgChan[toConv])
     dsp.quitQ <- true

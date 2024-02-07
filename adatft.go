@@ -22,7 +22,6 @@ package adatft
 
 import (
     "errors"
-    "fmt"
     "io/fs"
     "log"
     "os"
@@ -102,29 +101,4 @@ func init() {
     }
 }
 
-// Gibt eine Reihe von Messdaten aus, mit denen die Performance der Umgebung
-// eingeschaetzt werden kann. Drei Bereiche werden gemessen:
-//   - Die applikatorische Zeit (NumPaint, PaintTime).
-//   - Die Zeit, welche fuer die Konvertierung der Bilder ins ILI-spezifische
-//     Format benoetigt wird (NumConf, ConvTime).
-//   - Die Zeit, welche fuer die Darstellung der Bilder auf dem TFT benoetigt
-//     wird (NumDisp, DispTime).
-// Als Daumenregel gilt: wenn die applikatorische Zeit pro Frame
-// (PaintTime / NumPaint) groesser ist als die Zeit, welche fuer die
-// Darstellung benoetigt wird (DispTime / NumDisp), dann besteht Bedarf nach
-// Optimierung.
-func PrintStat() {
-    fmt.Printf("total:\n")
-    fmt.Printf("  %d frames\n", NumConv)
-    if NumPaint != 0 {
-        fmt.Printf("application painting:\n")
-        fmt.Printf("  %v total\n", PaintTime)
-        fmt.Printf("  %.3f ms / frame\n", float64(PaintTime.Milliseconds())/float64(NumPaint))
-    }
-    fmt.Printf("buffer conversion:\n")
-    fmt.Printf("  %v total\n", ConvTime)
-    fmt.Printf("  %.3f ms / frame\n", float64(ConvTime.Milliseconds())/float64(NumConv))
-    fmt.Printf("sending to SPI:\n")
-    fmt.Printf("  %v total\n", DispTime)
-    fmt.Printf("  %.3f ms / frame\n", float64(DispTime.Milliseconds())/float64(NumDisp))
-}
+

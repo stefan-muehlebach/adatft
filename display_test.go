@@ -1,7 +1,7 @@
 package adatft
 
 import (
-    "time"
+//    "time"
     "image"
     "image/draw"
     "image/png"
@@ -18,7 +18,6 @@ import (
 const (
     randSeed  = 12_345_678
     imageFile = "testbild.png"
-    speedHz   = 50_000_000
 )
 
 var (
@@ -30,6 +29,7 @@ var (
     srcPoint image.Point
     rect image.Rectangle
     gc *gg.Context
+    gcImage *image.RGBA
     err error
     plane *DistortedPlane
     touchData TouchRawPos
@@ -39,7 +39,6 @@ var (
 )
 
 func init() {
-//    Init()
     disp = OpenDisplay(Rotate000)
     fWidth, fHeight = float64(Width), float64(Height)
 
@@ -69,159 +68,162 @@ func init() {
     plane.ReadConfig()
 
     gc = gg.NewContext(Width, Height)
+    gcImage = gc.Image().(*image.RGBA)
+    
     backColor   = colornames.LightGreen
     fillColor   = colornames.CadetBlue
     borderColor = colornames.WhiteSmoke
     borderWidth = 5.0
-}
-
-// Sync'ed Draw-Funktionen.
-//
-func TestDrawSyncFull(t *testing.T) {
-    gc.SetFillColor(colornames.Navy)
-    gc.Clear()
-    disp.DrawSync(gc.Image())
-    gc.DrawImage(testBild.SubImage(RectFull), 0, 0)
-    disp.DrawSync(gc.Image())
-}
-func TestDrawSyncHalve(t *testing.T) {
-    gc.SetFillColor(colornames.Navy)
-    gc.Clear()
-    disp.DrawSync(gc.Image())
-    gc.DrawImage(testBild.SubImage(RectHalve), 0, 0)
-    disp.DrawSync(gc.Image())
-}
-func TestDrawSyncQuart(t *testing.T) {
-    gc.SetFillColor(colornames.Navy)
-    gc.Clear()
-    disp.DrawSync(gc.Image())
-    gc.DrawImage(testBild.SubImage(RectQuart), 0, 0)
-    disp.DrawSync(gc.Image())
-}
-func TestDrawSyncCust(t *testing.T) {
-    gc.SetFillColor(colornames.Navy)
-    gc.Clear()
-    disp.DrawSync(gc.Image())
-
-    rect := RectQuart
-    draw.Draw(workImage, rect, testBild, rect.Min, draw.Src)
-    disp.DrawSync(workImage)
-
-    rect = RectQuart.Add(image.Point{100, 100})
-    draw.Draw(workImage, rect, testBild, rect.Min, draw.Src)
-    disp.DrawSync(workImage)
-
-    disp.DrawSync(workImage)
-}
-
-// Async'ed Draw-Funktionen.
-//
-func TestDrawAsyncFull(t *testing.T) {
-    gc.SetFillColor(colornames.Navy)
-    gc.Clear()
-    disp.Draw(gc.Image())
-    gc.DrawImage(testBild.SubImage(RectFull), 0, 0)
-    disp.Draw(gc.Image())
-    time.Sleep(time.Second)
-}
-func TestDrawAsyncHalve(t *testing.T) {
-    gc.SetFillColor(colornames.Navy)
-    gc.Clear()
-    disp.Draw(gc.Image())
-    gc.DrawImage(testBild.SubImage(RectHalve), 0, 0)
-    disp.Draw(gc.Image())
-    time.Sleep(time.Second)
-}
-func TestDrawAsyncQuart(t *testing.T) {
-    gc.SetFillColor(colornames.Navy)
-    gc.Clear()
-    disp.Draw(gc.Image())
-    gc.DrawImage(testBild.SubImage(RectQuart), 0, 0)
-    disp.Draw(gc.Image())
-    time.Sleep(time.Second)
-}
-func TestDrawAsyncCust(t *testing.T) {
-    img := gc.Image().(*image.RGBA)
-
-    gc.SetFillColor(color.Black)
-    gc.Clear()
-    disp.Draw(gc.Image())
-
-    rect := RectQuart
-    draw.Draw(img, rect, testBild, rect.Min, draw.Src)
-    disp.Draw(gc.Image())
-
-    rect = RectQuart.Add(image.Point{100, 100})
-    draw.Draw(img, rect, testBild, rect.Min, draw.Src)
-    disp.Draw(gc.Image())
-    time.Sleep(time.Second)
-}
-
-func TestImageDiff(t *testing.T) {
-    imageA := NewILIImage(image.Rect(0, 0, Width, Height))
-    imageB := NewILIImage(image.Rect(0, 0, Width, Height))
-
-    imageA.Convert(testBild)
-    imageB.Convert(testBild)
-
-    rect := imageA.Diff(imageB)
-    log.Printf("difference rectangle: %v", rect)
-
-    imageB.Set(100, 100, colornames.Navy)
-    rect = imageA.Diff(imageB)
-    log.Printf("difference rectangle: %v", rect)
-
-    imageB.Set(250, 100, colornames.Navy)
-    rect = imageA.Diff(imageB)
-    log.Printf("difference rectangle: %v", rect)
-
-    imageB.Convert(testBild)
-    imageB.Set(100, 100, colornames.Navy)
-    imageB.Set(100, 210, colornames.Navy)
-    rect = imageA.Diff(imageB)
-    log.Printf("difference rectangle: %v", rect)
-
-
-}
-
-// Benchmark der Konvertierung von Touchscreen-Koordinaten nach Bildschirm-
-// Koordinaten. TO DO: ev. sollte die Erzeugung der Touchscreen-Koordinaten
-// aus der Zeitmessung entfernt werden.
-//
-func BenchmarkTransformPoint(b *testing.B) {
+    
     rand.Seed(randSeed)
-    x, y := uint16(rand.Intn(2 << 16)), uint16(rand.Intn(2 << 16))
+}
+
+// Test der synchronisierten Draw-Funktionen
+func TestDrawSyncFull(t *testing.T) {
+    gc.SetFillColor(colornames.Black)
+    gc.Clear()
+    gc.DrawImage(testBild.SubImage(RectFull), 0, 0)
+    disp.DrawSync(gc.Image())
+}
+func BenchmarkDrawSyncFull(b *testing.B) {
+    gc.SetFillColor(colornames.Black)
+    gc.Clear()
+    gc.DrawImage(testBild.SubImage(RectFull), 0, 0)
     b.ResetTimer()
-    for i := 0; i< b.N; i++ {
-        touchData = TouchRawPos{x, y}
-        touchPos, _ = plane.Transform(touchData)
+    for i:=0; i<b.N; i++ {
+        disp.DrawSync(gc.Image())
+    }
+}
+
+func TestDrawSyncRand(t *testing.T) {
+    rand.Seed(randSeed)
+    gc.SetFillColor(colornames.Black)
+    gc.Clear()
+    for i:=0; i<5; i++ {
+        dx := rand.Intn(240)-120
+        dy := rand.Intn(180)-90
+        rect := RectQuart.Add(image.Point{dx, dy})
+        draw.Draw(gcImage, rect, testBild, rect.Min, draw.Src)
+    }
+    disp.DrawSync(gc.Image())
+}
+
+// Test der asynchronen Draw-Funktionen.
+func TestDrawAsyncFull(t *testing.T) {
+    gc.SetFillColor(colornames.Black)
+    gc.Clear()
+    gc.DrawImage(testBild.SubImage(RectFull), 0, 0)
+    disp.Draw(gc.Image())
+    disp.Close()
+}
+func BenchmarkDrawAsyncFull(b *testing.B) {
+    gc.SetFillColor(colornames.Black)
+    gc.Clear()
+    gc.DrawImage(testBild.SubImage(RectFull), 0, 0)
+    b.ResetTimer()
+    for i:=0; i<b.N; i++ {
+        disp.Draw(gc.Image())
+    }
+    b.StopTimer()
+}
+func TestDrawAsyncRand(t *testing.T) {
+    rand.Seed(randSeed)
+    gc.SetFillColor(colornames.Black)
+    gc.Clear()
+    for i:=0; i<5; i++ {
+        dx := rand.Intn(240)-120
+        dy := rand.Intn(180)-90
+        rect := RectQuart.Add(image.Point{dx, dy})
+        draw.Draw(gcImage, rect, testBild, rect.Min, draw.Src)
+    }
+    disp.Draw(gc.Image())
+    disp.Close()
+}
+
+// Test des Ermittelns der Bilddifferenzen.
+func TestDiff(t *testing.T) {
+    img := NewILIImage(image.Rect(0, 0, Width, Height))
+    img.Clear()
+    pixBuf.Clear()
+
+    // Sollte keine Unterschiede bemerken, resp. ein leeres Rechteck liefern.
+    rect := pixBuf.Diff(img)
+    t.Logf("no changes; diff rect: %v", rect)
+    if !rect.Empty() {
+        t.Errorf("no changes; want (0,0)-(0,0), got %v", rect)
+    }
+    
+    // Unterschied von einem Pixel bei (100,100)
+    img.Set(160, 120, colornames.Navy)
+    rect = pixBuf.Diff(img)
+    t.Logf("one pixel changed; diff rect: %v", rect)
+    if rect.Size() != image.Pt(1, 1) {
+        t.Errorf("one pixel changed; want (160,120)-(161,121), got %v", rect)
+    }
+
+    // Unterschied durch zwei Pixel und dadurch Rechteck erwartet.
+    img.Clear()
+    img.Set( 80,  60, colornames.Navy)
+    img.Set(239, 179, colornames.Navy)
+    rect = pixBuf.Diff(img)
+    t.Logf("second pixel changed; diff rect: %v", rect)
+    if rect.Size() != image.Pt(160, 120) {
+        t.Errorf("second pixel changed; want (80,60)-(240,180), got %v", rect)
+    }
+
+    // Unterschied durch zwei Pixel und dadurch Rechteck erwartet.
+    img.Clear()
+    img.Set(239,  60, colornames.Navy)
+    img.Set( 80, 179, colornames.Navy)
+    rect = pixBuf.Diff(img)
+    t.Logf("second pixel changed; diff rect: %v", rect)
+    if rect.Size() != image.Pt(160, 120) {
+        t.Errorf("second pixel changed; want (80,60)-(240,180), got %v", rect)
+    }
+
+    // Unterschiede liegen ganz an den Raendern: ganzes Bild sollte neu
+    // gezeichnet werden
+    img.Clear()
+    img.Set(160,   0, colornames.Navy)
+    img.Set(319, 120, colornames.Navy)
+    img.Set(160, 239, colornames.Navy)
+    img.Set(  0, 120, colornames.Navy)
+    rect = pixBuf.Diff(img)
+    t.Logf("edge pixel changed; diff rect: %v", rect)
+    if rect.Size() != image.Pt(Width, Height) {
+        t.Errorf("edge pixel changed; want (0,0)-(320,240), got %v", rect)
     }
 }
 
 // Misst die Zeit, welche benoetigt wird um festzustellen, welche Teile eines
 // Bildes sich veraendert haben.
-//
+// Zuerst fuer den Fall, dass sich gar nichts aendert, also das gesamte Bild
+// durchsucht werden muss.
 func BenchmarkDiffFull(b *testing.B) {
     img := NewILIImage(image.Rect(0, 0, Width, Height))
-    pixBuf.Convert(testBild)
-    img.Convert(testBild)
+    img.Clear()
+    pixBuf.Clear()
+
     b.ResetTimer()
     for i:=0; i<b.N; i++ {
         rect = pixBuf.Diff(img)
     }
 }
+
+// Und danach fuer 20 zufaellig gesetzte Punkte.
 func BenchmarkDiffRand(b *testing.B) {
     rand.Seed(randSeed)
     img := NewILIImage(image.Rect(0, 0, Width, Height))
-    pixBuf.Convert(testBild)
+    pixBuf.Clear()
+    
     b.StopTimer()
     b.ResetTimer()
     for i:=0; i<b.N; i++ {
-        img.Convert(testBild)
-        for j:=0; j<2; j++ {
-            x, y := rand.Intn(Width), rand.Intn(Height)
-            img.Set(x, y, colornames.YellowGreen)
-        }
+        img.Clear()
+        x0, y0 := rand.Intn(Width/2), rand.Intn(Height/2)
+        x1, y1 := Width/2 + rand.Intn(Width/2), Height/2 + rand.Intn(Height/2)
+        img.Set(x0, y0, colornames.White)
+        img.Set(x1, y1, colornames.White)
         b.StartTimer()
         rect = pixBuf.Diff(img)
         b.StopTimer()
@@ -232,7 +234,6 @@ func BenchmarkDiffRand(b *testing.B) {
 // ins TFT-spezifische 666-/565-Format. Es gibt dazu vier Funktionen, welche
 // vier verschiedene Ausschnitte des Bildes konvertieren: Full, Halve, Quart
 // und Cust (siehe auch die Variablen dstRectXXX in der Funktion init()).
-//
 func BenchmarkConvertFull(b *testing.B) {
     for i := 0; i < b.N; i++ {
         pixBuf.Convert(testBild)
@@ -243,8 +244,8 @@ func BenchmarkConvertRand(b *testing.B) {
     b.StopTimer()
     b.ResetTimer()
     for i := 0; i < b.N; i++ {
-        x0, y0 := rand.Intn(Width), rand.Intn(Height)
-        x1, y1 := rand.Intn(Width), rand.Intn(Height)
+        x0, y0 := rand.Intn(Width/2), rand.Intn(Height/2)
+        x1, y1 := Width/2 + rand.Intn(Width/2), Height/2 + rand.Intn(Height/2)
         rect := image.Rect(x0, y0, x1, y1)
         img := testBild.SubImage(rect).(*image.RGBA)
         b.StartTimer()
@@ -257,6 +258,19 @@ func BenchmarkConvertRand(b *testing.B) {
 //         draw.Draw(pixBuf, pixBuf.Rect, testBild, image.Point{}, draw.Src)
 //     }
 // }
+
+// Benchmark der Konvertierung von Touchscreen-Koordinaten nach Bildschirm-
+// Koordinaten. TO DO: ev. sollte die Erzeugung der Touchscreen-Koordinaten
+// aus der Zeitmessung entfernt werden.
+func BenchmarkTransformPoint(b *testing.B) {
+    rand.Seed(randSeed)
+    x, y := uint16(rand.Intn(2 << 16)), uint16(rand.Intn(2 << 16))
+    touchData = TouchRawPos{x, y}
+    b.ResetTimer()
+    for i := 0; i < b.N; i++ {
+        touchPos, _ = plane.Transform(touchData)
+    }
+}
 
 // Misst die Zeit für die Darstellung eines Bildes (resp. eines Teils davon)
 // auf dem TFT. Es gibt dazu vier Funktionen, welche vier verschiedene
