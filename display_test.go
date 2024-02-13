@@ -13,9 +13,11 @@ import (
     "github.com/stefan-muehlebach/gg/color"
     "github.com/stefan-muehlebach/gg/colornames"
     draw2 "golang.org/x/image/draw"
+    "periph.io/x/conn/v3/physic"
 )
 
 const (
+    defSpeed  = 32_000_000
     randSeed  = 12_345_678
     imageFile = "testbild.png"
 )
@@ -39,6 +41,8 @@ var (
 )
 
 func init() {
+    SPISpeedHz = physic.Frequency(defSpeed)
+
     disp = OpenDisplay(Rotate000)
     fWidth, fHeight = float64(Width), float64(Height)
 

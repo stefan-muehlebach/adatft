@@ -2,16 +2,18 @@ package adatft
 
 import (
     "image"
-    ili "github.com/stefan-muehlebach/adatft/ili9341"
+    "periph.io/x/conn/v3/physic"
+    ili "github.com/stefan-muehlebach/adatft/hx8357"
+//    ili "github.com/stefan-muehlebach/adatft/ili9341"
 )
 
 const (
-    dspSpeedHz       = 65_000_000
     numBuffers  int  = 3
     initMinimal bool = false
 )
 
 var (
+    SPISpeedHz physic.Frequency = 32_000_000
     Width, Height int
 )
 
@@ -55,9 +57,9 @@ func OpenDisplay(rot RotationType) *Display {
 
     dsp = &Display{}
     if isRaspberry {
-        dsp.dspi = ili.Open(dspSpeedHz)
+        dsp.dspi = ili.Open(SPISpeedHz)
     } else {
-        dsp.dspi = ili.OpenDummy(dspSpeedHz)
+        dsp.dspi = ili.OpenDummy(SPISpeedHz)
     }
     dsp.dspi.Init([]any{false, rotDat[rot].iliParam})
 
@@ -130,11 +132,11 @@ func (dsp *Display) sendImage(img *ILIImage) {
     rect := img.Rect
     bytesPerLine := rect.Dx() * bytesPerPixel
 
-    dsp.dspi.Cmd(ili.ILI9341_CASET)
+    dsp.dspi.Cmd(ili.CASET)
     dsp.dspi.Data32(uint32((rect.Min.X << 16) | (rect.Max.X - 1)))
-    dsp.dspi.Cmd(ili.ILI9341_PASET)
+    dsp.dspi.Cmd(ili.PASET)
     dsp.dspi.Data32(uint32((rect.Min.Y << 16) | (rect.Max.Y - 1)))
-    dsp.dspi.Cmd(ili.ILI9341_RAMWR)
+    dsp.dspi.Cmd(ili.RAMWR)
 
     if bytesPerLine == img.Stride {
         len = rect.Dy() * img.Stride
