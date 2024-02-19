@@ -2,8 +2,8 @@ package adatft
 
 import (
     "errors"
-    ili "github.com/stefan-muehlebach/adatft/hx8357"
-//    ili "github.com/stefan-muehlebach/adatft/ili9341"
+    ili "github.com/stefan-muehlebach/adatft/ili9341"
+//    ili "github.com/stefan-muehlebach/adatft/hx8357"
 )
 
 // Rotationsmöglichkeiten des Displays. Es gibt (logischerweise) 4

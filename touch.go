@@ -2,6 +2,7 @@ package adatft
 
 import (
     "fmt"
+    //"log"
     "time"
     stmpe "github.com/stefan-muehlebach/adatft/stmpe610"
 )
@@ -205,6 +206,8 @@ func eventDispatcher(arg any) {
     var ev PenEvent
 
     tch = arg.(*Touch)
+
+    // log.Printf("Interrupt received!\n")
 
     // intStatus enthält pro Interrupt den aktuellen Status (active,
     // not active) während in intEnable pro Interrupt festgehalten ist, ob

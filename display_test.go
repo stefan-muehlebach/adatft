@@ -8,6 +8,7 @@ import (
     "log"
     "math/rand"
     "os"
+    "strconv"
     "testing"
     "github.com/stefan-muehlebach/gg"
     "github.com/stefan-muehlebach/gg/color"
@@ -17,7 +18,7 @@ import (
 )
 
 const (
-    defSpeed  = 32_000_000
+    defSpeed  = 45_000_000
     randSeed  = 12_345_678
     imageFile = "testbild.png"
 )
@@ -26,7 +27,7 @@ var (
     disp *Display
     pixBuf *ILIImage
     fWidth, fHeight float64
-    testBild, workImage *image.RGBA
+    tempBild, testBild, workImage *image.RGBA
     RectFull, RectHalve, RectQuart, RectCust image.Rectangle
     srcPoint image.Point
     rect image.Rectangle
@@ -38,15 +39,22 @@ var (
     touchPos  TouchPos
     backColor, fillColor, borderColor color.Color
     borderWidth float64
+    spiSpeed int64
 )
 
 func init() {
-    SPISpeedHz = physic.Frequency(defSpeed)
+    log.Printf("%d, %v", len(os.Args), os.Args)
+    spiSpeed, err = strconv.ParseInt(os.Args[len(os.Args)-1], 10, 32)
+    if err != nil {
+        spiSpeed = defSpeed
+    }
+    SPISpeedHz = physic.Frequency(spiSpeed)
 
     disp = OpenDisplay(Rotate000)
     fWidth, fHeight = float64(Width), float64(Height)
+    rect = image.Rect(0, 0, Width, Height)
 
-    pixBuf = NewILIImage(image.Rect(0, 0, Width, Height))
+    pixBuf = NewILIImage(rect)
 
     fh, err := os.Open(imageFile)
     if err != nil {
@@ -57,8 +65,11 @@ func init() {
     if err != nil {
         log.Fatal(err)
     }
-    testBild  = img.(*image.RGBA)
-    workImage = image.NewRGBA(image.Rect(0, 0, Width, Height))
+    tempBild  = img.(*image.RGBA)
+    testBild = image.NewRGBA(rect)
+    draw.Draw(testBild, rect, tempBild, image.Point{}, draw.Src)
+
+    workImage = image.NewRGBA(rect)
 
     RectFull  = image.Rect(0, 0, Width, Height)
     RectHalve = image.Rect(Width/4, Height/4, 3*Width/4, 3*Height/4)
