@@ -3,8 +3,8 @@ package adatft
 import (
     "image"
     "periph.io/x/conn/v3/physic"
-    ili "github.com/stefan-muehlebach/adatft/ili9341"
-//    ili "github.com/stefan-muehlebach/adatft/hx8357"
+//    ili "github.com/stefan-muehlebach/adatft/ili9341"
+    ili "github.com/stefan-muehlebach/adatft/hx8357"
 )
 
 const (
@@ -13,7 +13,8 @@ const (
 )
 
 var (
-    SPISpeedHz physic.Frequency = 65_000_000
+    SPISpeedHz physic.Frequency = 45_000_000
+    // SPISpeedHz physic.Frequency = 65_000_000
     Width, Height int
 )
 

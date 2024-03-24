@@ -1,6 +1,6 @@
 module github.com/stefan-muehlebach/adatft
 
-go 1.21.6
+go 1.22.1
 
 require (
 	github.com/stefan-muehlebach/gg v1.2.0

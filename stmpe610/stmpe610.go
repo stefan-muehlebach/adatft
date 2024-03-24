@@ -171,7 +171,8 @@ func Open(speedHz physic.Frequency) (*STMPE610) {
 	if d.pin == nil {
 	    log.Fatal("OpenSTMPE610(): gpio io pin not found")
 	}
-	err = d.pin.In(gpio.PullNoChange, gpio.FallingEdge)
+	err = d.pin.In(gpio.PullUp, gpio.FallingEdge)
+	// err = d.pin.In(gpio.PullNoChange, gpio.FallingEdge)
 	check("OpenSTMPE610(): couldn't configure interrupt pin", err)
 
 	return d
