@@ -39,7 +39,7 @@ func (p *ILIImage) Bounds() image.Rectangle {
     return p.Rect
 }
 func (p *ILIImage) At(x, y int) color.Color {
-    return p.ILIAt(x, y)
+    return p.ILIColorAt(x, y)
 }
 
 // Set wird ausserdem von draw.Image gefordert. Damit wird ein bestimmtes
@@ -48,8 +48,12 @@ func (p *ILIImage) Set(x, y int, c color.Color) {
     if !(image.Point{x, y}.In(p.Rect)) {
         return
     }
+    i := p.PixOffset(x, y)
     c1 := ILIModel.Convert(c).(ILIColor)
-    p.setILI(x, y, c1)
+    s := p.Pix[i : i+3 : i+3]
+    s[0] = c1.R
+    s[1] = c1.G
+    s[2] = c1.B
 }
 
 // Ermittelt den Offset des Pixels mit Koordinaten x und y in p.Pix.
@@ -58,7 +62,7 @@ func (p *ILIImage) PixOffset(x, y int) int {
 }
 
 
-func (p *ILIImage) ILIAt(x, y int) ILIColor {
+func (p *ILIImage) ILIColorAt(x, y int) ILIColor {
     if !(image.Point{x, y}.In(p.Rect)) {
         return ILIColor{}
     }
@@ -67,20 +71,16 @@ func (p *ILIImage) ILIAt(x, y int) ILIColor {
     return ILIColor{s[0], s[1], s[2]}
 }
 
-func (p *ILIImage) SetILI(x, y int, c ILIColor) {
+func (p *ILIImage) SetILIColor(x, y int, c ILIColor) {
     if !(image.Point{x, y}.In(p.Rect)) {
         return
     }
-    p.setILI(x, y, c)
-}
-
-func (p *ILIImage) setILI(x, y int, c ILIColor) {
     i := p.PixOffset(x, y)
     s := p.Pix[i : i+3 : i+3]
     s[0] = c.R
     s[1] = c.G
     s[2] = c.B
-}    
+}
 
 func (p *ILIImage) SubImage(r image.Rectangle) image.Image {
     r = r.Intersect(p.Rect)
