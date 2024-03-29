@@ -8,11 +8,7 @@ import (
     "periph.io/x/conn/v3/physic"
     "periph.io/x/conn/v3/spi"
     "periph.io/x/conn/v3/spi/spireg"
-    //"periph.io/x/conn/gpio"
-    //"periph.io/x/conn/gpio/gpioreg"
-    //"periph.io/x/conn/physic"
-    //"periph.io/x/conn/spi"
-    //"periph.io/x/conn/spi/spireg"
+    //"periph.io/x/host/v3/sysfs"
 )
 
 // Konstanten für den Display-Chip HX8357.
@@ -25,7 +21,7 @@ const (
     HX8357_RDDST      = 0x09
     HX8357_RDMODE     = 0x0A
     HX8357_RDMADCTL   = 0x0B
-    HX8357_RDPIXFMT   = 0x0C
+    HX8357_RDCOLMOD   = 0x0C
     HX8357_RDIMGFMT   = 0x0D
     HX8357_RDSELFDIAG = 0x0F
 
@@ -48,7 +44,7 @@ const (
     HX8357_PTLAR    = 0x30
     HX8357_MADCTL   = 0x36
     HX8357_VSCRSADD = 0x37
-    HX8357_PIXFMT   = 0x3A
+    HX8357_COLMOD   = 0x3A
 
     HX8357_WRDISBV = 0x51
     HX8357_WRCTRLD = 0x53
@@ -126,6 +122,10 @@ func Open(speedHz physic.Frequency) (*HX8357) {
         log.Fatal("OpenHX8357(): gpio io pin not found")
     }
 
+    //spi, _ := sysfs.NewSPI(0, 0)
+    //log.Printf("MaxTxSize(): %d", spi.MaxTxSize())
+    //spi.Close()
+
     return d
 }
 
@@ -141,20 +141,23 @@ func (d *HX8357) Close() {
 func (d *HX8357) Init(initParams []any) {
     var initMinimal bool
     var madctlParam uint8
+    var pixfmtParam uint8
 
     initMinimal = initParams[0].(bool)
     madctlParam = initParams[1].(uint8)
+    pixfmtParam = initParams[2].(uint8)
 
-    var posGamma []uint8 = []uint8{
-        0x0f, 0x31, 0x2b, 0x0c, 0x0e, 0x08, 0x4e,
-        0xf1,
-        0x37, 0x07, 0x10, 0x03, 0x0e, 0x09, 0x00,
-    }
-    var negGamma []uint8 = []uint8{
-        0x00, 0x0e, 0x14, 0x03, 0x11, 0x07, 0x31,
-        0xc1,
-        0x48, 0x08, 0x0f, 0x0c, 0x31, 0x36, 0x0f,
-    }
+    //var posGamma []uint8 = []uint8{
+    //    0x0f, 0x31, 0x2b, 0x0c, 0x0e, 0x08, 0x4e,
+    //    0xf1,
+    //    0x37, 0x07, 0x10, 0x03, 0x0e, 0x09, 0x00,
+   // }
+    //var negGamma []uint8 = []uint8{
+    //    0x00, 0x0e, 0x14, 0x03, 0x11, 0x07, 0x31,
+    //    0xc1,
+    //    0x48, 0x08, 0x0f, 0x0c, 0x31, 0x36, 0x0f,
+   // }
+
     /*
        var colorLut []uint8
        colorLut = make([]uint8, 128)
@@ -180,58 +183,57 @@ func (d *HX8357) Init(initParams []any) {
        }
     */
 
-    d.Cmd(HX8357_DISPOFF) // Display On
+    d.Cmd(HX8357_DISPOFF) // Display Off
     time.Sleep(125 * time.Millisecond)
 
-    d.Cmd(HX8357_SWRESET) // Reset the chip at the beginning
-    time.Sleep(128 * time.Millisecond)
+    //d.Cmd(HX8357_SWRESET) // Reset the chip at the beginning
+    //time.Sleep(128 * time.Millisecond)
 
     if !initMinimal {
-        d.Cmd(0xEF)
-        d.DataArray([]byte{0x03, 0x80, 0x02})
+    //    d.Cmd(0xEF)
+    //    d.DataArray([]byte{0x03, 0x80, 0x02})
 
-        d.Cmd(HX8357_PWCTRLB)
-        d.DataArray([]byte{0x00, 0xc1, 0x30})
+    //    d.Cmd(HX8357_PWCTRLB)
+    //    d.DataArray([]byte{0x00, 0xc1, 0x30})
 
-        d.Cmd(HX8357_PWOSEQCTR)
-        d.DataArray([]byte{0x64, 0x03, 0x12, 0x81})
+    //    d.Cmd(HX8357_PWOSEQCTR)
+    //    d.DataArray([]byte{0x64, 0x03, 0x12, 0x81})
 
-        d.Cmd(HX8357_DRVTICTRLA)
-        d.DataArray([]byte{0x85, 0x00, 0x78})
+    //    d.Cmd(HX8357_DRVTICTRLA)
+    //    d.DataArray([]byte{0x85, 0x00, 0x78})
 
-        d.Cmd(HX8357_PWCTRLA)
-        d.DataArray([]byte{0x39, 0x2c, 0x00, 0x34, 0x02})
+    //    d.Cmd(HX8357_PWCTRLA)
+    //    d.DataArray([]byte{0x39, 0x2c, 0x00, 0x34, 0x02})
 
-        d.Cmd(HX8357_PMPRTCTR)
-        d.Data8(0x20)
+    //    d.Cmd(HX8357_PMPRTCTR)
+    //    d.Data8(0x20)
 
-        d.Cmd(HX8357_DRVTICTRLB)
-        d.DataArray([]byte{0x00, 0x00})
+    //    d.Cmd(HX8357_DRVTICTRLB)
+    //    d.DataArray([]byte{0x00, 0x00})
 
-        d.Cmd(HX8357_PWCTR1)
-        d.Data8(0x23)
+    //    d.Cmd(HX8357_PWCTR1)
+    //    d.Data8(0x23)
 
-        d.Cmd(HX8357_PWCTR2)
-        d.Data8(0x10)
+    //    d.Cmd(HX8357_PWCTR2)
+    //    d.Data8(0x10)
 
-        d.Cmd(HX8357_VMCTR1)
-        d.DataArray([]byte{0x3e, 0x28})
+    //    d.Cmd(HX8357_VMCTR1)
+    //    d.DataArray([]byte{0x3e, 0x28})
 
-        d.Cmd(HX8357_VMCTR2)
-        d.Data8(0x86)
+    //    d.Cmd(HX8357_VMCTR2)
+    //    d.Data8(0x86)
     }
 
     d.Cmd(HX8357_MADCTL) // Memory Access Control
     d.Data8(madctlParam)
 
-    if !initMinimal {
-        d.Cmd(HX8357_VSCRSADD)
-        d.Data8(0x00)
-    }
+    d.Cmd(HX8357_COLMOD) // Pixel format
+    d.Data8(pixfmtParam)
 
-    d.Cmd(HX8357_PIXFMT)
-    d.Data8(0x66) // Fuer das 666-Format
-    //d.Data8(0x55)        // Fuer das 565-Format
+    if !initMinimal {
+        //d.Cmd(HX8357_VSCRSADD)
+        //d.Data8(0x00)
+    }
 
     if !initMinimal {
         //d.Cmd(HX8357_WRDISBV)
@@ -240,24 +242,21 @@ func (d *HX8357) Init(initParams []any) {
         //d.Cmd(HX8357_WRCTRLD)
         //d.Data8(0x2c)
 
-        d.Cmd(HX8357_FRMCTR1)
-        d.DataArray([]byte{0x00, 0x18})
+        //d.Cmd(HX8357_FRMCTR1)
+        //d.DataArray([]byte{0x00, 0x18})
 
-        d.Cmd(HX8357_DFUNCTR)
-        d.DataArray([]byte{0x08, 0x82, 0x27})
+        //d.Cmd(HX8357_DFUNCTR)
+        //d.DataArray([]byte{0x08, 0x82, 0x27})
     }
-
-    d.Cmd(HX8357_GAMMA_3G) // Disable 3G (Gamma)
-    d.Data8(0x00)
 
     d.Cmd(HX8357_GAMMASET) // Set gamma correction to custom
     d.Data8(0x01)           // curve 1
 
-    d.Cmd(HX8357_GMCTRP1) // Positive Gamma Correction values
-    d.DataArray(posGamma)
+    //d.Cmd(HX8357_GMCTRP1) // Positive Gamma Correction values
+    //d.DataArray(posGamma)
 
-    d.Cmd(HX8357_GMCTRN1) // Negative Gamma Correction values
-    d.DataArray(negGamma)
+    //d.Cmd(HX8357_GMCTRN1) // Negative Gamma Correction values
+    //d.DataArray(negGamma)
 
     d.Cmd(HX8357_SLPOUT) // Exit Sleep
     time.Sleep(125 * time.Millisecond)

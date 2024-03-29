@@ -230,8 +230,8 @@ func (d *ILI9341) Init(initParams []any) {
     }
 
     d.Cmd(ILI9341_PIXFMT)
-    d.Data8(0x66) // Fuer das 666-Format
-    //d.Data8(0x55)        // Fuer das 565-Format
+    //d.Data8(0x66) // Fuer das 666-Format
+    d.Data8(0x55)        // Fuer das 565-Format
 
     if !initMinimal {
         //d.Cmd(ILI9341_WRDISBV)
