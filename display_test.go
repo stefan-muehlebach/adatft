@@ -50,7 +50,7 @@ func init() {
 	}
 	SPISpeedHz = physic.Frequency(spiSpeed)
 
-	disp = OpenDisplay(Rotate000)
+	disp = OpenDisplay(Rotate090)
 	fWidth, fHeight = float64(Width), float64(Height)
 	rect = image.Rect(0, 0, Width, Height)
 
@@ -93,6 +93,19 @@ func init() {
 	rand.Seed(randSeed)
 }
 
+func TestDrawSyncPixel(t *testing.T) {
+    pixBuf.Clear()
+    pixBuf.Convert(testBild)
+/*
+    for i := range 100 {
+        for j := range 100 {
+            pixBuf.Set(i, j, fillColor)
+        }
+    }
+*/
+	disp.sendImage(pixBuf)
+}
+
 // Test der synchronisierten Draw-Funktionen
 func TestDrawSyncFull(t *testing.T) {
 	gc.SetFillColor(colornames.Black)
@@ -129,7 +142,6 @@ func TestDrawAsyncFull(t *testing.T) {
 	gc.Clear()
 	gc.DrawImage(testBild.SubImage(RectFull), 0, 0)
 	disp.Draw(gc.Image())
-	disp.Close()
 }
 func BenchmarkDrawAsyncFull(b *testing.B) {
 	gc.SetFillColor(colornames.Black)
@@ -152,7 +164,6 @@ func TestDrawAsyncRand(t *testing.T) {
 		draw.Draw(gcImage, rect, testBild, rect.Min, draw.Src)
 	}
 	disp.Draw(gc.Image())
-	disp.Close()
 }
 
 // Test des Ermittelns der Bilddifferenzen.
@@ -199,14 +210,14 @@ func TestDiff(t *testing.T) {
 	// Unterschiede liegen ganz an den Raendern: ganzes Bild sollte neu
 	// gezeichnet werden
 	img.Clear()
-	img.Set(160, 0, colornames.Navy)
-	img.Set(319, 120, colornames.Navy)
-	img.Set(160, 239, colornames.Navy)
-	img.Set(0, 120, colornames.Navy)
+	img.Set(Width/2, 0, colornames.Navy)
+	img.Set(Width-1, Height/2, colornames.Navy)
+	img.Set(Width/2, Height-1, colornames.Navy)
+	img.Set(0, Height/2, colornames.Navy)
 	rect = pixBuf.Diff(img)
 	t.Logf("edge pixel changed; diff rect: %v", rect)
 	if rect.Size() != image.Pt(Width, Height) {
-		t.Errorf("edge pixel changed; want (0,0)-(320,240), got %v", rect)
+		t.Errorf("edge pixel changed; want %v, %v", img.Rect.Size(), rect)
 	}
 }
 

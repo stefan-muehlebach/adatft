@@ -12,6 +12,10 @@ type ILIColor struct {
 	R, G, B uint8
 }
 
+func NewILIColor(r, g, b uint8) (ILIColor) {
+    return ILIColor{r, g, b}
+}
+
 func (c ILIColor) RGBA() (r, g, b, a uint32) {
 	r = uint32(c.R)
 	r |= r << 8

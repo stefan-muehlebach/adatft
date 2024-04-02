@@ -11,6 +11,12 @@ type ILIColor struct {
     HB, LB uint8
 }
 
+func NewILIColor(r, g, b uint8) (ILIColor) {
+    hb := (r & 0xF8) | ((g >> 5) & 0x07)
+    lb := ((g << 3) & 0xE0) | ((b >> 3) & 0x1F)
+    return ILIColor{hb, lb}
+}
+
 func (c ILIColor) RGBA() (r, g, b, a uint32) {
     r = uint32(c.HB & 0xF8)
     r |= r << 8
@@ -28,21 +34,21 @@ func iliModel(c color.Color) (color.Color) {
     }
     r, g, b, a := c.RGBA()
     if a == 0xffff {
-        r = (r >> 8) & 0xF8
-        g = (g >> 8) & 0xFC
-        b = (b >> 8) & 0xF8
-        return ILIColor{uint8(r | (g >> 5)), uint8((g << 3) | (b >> 3))}
+        r = (r >> 8)
+        g = (g >> 8)
+        b = (b >> 8)
+        return NewILIColor(uint8(r), uint8(g), uint8(b))
     }
     if a == 0x0000 {
-        return ILIColor{0, 0}
+        return NewILIColor(0, 0, 0)
     }
 	r = (r * 0xffff) / a
-    r = (r >> 8) & 0x1F
+    r = (r >> 8)
 	g = (g * 0xffff) / a
-    g = (g >> 8) & 0x3F
+    g = (g >> 8)
 	b = (b * 0xffff) / a
-    b = (b >> 8) & 0x1F
-    return ILIColor{uint8((r << 3) | (g >> 5)), uint8((g << 5) | b)}
+    b = (b >> 8)
+    return NewILIColor(uint8(r), uint8(g), uint8(b))
 }
 
 var (

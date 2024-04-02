@@ -1,9 +1,9 @@
 package hx8357
 
 import (
-    "periph.io/x/conn/v3/gpio"
-    "periph.io/x/conn/v3/physic"
-    "periph.io/x/conn/v3/spi"
+	"periph.io/x/conn/v3/gpio"
+	"periph.io/x/conn/v3/physic"
+	"periph.io/x/conn/v3/spi"
 )
 
 // Dies ist der Datentyp, welche für die Verbindung zum ILI9341 via SPI
@@ -11,28 +11,28 @@ import (
 // das Device-File für die SPI-Verbindung und den Pin, welcher für die
 // Command/Data-Leitung verwendet wird.
 type HX8357Dummy struct {
-    spi spi.Conn
-    pin gpio.PinIO
+	spi spi.Conn
+	pin gpio.PinIO
 }
 
 // Damit wird die Verbindung zum HX8357 geöffnet. Die Initialisierung des
 // Chips wird in einer separaten Funktion (Init()) durchgeführt!
 func OpenDummy(speedHz physic.Frequency) *HX8357Dummy {
-    d := &HX8357Dummy{}
+	d := &HX8357Dummy{}
 
-    return d
+	return d
 }
 
 // Schliesst die Verbindung zum HX8357.
 func (d *HX8357Dummy) Close() {
-    // err := d.spi.Close()
-    // check("Close(): error in spi.Close()", err)
+	// err := d.spi.Close()
+	// check("Close(): error in spi.Close()", err)
 }
 
 // Führt die Initialisierung des Chips durch. initParams ist ein Slice
 // von Hardware-spezifischen Einstellungen. Beim HX8357 sind dies:
 //
-//    { initMinimal, madctlParam }
+//	{ initMinimal, madctlParam }
 func (d *HX8357Dummy) Init(initParams []any) {
 
 }
@@ -55,4 +55,3 @@ func (d *HX8357Dummy) Data32(value uint32) {
 // sichtbar sind.
 func (d *HX8357Dummy) DataArray(buf []byte) {
 }
-
