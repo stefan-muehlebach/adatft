@@ -2,8 +2,8 @@ package adatft
 
 import (
 	"errors"
-	//    ili "github.com/stefan-muehlebach/adatft/ili9341"
-	ili "github.com/stefan-muehlebach/adatft/hx8357"
+	// hw "github.com/stefan-muehlebach/adatft/ili9341"
+	hw "github.com/stefan-muehlebach/adatft/hx8357"
 )
 
 // Rotationsmöglichkeiten des Displays. Es gibt (logischerweise) 4
@@ -56,20 +56,20 @@ func (rot *RotationType) Set(s string) error {
 // abgelegt. Es ist ein interner Datentyp, der wohl verwendet, aber nicht
 // verändert werden kann.
 type RotationData struct {
-	iliParam      uint8
+	madctlParam      uint8
 	calibDataFile string
 	width, height int
 }
 
 var (
 	rotDat = []RotationData{
-		RotationData{0x48, "Rotate000.json", ili.SHORT_SIDE, ili.LONG_SIDE},
-		RotationData{0xe8, "Rotate090.json", ili.LONG_SIDE, ili.SHORT_SIDE},
-		RotationData{0x88, "Rotate180.json", ili.SHORT_SIDE, ili.LONG_SIDE},
-		RotationData{0x28, "Rotate270.json", ili.LONG_SIDE, ili.SHORT_SIDE},
-		//RotationData{0xe0, "Rotate000.json", ili.LONG_SIDE, ili.SHORT_SIDE},
-		//RotationData{0x80, "Rotate090.json", ili.SHORT_SIDE, ili.LONG_SIDE},
-		//RotationData{0x20, "Rotate180.json", ili.LONG_SIDE, ili.SHORT_SIDE},
-		//RotationData{0x40, "Rotate270.json", ili.SHORT_SIDE, ili.LONG_SIDE},
+		RotationData{0x48, "Rotate000.json", hw.SHORT_SIDE, hw.LONG_SIDE},
+		RotationData{0xe8, "Rotate090.json", hw.LONG_SIDE, hw.SHORT_SIDE},
+		RotationData{0x88, "Rotate180.json", hw.SHORT_SIDE, hw.LONG_SIDE},
+		RotationData{0x28, "Rotate270.json", hw.LONG_SIDE, hw.SHORT_SIDE},
+		//RotationData{0xe0, "Rotate000.json", hw.LONG_SIDE, hw.SHORT_SIDE},
+		//RotationData{0x80, "Rotate090.json", hw.SHORT_SIDE, hw.LONG_SIDE},
+		//RotationData{0x20, "Rotate180.json", hw.LONG_SIDE, hw.SHORT_SIDE},
+		//RotationData{0x40, "Rotate270.json", hw.SHORT_SIDE, hw.LONG_SIDE},
 	}
 )

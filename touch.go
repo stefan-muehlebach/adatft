@@ -2,9 +2,8 @@ package adatft
 
 import (
 	"fmt"
-	//"log"
-	stmpe "github.com/stefan-muehlebach/adatft/stmpe610"
 	"time"
+	hw "github.com/stefan-muehlebach/adatft/stmpe610"
 )
 
 // Mit diesen Konstanten wird einerseits die Frequenz fuer den SPI-Bus
@@ -103,8 +102,6 @@ type PenEventHandlerType func(event PenEvent)
 
 type PenEventChannelType chan PenEvent
 
-// -----------------------------------------------------------------------------
-//
 // Funktionen
 func OpenTouch() *Touch {
 	var tch *Touch
@@ -113,13 +110,13 @@ func OpenTouch() *Touch {
 
 	tch = &Touch{}
 	if isRaspberry {
-		tch.tspi = stmpe.Open(tchSpeedHz)
+		tch.tspi = hw.Open(tchSpeedHz)
 	} else {
-		tch.tspi = stmpe.OpenDummy(tchSpeedHz)
+		tch.tspi = hw.OpenDummy(tchSpeedHz)
 	}
 
-	revNr = tch.tspi.ReadReg8(stmpe.STMPE610_ID_VER)
-	devId = tch.tspi.ReadReg16(stmpe.STMPE610_CHIP_ID)
+	revNr = tch.tspi.ReadReg8(hw.ID_VER)
+	devId = tch.tspi.ReadReg16(hw.CHIP_ID)
 	if (devId != 0x0811) || (revNr != 0x03) {
 		adalog.Fatalf("device id and/or revision numbers are not as expected: got (0x%04x, 0x%02x) should be (0x0811, 0x03)\n", devId, revNr)
 	}
@@ -173,7 +170,7 @@ func (tch *Touch) newPenEvent(typ PenEventType, rawPos TouchRawPos) (ev PenEvent
 	ev.TouchRawPos = rawPos
 	ev.TouchPos, _ = tch.Transform(rawPos)
 	ev.Time = time.Now()
-	ev.FifoSize = tch.tspi.ReadReg8(stmpe.STMPE610_FIFO_SIZE)
+	ev.FifoSize = tch.tspi.ReadReg8(hw.FIFO_SIZE)
 	return
 }
 
@@ -206,30 +203,30 @@ func eventDispatcher(arg any) {
 	// intStatus enthält pro Interrupt den aktuellen Status (active,
 	// not active) während in intEnable pro Interrupt festgehalten ist, ob
 	// dieser Interrupt überhaupt eingeschaltet ist.
-	intStatus := tch.tspi.ReadReg8(stmpe.STMPE610_INT_STA)
-	intEnable := tch.tspi.ReadReg8(stmpe.STMPE610_INT_EN)
+	intStatus := tch.tspi.ReadReg8(hw.INT_STA)
+	intEnable := tch.tspi.ReadReg8(hw.INT_EN)
 
-	if (intStatus & (stmpe.STMPE610_INT_TOUCH_DET |
-		stmpe.STMPE610_INT_FIFO_TH)) == 0 {
+	if (intStatus & (hw.INT_TOUCH_DET |
+		hw.INT_FIFO_TH)) == 0 {
 		return
 	}
 
 	// Schalte alle (!) Interrupts aus.
-	tch.tspi.WriteReg8(stmpe.STMPE610_INT_EN, 0x00)
+	tch.tspi.WriteReg8(hw.INT_EN, 0x00)
 
 	switch {
-	case (intStatus & stmpe.STMPE610_INT_TOUCH_DET) != 0:
-		if (tch.tspi.ReadReg8(stmpe.STMPE610_TSC_CTRL) & 0x80) == 0 {
+	case (intStatus & hw.INT_TOUCH_DET) != 0:
+		if (tch.tspi.ReadReg8(hw.TSC_CTRL) & 0x80) == 0 {
 			if !penUp {
 				ev = tch.newPenEvent(PenRelease, posRaw)
 				tch.enqueueEvent(ev)
 				penUp = true
 			}
 		}
-		tch.tspi.WriteReg8(stmpe.STMPE610_INT_STA, stmpe.STMPE610_INT_TOUCH_DET)
+		tch.tspi.WriteReg8(hw.INT_STA, hw.INT_TOUCH_DET)
 
-	case (intStatus & stmpe.STMPE610_INT_FIFO_TH) != 0:
-		for tch.tspi.ReadReg8(stmpe.STMPE610_FIFO_SIZE) > 0 {
+	case (intStatus & hw.INT_FIFO_TH) != 0:
+		for tch.tspi.ReadReg8(hw.FIFO_SIZE) > 0 {
 			time.Sleep(sampleTime) // NEU!!! ACHTUNG!!!
 			posRaw = tch.readRawPos()
 			evTyp = PenDrag
@@ -240,11 +237,12 @@ func eventDispatcher(arg any) {
 			ev = tch.newPenEvent(evTyp, posRaw)
 			tch.enqueueEvent(ev)
 		}
-		tch.tspi.WriteReg8(stmpe.STMPE610_INT_STA, stmpe.STMPE610_INT_FIFO_TH)
-		tch.tspi.WriteReg8(stmpe.STMPE610_FIFO_STA, 0x01)
-		tch.tspi.WriteReg8(stmpe.STMPE610_FIFO_STA, 0x00)
+		tch.tspi.WriteReg8(hw.INT_STA, hw.INT_FIFO_TH)
+		tch.tspi.WriteReg8(hw.FIFO_STA, 0x01)
+		tch.tspi.WriteReg8(hw.FIFO_STA, 0x00)
 	}
 
 	// Schalte die Interrupts wieder ein.
-	tch.tspi.WriteReg8(stmpe.STMPE610_INT_EN, intEnable)
+	tch.tspi.WriteReg8(hw.INT_EN, intEnable)
 }
+

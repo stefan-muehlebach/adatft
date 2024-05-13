@@ -1,22 +1,22 @@
-// Alles für die Ansteuerung des 2.8" TFT-Display/Touchscreen von AdaFruit.
-//
 // Mit diesem Package kann das 2.8” TFT-Display mit Touchscreen von Adafruit
 // via Go angesprochen werden.
 //
-// # Das Package besteht im Wesentlichen aus 2 Teilen
+// Das Package besteht im Wesentlichen aus 2 Teilen
 //
-// - Einer Sammlung von Typen und Funktionen für das Ansteuern des Bildschirms.
-// - Und einem Teil für die Ansteuerung des Touchscreens.
+//   - Einer Sammlung von Typen und Funktionen für das Ansteuern des
+//     Bildschirms.
+//   - Und einem Teil für die Ansteuerung des Touchscreens.
 //
 // Jeder Teil ist dabei in eine hardwarenahe Implementation und ein etwas
 // abstraketeres API unterteilt. Konkret:
 //
 //   - ili9341/ili9341.go: enthält alles, was für die Ansteuerung dieses
 //     konkreten Chips via SPI notwendig ist.
+//   - hx8357/hx8357.go: analoge Sammlung für den leistungsfähigeren Chip.
+//   - stmpe610/stmpe610.go: "low level API" für die Ansteuerung des
+//     Touchscreens über diesen Chip via SPI.
+//   
 //   - display.go: enthält den Typ 'Display', der ein "high level API" anbietet.
-//
-//   - stmpe610/stmpe610.go: "low level API" für die Ansteuerung des Touchscreens
-//     über diesen Chip via SPI.
 //   - touch.go: enthält den Typ 'Touch', der ein "high level API" anbietet.
 package adatft
 
@@ -51,9 +51,8 @@ var (
 	adalog *log.Logger
 )
 
-// Damit wird die 'periph.io'-Umgebung initialisiert. Diese Funktion muss
-// immer als erstes aufgerufen werden, noch bevor irgendwelche Devices
-// geoeffnet werden.
+// Damit wird die 'periph.io'-Umgebung und diverse globale Variablen
+// initialisiert.
 func init() {
 	var userConfDir, userLogDir, logDir, logFile string
 	var fh *os.File

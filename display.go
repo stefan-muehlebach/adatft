@@ -3,8 +3,8 @@ package adatft
 import (
 	"image"
 	"periph.io/x/conn/v3/physic"
-	//    ili "github.com/stefan-muehlebach/adatft/ili9341"
-	ili "github.com/stefan-muehlebach/adatft/hx8357"
+	// hw "github.com/stefan-muehlebach/adatft/ili9341"
+	hw "github.com/stefan-muehlebach/adatft/hx8357"
 )
 
 const (
@@ -14,7 +14,7 @@ const (
 
 var (
 	SPISpeedHz physic.Frequency = 45_000_000
-	// SPISpeedHz physic.Frequency = 65_000_000
+	//SPISpeedHz physic.Frequency = 65_000_000
 	Width, Height int
 )
 
@@ -58,11 +58,11 @@ func OpenDisplay(rot RotationType) *Display {
 
 	dsp = &Display{}
 	if isRaspberry {
-		dsp.dspi = ili.Open(SPISpeedHz)
+		dsp.dspi = hw.Open(SPISpeedHz)
 	} else {
-		dsp.dspi = ili.OpenDummy(SPISpeedHz)
+		dsp.dspi = hw.OpenDummy(SPISpeedHz)
 	}
-	dsp.dspi.Init([]any{false, rotDat[rot].iliParam, pixfmt})
+	dsp.dspi.Init([]any{false, rotDat[rot].madctlParam, pixfmt})
 
 	dsp.imgChan = make([]chan *ILIImage, numChannels)
 	for i := 0; i < len(dsp.imgChan); i++ {
@@ -133,11 +133,11 @@ func (dsp *Display) sendImage(img *ILIImage) {
 	rect := img.Rect
 	bytesPerLine := rect.Dx() * bytesPerPixel
 
-	dsp.dspi.Cmd(ili.PASET)
+	dsp.dspi.Cmd(hw.PASET)
 	dsp.dspi.Data32(uint32((rect.Min.Y << 16) | (rect.Max.Y - 1)))
-	dsp.dspi.Cmd(ili.CASET)
+	dsp.dspi.Cmd(hw.CASET)
 	dsp.dspi.Data32(uint32((rect.Min.X << 16) | (rect.Max.X - 1)))
-	dsp.dspi.Cmd(ili.RAMWR)
+	dsp.dspi.Cmd(hw.RAMWR)
 
 	if bytesPerLine == img.Stride {
 		len = rect.Dy() * img.Stride

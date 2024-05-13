@@ -19,72 +19,72 @@ import (
 // Dies sind die Codes aller Befehle, welche der ILI-Chip unterstützt.
 // Mehr Infos zu den einzelnen Befehlen findet man in den Dokumentationen.
 const (
-    ILI9341_NOP        = 0x00 // No operation / dummy command
-    ILI9341_SWRESET    = 0x01 // Software reset
-    ILI9341_RDDID      = 0x04 // Read display identification info
-    ILI9341_RDDST      = 0x09
-    ILI9341_RDMODE     = 0x0A
-    ILI9341_RDMADCTL   = 0x0B
-    ILI9341_RDPIXFMT   = 0x0C
-    ILI9341_RDIMGFMT   = 0x0D
-    ILI9341_RDSELFDIAG = 0x0F
+    NOP        = 0x00 // No operation / dummy command
+    SWRESET    = 0x01 // Software reset
+    RDDID      = 0x04 // Read display identification info
+    RDDST      = 0x09
+    RDMODE     = 0x0A
+    RDMADCTL   = 0x0B
+    RDPIXFMT   = 0x0C
+    RDIMGFMT   = 0x0D
+    RDSELFDIAG = 0x0F
 
-    ILI9341_SLPIN  = 0x10
-    ILI9341_SLPOUT = 0x11
-    ILI9341_PTLON  = 0x12
-    ILI9341_NORON  = 0x13
+    SLPIN  = 0x10
+    SLPOUT = 0x11
+    PTLON  = 0x12
+    NORON  = 0x13
 
-    ILI9341_INVOFF   = 0x20
-    ILI9341_INVON    = 0x21
-    ILI9341_GAMMASET = 0x26
-    ILI9341_DISPOFF  = 0x28
-    ILI9341_DISPON   = 0x29
+    INVOFF   = 0x20
+    INVON    = 0x21
+    GAMMASET = 0x26
+    DISPOFF  = 0x28
+    DISPON   = 0x29
     CASET    = 0x2A
     PASET    = 0x2B
     RAMWR    = 0x2C
-    ILI9341_LUTSET   = 0x2D
-    ILI9341_RAMRD    = 0x2E
+    LUTSET   = 0x2D
+    RAMRD    = 0x2E
 
-    ILI9341_PTLAR    = 0x30
-    ILI9341_MADCTL   = 0x36
-    ILI9341_VSCRSADD = 0x37
-    ILI9341_PIXFMT   = 0x3A
+    PTLAR    = 0x30
+    MADCTL   = 0x36
+    VSCRSADD = 0x37
+    PIXFMT   = 0x3A
 
-    ILI9341_WRDISBV = 0x51
-    ILI9341_WRCTRLD = 0x53
-    ILI9341_WRCABC  = 0x55
+    WRDISBV = 0x51
+    WRCTRLD = 0x53
+    WRCABC  = 0x55
 
-    ILI9341_FRMCTR1 = 0xB1
-    ILI9341_FRMCTR2 = 0xB2
-    ILI9341_FRMCTR3 = 0xB3
-    ILI9341_INVCTR  = 0xB4
-    ILI9341_DFUNCTR = 0xB6
+    FRMCTR1 = 0xB1
+    FRMCTR2 = 0xB2
+    FRMCTR3 = 0xB3
+    INVCTR  = 0xB4
+    DFUNCTR = 0xB6
 
-    ILI9341_PWCTR1  = 0xC0
-    ILI9341_PWCTR2  = 0xC1
-    ILI9341_PWCTR3  = 0xC2
-    ILI9341_PWCTR4  = 0xC3
-    ILI9341_PWCTR5  = 0xC4
-    ILI9341_VMCTR1  = 0xC5
-    ILI9341_VMCTR2  = 0xC7
-    ILI9341_PWCTRLA = 0xCB
-    ILI9341_PWCTRLB = 0xCF
+    PWCTR1  = 0xC0
+    PWCTR2  = 0xC1
+    PWCTR3  = 0xC2
+    PWCTR4  = 0xC3
+    PWCTR5  = 0xC4
+    VMCTR1  = 0xC5
+    VMCTR2  = 0xC7
+    PWCTRLA = 0xCB
+    PWCTRLB = 0xCF
 
-    ILI9341_RDID1 = 0xDA
-    ILI9341_RDID2 = 0xDB
-    ILI9341_RDID3 = 0xDC
-    ILI9341_RDID4 = 0xDD
+    RDID1 = 0xDA
+    RDID2 = 0xDB
+    RDID3 = 0xDC
+    RDID4 = 0xDD
 
-    ILI9341_GMCTRP1    = 0xE0
-    ILI9341_GMCTRN1    = 0xE1
-    ILI9341_GAMMACTRL1 = 0xE2 // Anschliessend ein Array von 16 Byte-Werten
-    ILI9341_GAMMACTRL2 = 0xE3 // Anschliessend ein Array von 64 Byte-Werten
-    ILI9341_DRVTICTRLA = 0xE8
-    ILI9341_DRVTICTRLB = 0xEA
-    ILI9341_PWOSEQCTR  = 0xED
+    GMCTRP1    = 0xE0
+    GMCTRN1    = 0xE1
+    GAMMACTRL1 = 0xE2 // Anschliessend ein Array von 16 Byte-Werten
+    GAMMACTRL2 = 0xE3 // Anschliessend ein Array von 64 Byte-Werten
+    DRVTICTRLA = 0xE8
+    DRVTICTRLB = 0xEA
+    PWOSEQCTR  = 0xED
 
-    ILI9341_GAMMA_3G = 0xF2
-    ILI9341_PMPRTCTR = 0xF7
+    GAMMA_3G = 0xF2
+    PMPRTCTR = 0xF7
 
     LONG_SIDE  = 320
     SHORT_SIDE = 240
@@ -180,89 +180,89 @@ func (d *ILI9341) Init(initParams []any) {
        }
     */
 
-    d.Cmd(ILI9341_DISPOFF) // Display On
+    d.Cmd(DISPOFF) // Display On
     time.Sleep(125 * time.Millisecond)
 
-    d.Cmd(ILI9341_SWRESET) // Reset the chip at the beginning
+    d.Cmd(SWRESET) // Reset the chip at the beginning
     time.Sleep(128 * time.Millisecond)
 
     if !initMinimal {
         d.Cmd(0xEF)
         d.DataArray([]byte{0x03, 0x80, 0x02})
 
-        d.Cmd(ILI9341_PWCTRLB)
+        d.Cmd(PWCTRLB)
         d.DataArray([]byte{0x00, 0xc1, 0x30})
 
-        d.Cmd(ILI9341_PWOSEQCTR)
+        d.Cmd(PWOSEQCTR)
         d.DataArray([]byte{0x64, 0x03, 0x12, 0x81})
 
-        d.Cmd(ILI9341_DRVTICTRLA)
+        d.Cmd(DRVTICTRLA)
         d.DataArray([]byte{0x85, 0x00, 0x78})
 
-        d.Cmd(ILI9341_PWCTRLA)
+        d.Cmd(PWCTRLA)
         d.DataArray([]byte{0x39, 0x2c, 0x00, 0x34, 0x02})
 
-        d.Cmd(ILI9341_PMPRTCTR)
+        d.Cmd(PMPRTCTR)
         d.Data8(0x20)
 
-        d.Cmd(ILI9341_DRVTICTRLB)
+        d.Cmd(DRVTICTRLB)
         d.DataArray([]byte{0x00, 0x00})
 
-        d.Cmd(ILI9341_PWCTR1)
+        d.Cmd(PWCTR1)
         d.Data8(0x23)
 
-        d.Cmd(ILI9341_PWCTR2)
+        d.Cmd(PWCTR2)
         d.Data8(0x10)
 
-        d.Cmd(ILI9341_VMCTR1)
+        d.Cmd(VMCTR1)
         d.DataArray([]byte{0x3e, 0x28})
 
-        d.Cmd(ILI9341_VMCTR2)
+        d.Cmd(VMCTR2)
         d.Data8(0x86)
     }
 
-    d.Cmd(ILI9341_MADCTL) // Memory Access Control
+    d.Cmd(MADCTL) // Memory Access Control
     d.Data8(madctlParam)
 
     if !initMinimal {
-        d.Cmd(ILI9341_VSCRSADD)
+        d.Cmd(VSCRSADD)
         d.Data8(0x00)
     }
 
-    d.Cmd(ILI9341_PIXFMT)
+    d.Cmd(PIXFMT)
     //d.Data8(0x66) // Fuer das 666-Format
     d.Data8(0x55)        // Fuer das 565-Format
 
     if !initMinimal {
-        //d.Cmd(ILI9341_WRDISBV)
+        //d.Cmd(WRDISBV)
         //d.Data8(0x00)
 
-        //d.Cmd(ILI9341_WRCTRLD)
+        //d.Cmd(WRCTRLD)
         //d.Data8(0x2c)
 
-        d.Cmd(ILI9341_FRMCTR1)
+        d.Cmd(FRMCTR1)
         d.DataArray([]byte{0x00, 0x18})
 
-        d.Cmd(ILI9341_DFUNCTR)
+        d.Cmd(DFUNCTR)
         d.DataArray([]byte{0x08, 0x82, 0x27})
     }
 
-    d.Cmd(ILI9341_GAMMA_3G) // Disable 3G (Gamma)
+    d.Cmd(GAMMA_3G) // Disable 3G (Gamma)
     d.Data8(0x00)
 
-    d.Cmd(ILI9341_GAMMASET) // Set gamma correction to custom
+    d.Cmd(GAMMASET) // Set gamma correction to custom
     d.Data8(0x01)           // curve 1
 
-    d.Cmd(ILI9341_GMCTRP1) // Positive Gamma Correction values
+    d.Cmd(GMCTRP1) // Positive Gamma Correction values
     d.DataArray(posGamma)
 
-    d.Cmd(ILI9341_GMCTRN1) // Negative Gamma Correction values
+    d.Cmd(GMCTRN1) // Negative Gamma Correction values
     d.DataArray(negGamma)
 
-    d.Cmd(ILI9341_SLPOUT) // Exit Sleep
+    d.Cmd(SLPOUT) // Exit Sleep
     time.Sleep(125 * time.Millisecond)
 
-    d.Cmd(ILI9341_DISPON) // Display On
+    d.Cmd(DISPON) // Display On
     time.Sleep(125 * time.Millisecond)
 }
 

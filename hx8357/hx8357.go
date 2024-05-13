@@ -105,6 +105,7 @@ const (
 	SHORT_SIDE = 320
 
 	SPI_BLOCK_SIZE = 4096
+
 )
 
 // Die Variablen SpiDevFile und DatCmdPin enthalten die Verbindungsparameter
@@ -112,6 +113,37 @@ const (
 var (
 	SpiDevFile = "/dev/spidev0.0"
 	DatCmdPin  = "GPIO25"
+
+    gammaPar = []uint8{
+        // Positive polarity
+        0x02, 0x0a, 0x11, 0x1d, 0x23, 0x35, 0x41, 0x4b,
+        0x4b, 0x42, 0x3a, 0x27, 0x1b, 0x08, 0x09, 0x03,
+        // Negative polarity
+        0x02, 0x0a, 0x11, 0x1d, 0x23, 0x35, 0x41, 0x4b,
+        0x4b, 0x42, 0x3a, 0x27, 0x1b, 0x08, 0x09, 0x03,
+        // Some control bytes
+        0x00, 0x01,
+    }
+
+    gammaLUT = []uint8{
+        0x01,
+        // Lookup values for red
+        0x00, 0x08, 0x10, 0x18, 0x20, 0x28, 0x30, 0x38,
+        0x40, 0x48, 0x50, 0x58, 0x60, 0x68, 0x70, 0x7a,
+        0x80, 0x88, 0x90, 0x98, 0xa0, 0xa8, 0xb0, 0xb8,
+        0xc0, 0xc8, 0xd0, 0xd8, 0xe0, 0xe8, 0xf0, 0xf8, 0xfc,
+        // Lookup values for green
+        0x00, 0x08, 0x10, 0x18, 0x20, 0x28, 0x30, 0x38,
+        0x40, 0x48, 0x50, 0x58, 0x60, 0x68, 0x70, 0x78,
+        0x80, 0x88, 0x90, 0x98, 0xa0, 0xa8, 0xb0, 0xb8,
+        0xc0, 0xc8, 0xd0, 0xd8, 0xe0, 0xe8, 0xf0, 0xf8, 0xfc,
+        // Lookup values for blue
+        0x00, 0x08, 0x10, 0x18, 0x20, 0x28, 0x30, 0x38,
+        0x40, 0x48, 0x50, 0x58, 0x60, 0x68, 0x70, 0x7a,
+        0x80, 0x88, 0x90, 0x98, 0xa0, 0xa8, 0xb0, 0xb8,
+        0xc0, 0xc8, 0xd0, 0xd8, 0xe0, 0xe8, 0xf0, 0xf8, 0xfc,
+    }
+
 )
 
 // Dies ist der Datentyp, welche für die Verbindung zum HX8357 via SPI
@@ -161,93 +193,20 @@ func (d *HX8357) Close() {
 func (d *HX8357) Init(initParams []any) {
 	//    var initMinimal bool
 	var madctlParam uint8
-	var pixfmtParam uint8
+	var colmodParam uint8
 
 	//    initMinimal = initParams[0].(bool)
 	madctlParam = initParams[1].(uint8)
-	pixfmtParam = initParams[2].(uint8)
-
-	//var posGamma []uint8 = []uint8{
-	//    0x0f, 0x31, 0x2b, 0x0c, 0x0e, 0x08, 0x4e,
-	//    0xf1,
-	//    0x37, 0x07, 0x10, 0x03, 0x0e, 0x09, 0x00,
-	// }
-	//var negGamma []uint8 = []uint8{
-	//    0x00, 0x0e, 0x14, 0x03, 0x11, 0x07, 0x31,
-	//    0xc1,
-	//    0x48, 0x08, 0x0f, 0x0c, 0x31, 0x36, 0x0f,
-	// }
-
-	/*
-	   var colorLut []uint8
-	   colorLut = make([]uint8, 128)
-	   for i := 0; i < 32; i++ {
-	       colorLut[i] = uint8(2*i)
-	   }
-	   for i := 0; i < 64; i++ {
-	       colorLut[i+32] = uint8(i)
-	   }
-	   for i := 0; i < 32; i++ {
-	       colorLut[i+96] = uint8(2*i)
-	   }
-	*/
-
-	/*
-	   macroGamma = make([]uint8, 16)
-	   for i := 0; i < 16; i++ {
-	       macroGamma[i] = 0x00
-	   }
-	   microGamma = make([]uint8, 64)
-	   for i := 0; i < 64; i++ {
-	       microGamma[i] = 0x00
-	   }
-	*/
+	colmodParam = initParams[2].(uint8)
 
 	d.Cmd(DISPOFF) // Display Off
 	time.Sleep(125 * time.Millisecond)
 
 	d.Cmd(COLMOD) // Pixel format
-	d.Data8(pixfmtParam)
+	d.Data8(colmodParam)
 
 	d.Cmd(SWRESET) // Reset the chip at the beginning
 	time.Sleep(128 * time.Millisecond)
-
-	/*
-	   if !initMinimal {
-	       d.Cmd(0xEF)
-	       d.DataArray([]byte{0x03, 0x80, 0x02})
-
-	       d.Cmd(PWCTRLB)
-	       d.DataArray([]byte{0x00, 0xc1, 0x30})
-
-	       d.Cmd(PWOSEQCTR)
-	       d.DataArray([]byte{0x64, 0x03, 0x12, 0x81})
-
-	       d.Cmd(DRVTICTRLA)
-	       d.DataArray([]byte{0x85, 0x00, 0x78})
-
-	       d.Cmd(PWCTRLA)
-	       d.DataArray([]byte{0x39, 0x2c, 0x00, 0x34, 0x02})
-
-	       d.Cmd(PMPRTCTR)
-	       d.Data8(0x20)
-
-	       d.Cmd(DRVTICTRLB)
-	       d.DataArray([]byte{0x00, 0x00})
-
-	       d.Cmd(PWCTR1)
-	       d.Data8(0x23)
-
-	       d.Cmd(PWCTR2)
-	       d.Data8(0x10)
-
-	       d.Cmd(VMCTR1)
-	       d.DataArray([]byte{0x3e, 0x28})
-
-	       d.Cmd(VMCTR2)
-	       d.Data8(0x86)
-	   }
-	*/
 
 	d.Cmd(MADCTL) // Memory Access Control
 	d.Data8(madctlParam)
@@ -256,36 +215,17 @@ func (d *HX8357) Init(initParams []any) {
 	d.Data8(0x2c)  // Backlight Control Block: ON, Display Dimming: ON,
 	// Backlight Control: ON
 
-	/*
-	   if !initMinimal {
-	       d.Cmd(VSCRSADD)
-	       d.Data8(0x00)
-
-	       d.Cmd(WRDISBV)
-	       d.Data8(0x00)
-
-	       d.Cmd(FRMCTR1)
-	       d.DataArray([]byte{0x00, 0x18})
-
-	       d.Cmd(DFUNCTR)
-	       d.DataArray([]byte{0x08, 0x82, 0x27})
-	   }
-	*/
-
-	d.Cmd(GAMSET) // Set gamma correction to custom
-	d.Data8(0x01) // curve 1
-
-	//d.Cmd(GMCTRP1) // Positive Gamma Correction values
-	//d.DataArray(posGamma)
-
-	//d.Cmd(GMCTRN1) // Negative Gamma Correction values
-	//d.DataArray(negGamma)
-
     d.Cmd(SETEXTC)
     d.DataArray([]byte{0xFF, 0x83, 0x57})
 
     d.Cmd(SETPANEL)
     d.Data8(0x00)
+
+    d.Cmd(SETGAMMA)
+    d.DataArray(gammaPar)
+
+    //d.Cmd(SETDGC)
+    //d.DataArray(gammaLUT)
 
     d.Cmd(SETEXTC)
     d.DataArray([]byte{0x01, 0x01, 0x01})
