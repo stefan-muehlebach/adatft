@@ -9,21 +9,21 @@ import (
 // dargestellt werden kann und implementiert alle Interfaces, welche Go
 // fuer Bild-Typen kennt.
 type ILIImage struct {
-    Pix    []uint8
-    Stride int
     Rect   image.Rectangle
+    Stride int
+    Pix    []uint8
 }   
 
 func NewILIImage(r image.Rectangle) *ILIImage {
     p := &ILIImage{
-        Pix: make([]uint8, r.Dx()*r.Dy()*bytesPerPixel),
-        Stride: r.Dx() * bytesPerPixel,
         Rect: r,
+        Stride: r.Dx() * bytesPerPixel,
+        Pix: make([]uint8, r.Dx()*r.Dy()*bytesPerPixel),
     }
     p.Clear()   
     return p
 }
-    
+
 // ColorModel, Bounds und At werden vom Interface image.Image gefordert.
 func (p *ILIImage) ColorModel() color.Model {
     return ILIModel

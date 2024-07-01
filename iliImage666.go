@@ -7,11 +7,6 @@ import (
 	"image/color"
 )
 
-const (
-	bytesPerPixel = 3
-    pixfmt uint8 = 0x06
-)
-
 // Set wird ausserdem von draw.Image gefordert. Damit wird ein bestimmtes
 // Pixel des Bildes auf den Farbwert c gesetzt.
 func (p *ILIImage) Set(x, y int, c color.Color) {
@@ -20,10 +15,6 @@ func (p *ILIImage) Set(x, y int, c color.Color) {
 	}
 	idx := p.PixOffset(x, y)
 	c1 := ILIModel.Convert(c).(ILIColor)
-
-    //p.Pix[idx+0] = c1.R
-    //p.Pix[idx+1] = c1.G
-    //p.Pix[idx+2] = c1.B
 
 	s := p.Pix[idx : idx+bytesPerPixel : idx+bytesPerPixel]
 	s[0] = c1.R
@@ -45,10 +36,6 @@ func (p *ILIImage) SetILIColor(x, y int, c ILIColor) {
 		return
 	}
 	idx := p.PixOffset(x, y)
-
-    //p.Pix[idx+0] = c.R
-    //p.Pix[idx+1] = c.G
-    //p.Pix[idx+2] = c.B
 
 	s := p.Pix[idx : idx+bytesPerPixel : idx+bytesPerPixel]
 	s[0] = c.R
@@ -147,12 +134,10 @@ func (p *ILIImage) Convert(src *image.RGBA) {
 			d[2] = s[2]
 			srcIdx += 4
 			dstIdx += bytesPerPixel
-
-            //c := src.At(x, y)
-            //p.Set(x, y, c)
 		}
 		srcBaseIdx += src.Stride
 		dstBaseIdx += p.Stride
 	}
 	ConvWatch.Stop()
 }
+

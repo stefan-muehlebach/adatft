@@ -8,6 +8,11 @@ import (
 	"image/color"
 )
 
+const (
+    bytesPerPixel = 3
+    pixfmt uint8 = 0x06
+)
+
 type ILIColor struct {
 	R, G, B uint8
 }

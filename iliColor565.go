@@ -9,6 +9,11 @@ import (
 	"image/color"
 )
 
+const (
+    bytesPerPixel = 2
+    pixfmt uint8 = 0x05
+)
+
 type ILIColor struct {
     // HB ist das hoeherwertige Byte (mit Rot und einem Teil Gruen) und LB
     // ist das niederwertige Byte (mit der zweiten Haelfte von Gruen und Blau)
@@ -18,8 +23,6 @@ type ILIColor struct {
 func NewILIColor(r, g, b uint8) (ILIColor) {
     hb :=  (r & 0xF8)       | ((g & 0xFC) >> 5)
     lb := ((g & 0xFC) << 3) | ((b & 0xF8) >> 3)
-    //hb := (r & 0xF8) | ((g >> 5) & 0x07)
-    //lb := ((g << 3) & 0xE0) | ((b >> 3) & 0x1F)
     return ILIColor{hb, lb}
 }
 
@@ -29,7 +32,6 @@ func (c ILIColor) RGBA() (r, g, b, a uint32) {
     g = uint32(((c.HB & 0x07) << 5) | ((c.LB & 0xE0) >> 3))
     g |= g << 8
     b = uint32((c.LB << 3) & 0xF8)
-    //b = uint32((c.LB & 0x1F) << 3)
     b |= b << 8
     a = 0xffff
     return

@@ -4,7 +4,6 @@ import (
 	//    "time"
 	"github.com/stefan-muehlebach/gg"
 	"github.com/stefan-muehlebach/gg/color"
-	"github.com/stefan-muehlebach/gg/colornames"
 	draw2 "golang.org/x/image/draw"
 	"image"
 	"image/draw"
@@ -85,9 +84,9 @@ func init() {
 	gc = gg.NewContext(Width, Height)
 	gcImage = gc.Image().(*image.RGBA)
 
-	backColor = colornames.LightGreen
-	fillColor = colornames.CadetBlue
-	borderColor = colornames.WhiteSmoke
+	backColor = color.LightGreen
+	fillColor = color.CadetBlue
+	borderColor = color.WhiteSmoke
 	borderWidth = 5.0
 
 	rand.Seed(randSeed)
@@ -108,13 +107,13 @@ func TestDrawSyncPixel(t *testing.T) {
 
 // Test der synchronisierten Draw-Funktionen
 func TestDrawSyncFull(t *testing.T) {
-	gc.SetFillColor(colornames.Black)
+	gc.SetFillColor(color.Black)
 	gc.Clear()
 	gc.DrawImage(testBild.SubImage(RectFull), 0, 0)
 	disp.DrawSync(gc.Image())
 }
 func BenchmarkDrawSyncFull(b *testing.B) {
-	gc.SetFillColor(colornames.Black)
+	gc.SetFillColor(color.Black)
 	gc.Clear()
 	gc.DrawImage(testBild.SubImage(RectFull), 0, 0)
 	b.ResetTimer()
@@ -125,7 +124,7 @@ func BenchmarkDrawSyncFull(b *testing.B) {
 
 func TestDrawSyncRand(t *testing.T) {
 	rand.Seed(randSeed)
-	gc.SetFillColor(colornames.Black)
+	gc.SetFillColor(color.Black)
 	gc.Clear()
 	for i := 0; i < 5; i++ {
 		dx := rand.Intn(240) - 120
@@ -138,13 +137,13 @@ func TestDrawSyncRand(t *testing.T) {
 
 // Test der asynchronen Draw-Funktionen.
 func TestDrawAsyncFull(t *testing.T) {
-	gc.SetFillColor(colornames.Black)
+	gc.SetFillColor(color.Black)
 	gc.Clear()
 	gc.DrawImage(testBild.SubImage(RectFull), 0, 0)
 	disp.Draw(gc.Image())
 }
 func BenchmarkDrawAsyncFull(b *testing.B) {
-	gc.SetFillColor(colornames.Black)
+	gc.SetFillColor(color.Black)
 	gc.Clear()
 	gc.DrawImage(testBild.SubImage(RectFull), 0, 0)
 	b.ResetTimer()
@@ -155,7 +154,7 @@ func BenchmarkDrawAsyncFull(b *testing.B) {
 }
 func TestDrawAsyncRand(t *testing.T) {
 	rand.Seed(randSeed)
-	gc.SetFillColor(colornames.Black)
+	gc.SetFillColor(color.Black)
 	gc.Clear()
 	for i := 0; i < 5; i++ {
 		dx := rand.Intn(240) - 120
@@ -180,7 +179,7 @@ func TestDiff(t *testing.T) {
 	}
 
 	// Unterschied von einem Pixel bei (100,100)
-	img.Set(160, 120, colornames.Navy)
+	img.Set(160, 120, color.Navy)
 	rect = pixBuf.Diff(img)
 	t.Logf("one pixel changed; diff rect: %v", rect)
 	if rect.Size() != image.Pt(1, 1) {
@@ -189,8 +188,8 @@ func TestDiff(t *testing.T) {
 
 	// Unterschied durch zwei Pixel und dadurch Rechteck erwartet.
 	img.Clear()
-	img.Set(80, 60, colornames.Navy)
-	img.Set(239, 179, colornames.Navy)
+	img.Set(80, 60, color.Navy)
+	img.Set(239, 179, color.Navy)
 	rect = pixBuf.Diff(img)
 	t.Logf("second pixel changed; diff rect: %v", rect)
 	if rect.Size() != image.Pt(160, 120) {
@@ -199,8 +198,8 @@ func TestDiff(t *testing.T) {
 
 	// Unterschied durch zwei Pixel und dadurch Rechteck erwartet.
 	img.Clear()
-	img.Set(239, 60, colornames.Navy)
-	img.Set(80, 179, colornames.Navy)
+	img.Set(239, 60, color.Navy)
+	img.Set(80, 179, color.Navy)
 	rect = pixBuf.Diff(img)
 	t.Logf("second pixel changed; diff rect: %v", rect)
 	if rect.Size() != image.Pt(160, 120) {
@@ -210,10 +209,10 @@ func TestDiff(t *testing.T) {
 	// Unterschiede liegen ganz an den Raendern: ganzes Bild sollte neu
 	// gezeichnet werden
 	img.Clear()
-	img.Set(Width/2, 0, colornames.Navy)
-	img.Set(Width-1, Height/2, colornames.Navy)
-	img.Set(Width/2, Height-1, colornames.Navy)
-	img.Set(0, Height/2, colornames.Navy)
+	img.Set(Width/2, 0, color.Navy)
+	img.Set(Width-1, Height/2, color.Navy)
+	img.Set(Width/2, Height-1, color.Navy)
+	img.Set(0, Height/2, color.Navy)
 	rect = pixBuf.Diff(img)
 	t.Logf("edge pixel changed; diff rect: %v", rect)
 	if rect.Size() != image.Pt(Width, Height) {
@@ -248,8 +247,8 @@ func BenchmarkDiffRand(b *testing.B) {
 		img.Clear()
 		x0, y0 := rand.Intn(Width/2), rand.Intn(Height/2)
 		x1, y1 := Width/2+rand.Intn(Width/2), Height/2+rand.Intn(Height/2)
-		img.Set(x0, y0, colornames.White)
-		img.Set(x1, y1, colornames.White)
+		img.Set(x0, y0, color.White)
+		img.Set(x1, y1, color.White)
 		b.StartTimer()
 		rect = pixBuf.Diff(img)
 		b.StopTimer()
@@ -348,7 +347,7 @@ func BenchmarkDrawRand(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		for j := 0; j < 2; j++ {
 			x, y := rand.Intn(Width), rand.Intn(Height)
-			testBild.Set(x, y, colornames.YellowGreen)
+			testBild.Set(x, y, color.YellowGreen)
 		}
 		b.StartTimer()
 		imgA.Convert(testBild)

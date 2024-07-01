@@ -7,11 +7,6 @@ import (
 	"image/color"
 )
 
-const (
-	bytesPerPixel = 2
-    pixfmt uint8 = 0x05
-)
-
 // Set wird ausserdem von draw.Image gefordert. Damit wird ein bestimmtes
 // Pixel des Bildes auf den Farbwert c gesetzt.
 func (p *ILIImage) Set(x, y int, c color.Color) {
