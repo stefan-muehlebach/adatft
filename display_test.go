@@ -27,7 +27,7 @@ var (
 	pixBuf                                   *ILIImage
 	fWidth, fHeight                          float64
 	tempBild, testBild, workImage            *image.RGBA
-	RectFull, RectHalve, RectQuart, RectCust image.Rectangle
+	RectFull, RectHalve, RectHalve02, RectHalve03, RectQuart, RectCust image.Rectangle
 	srcPoint                                 image.Point
 	rect                                     image.Rectangle
 	gc                                       *gg.Context
@@ -72,6 +72,8 @@ func init() {
 
 	RectFull = image.Rect(0, 0, Width, Height)
 	RectHalve = image.Rect(Width/4, Height/4, 3*Width/4, 3*Height/4)
+	RectHalve02 = image.Rect(0, Height/4, Width, 3*Height/4)
+	RectHalve03 = image.Rect(Width/4, 0, 3*Width/4, Height)
 	RectQuart = image.Rect(3*Width/8, 3*Height/8, 5*Width/8, 5*Height/8)
 	RectCust = image.Rect(0, 0, Width/3, Height/3)
 
@@ -92,18 +94,36 @@ func init() {
 	rand.Seed(randSeed)
 }
 
-func TestDrawSyncPixel(t *testing.T) {
+func TestSendImage(t *testing.T) {
     pixBuf.Clear()
     pixBuf.Convert(testBild)
-/*
-    for i := range 100 {
-        for j := range 100 {
-            pixBuf.Set(i, j, fillColor)
-        }
-    }
-*/
 	disp.sendImage(pixBuf)
 }
+func BenchmarkSendImage(b *testing.B) {
+    pixBuf.Clear()
+    pixBuf.Convert(testBild)
+    b.ResetTimer()
+    for i := 0; i < b.N; i++ {
+	    disp.sendImage(pixBuf.SubImage(RectHalve).(*ILIImage))
+    }
+}
+func BenchmarkSendImage02(b *testing.B) {
+    pixBuf.Clear()
+    pixBuf.Convert(testBild)
+    b.ResetTimer()
+    for i := 0; i < b.N; i++ {
+	    disp.sendImage(pixBuf.SubImage(RectHalve02).(*ILIImage))
+    }
+}
+func BenchmarkSendImage03(b *testing.B) {
+    pixBuf.Clear()
+    pixBuf.Convert(testBild)
+    b.ResetTimer()
+    for i := 0; i < b.N; i++ {
+	    disp.sendImage(pixBuf.SubImage(RectHalve03).(*ILIImage))
+    }
+}
+
 
 // Test der synchronisierten Draw-Funktionen
 func TestDrawSyncFull(t *testing.T) {
@@ -121,7 +141,6 @@ func BenchmarkDrawSyncFull(b *testing.B) {
 		disp.DrawSync(gc.Image())
 	}
 }
-
 func TestDrawSyncRand(t *testing.T) {
 	rand.Seed(randSeed)
 	gc.SetFillColor(color.Black)

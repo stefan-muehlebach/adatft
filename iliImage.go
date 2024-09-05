@@ -47,9 +47,9 @@ func (p *ILIImage) SubImage(r image.Rectangle) image.Image {
     }
     idx := p.PixOffset(r.Min.X, r.Min.Y)
     return &ILIImage{
-        Pix:    p.Pix[idx:],
-        Stride: p.Stride,
         Rect:   r,
+        Stride: p.Stride,
+        Pix:    p.Pix[idx:],
     }
 }
 

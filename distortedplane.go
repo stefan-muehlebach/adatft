@@ -32,9 +32,9 @@ func (pt RefPointType) String() string {
 	return "(unknow reference point)"
 }
 
-var (
-	calibDataFile string
-)
+//var (
+//	calibDataFile string
+//)
 
 // Der Touchscreen hat ein eigenes Koordinatensystem, welches mit den Pixel-
 // Koordinaten des Bildschirms erst einmal nichts gemeinsam hat (eigener
@@ -52,8 +52,8 @@ type DistortedPlane struct {
 }
 
 // Schreibt die aktuelle Konfiguration in das Default-File.
-func (d *DistortedPlane) WriteConfig() {
-	fileName := filepath.Join(confDir, calibDataFile)
+func (d *DistortedPlane) WriteConfig(dataFile string) {
+	fileName := filepath.Join(confDir, dataFile)
 	d.WriteConfigFile(fileName)
 }
 
@@ -71,8 +71,8 @@ func (d *DistortedPlane) WriteConfigFile(fileName string) {
 }
 
 // Liest die Konfiguration aus dem Default-File.
-func (d *DistortedPlane) ReadConfig() {
-	fileName := filepath.Join(confDir, calibDataFile)
+func (d *DistortedPlane) ReadConfig(dataFile string) {
+	fileName := filepath.Join(confDir, dataFile)
 	d.ReadConfigFile(fileName)
 }
 

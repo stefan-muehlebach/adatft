@@ -54,7 +54,7 @@ func OpenDisplay(rot RotationType) *Display {
 
 	Width = rotDat[rot].width
 	Height = rotDat[rot].height
-	calibDataFile = rotDat[rot].calibDataFile
+	//calibDataFile = rotDat[rot].calibDataFile
 
 	dsp = &Display{}
 	if isRaspberry {

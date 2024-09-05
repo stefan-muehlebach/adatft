@@ -73,16 +73,11 @@ var (
 )
 
 // Gibt eine Reihe von Messdaten aus, mit denen die Performance der Umgebung
-// eingeschaetzt werden kann. Drei Bereiche werden gemessen:
-//   - Die applikatorische Zeit (NumPaint, PaintTime).
-//   - Die Zeit, welche fuer die Konvertierung der Bilder ins ILI-spezifische
-//     Format benoetigt wird (NumConf, ConvTime).
-//   - Die Zeit, welche fuer die Darstellung der Bilder auf dem TFT benoetigt
-//     wird (NumDisp, DispTime).
+// eingeschaetzt werden kann.
 //
 // Als Daumenregel gilt: wenn die applikatorische Zeit pro Frame
-// (PaintTime / NumPaint) groesser ist als die Zeit, welche fuer die
-// Darstellung benoetigt wird (DispTime / NumDisp), dann besteht Bedarf nach
+// (PaintWatch.Avg()) groesser ist als die Zeit, welche fuer die
+// Darstellung benoetigt wird (DispWatch.Avg()), dann besteht Bedarf nach
 // Optimierung.
 func PrintStat() {
 	fmt.Printf("total:\n")

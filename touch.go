@@ -11,6 +11,7 @@ import (
 const (
 	tchSpeedHz     = 1_000_000
 	eventQueueSize = 30
+	sampleTime = 5 * time.Millisecond
 )
 
 // Dies sind alle Pen- oder Touch-Events, auf welche man sich abonnieren kann.
@@ -29,11 +30,6 @@ const (
 	// PenRelease wird erzeugt, wenn der Druck auf dem Touch-Screen nicht
 	// mehr gemessen werden kann.
 	PenRelease
-	numEvents
-)
-
-const (
-	sampleTime = 5 * time.Millisecond
 )
 
 func (pet PenEventType) String() string {
@@ -46,14 +42,6 @@ func (pet PenEventType) String() string {
 		return "PenRelease"
 	}
 	return "(unknown event)"
-}
-
-// Dieser Typ steht fuer das SPI Interface zum STMPE - dem Touchscreen.
-type Touch struct {
-	tspi   TouchInterface
-	EventQ PenEventChannelType
-	DistortedPlane
-	isOpen bool
 }
 
 // Dieser Typ enthält die rohen, unkalibrierten Display-Daten
@@ -102,8 +90,17 @@ type PenEventHandlerType func(event PenEvent)
 
 type PenEventChannelType chan PenEvent
 
+// Dieser Typ steht fuer das SPI Interface zum STMPE - dem Touchscreen.
+type Touch struct {
+	tspi   TouchInterface
+	EventQ PenEventChannelType
+	plane  DistortedPlane
+	//DistortedPlane
+	isOpen bool
+}
+
 // Funktionen
-func OpenTouch() *Touch {
+func OpenTouch(rot RotationType) *Touch {
 	var tch *Touch
 	var devId uint16
 	var revNr uint8
@@ -128,6 +125,8 @@ func OpenTouch() *Touch {
 
 	tch.tspi.Init(nil)
 	tch.isOpen = true
+
+    tch.plane.ReadConfig(rotDat[rot].calibDataFile)
 
 	return tch
 }
@@ -168,7 +167,7 @@ func (tch *Touch) WaitForEvent() PenEvent {
 func (tch *Touch) newPenEvent(typ PenEventType, rawPos TouchRawPos) (ev PenEvent) {
 	ev.Type = typ
 	ev.TouchRawPos = rawPos
-	ev.TouchPos, _ = tch.Transform(rawPos)
+	ev.TouchPos, _ = tch.plane.Transform(rawPos)
 	ev.Time = time.Now()
 	ev.FifoSize = tch.tspi.ReadReg8(hw.FIFO_SIZE)
 	return
@@ -206,8 +205,7 @@ func eventDispatcher(arg any) {
 	intStatus := tch.tspi.ReadReg8(hw.INT_STA)
 	intEnable := tch.tspi.ReadReg8(hw.INT_EN)
 
-	if (intStatus & (hw.INT_TOUCH_DET |
-		hw.INT_FIFO_TH)) == 0 {
+	if (intStatus & (hw.INT_TOUCH_DET | hw.INT_FIFO_TH)) == 0 {
 		return
 	}
 
