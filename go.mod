@@ -1,10 +1,12 @@
 module github.com/stefan-muehlebach/adatft
 
-go 1.22.5
+go 1.23.2
+
+replace github.com/stefan-muehlebach/gg => ../gg
 
 require (
-	github.com/stefan-muehlebach/gg v1.3.2
-	golang.org/x/image v0.17.0
+	github.com/stefan-muehlebach/gg v0.0.0-00010101000000-000000000000
+	golang.org/x/image v0.21.0
 	periph.io/x/conn/v3 v3.7.1
 	periph.io/x/host/v3 v3.8.2
 )

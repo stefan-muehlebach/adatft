@@ -73,7 +73,7 @@ type PenEvent struct {
 	TouchRawPos
 	TouchPos
 	Time     time.Time
-	FifoSize uint8
+	//FifoSize uint8
 }
 
 func (p1 TouchPos) Near(p2 TouchPos) bool {
@@ -95,7 +95,6 @@ type Touch struct {
 	tspi   TouchInterface
 	EventQ PenEventChannelType
 	plane  DistortedPlane
-	//DistortedPlane
 	isOpen bool
 }
 
@@ -126,7 +125,7 @@ func OpenTouch(rot RotationType) *Touch {
 	tch.tspi.Init(nil)
 	tch.isOpen = true
 
-    tch.plane.ReadConfig(rotDat[rot].calibDataFile)
+    tch.plane.ReadConfig(rot)
 
 	return tch
 }
@@ -169,7 +168,7 @@ func (tch *Touch) newPenEvent(typ PenEventType, rawPos TouchRawPos) (ev PenEvent
 	ev.TouchRawPos = rawPos
 	ev.TouchPos, _ = tch.plane.Transform(rawPos)
 	ev.Time = time.Now()
-	ev.FifoSize = tch.tspi.ReadReg8(hw.FIFO_SIZE)
+	//ev.FifoSize = tch.tspi.ReadReg8(hw.FIFO_SIZE)
 	return
 }
 

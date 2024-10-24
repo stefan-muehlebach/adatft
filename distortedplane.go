@@ -32,9 +32,35 @@ func (pt RefPointType) String() string {
 	return "(unknow reference point)"
 }
 
-//var (
-//	calibDataFile string
-//)
+var (
+	calibDataFile = "TouchCalib.json"
+)
+
+type CalibData struct {
+	RawPosList [NumRefPoints]TouchRawPos
+	PosList    [NumRefPoints]TouchPos
+}
+
+// Liest die Konfiguration aus dem Default-File.
+func ReadCalibData() *CalibData {
+	fileName := filepath.Join(confDir, calibDataFile)
+	return ReadCalibDataFile(fileName)
+}
+
+// Liest die Konfiguration aus dem angegebenen File. Der Pfad kann absolut
+// oder relativ angegeben werden. Als Dateiformat wird JSON verwendet.
+func ReadCalibDataFile(fileName string) *CalibData {
+    d := &CalibData{}
+	data, err := os.ReadFile(fileName)
+	if err != nil {
+		adalog.Fatal(err)
+	}
+	err = json.Unmarshal(data, d)
+	if err != nil {
+		adalog.Fatal(err)
+	}
+	return d
+}
 
 // Der Touchscreen hat ein eigenes Koordinatensystem, welches mit den Pixel-
 // Koordinaten des Bildschirms erst einmal nichts gemeinsam hat (eigener
@@ -52,10 +78,14 @@ type DistortedPlane struct {
 }
 
 // Schreibt die aktuelle Konfiguration in das Default-File.
-func (d *DistortedPlane) WriteConfig(dataFile string) {
-	fileName := filepath.Join(confDir, dataFile)
-	d.WriteConfigFile(fileName)
-}
+//func (d *DistortedPlane) WriteConfig() {
+//	fileName := filepath.Join(confDir, calibDataFile)
+//	d.WriteConfigFile(fileName)
+//}
+//func (d *DistortedPlane) WriteConfig(dataFile string) {
+//	fileName := filepath.Join(confDir, dataFile)
+//	d.WriteConfigFile(fileName)
+//}
 
 // Schreibt die aktuelle Konfiguration in das angegebene File. Der Pfad kann
 // absolut oder relativ angegeben werden. Als Dateiformat wird JSON verwendet.
@@ -71,23 +101,56 @@ func (d *DistortedPlane) WriteConfigFile(fileName string) {
 }
 
 // Liest die Konfiguration aus dem Default-File.
-func (d *DistortedPlane) ReadConfig(dataFile string) {
-	fileName := filepath.Join(confDir, dataFile)
-	d.ReadConfigFile(fileName)
+func (d *DistortedPlane) ReadConfig(rot RotationType) {
+    off := 0
+    calibData := ReadCalibData()
+    d.PosList = calibData.PosList
+    switch rot {
+    case Rotate000:
+        off = 0
+    case Rotate090:
+        off = 1
+        d.PosList[1].X, d.PosList[3].Y = d.PosList[3].Y, d.PosList[1].X
+        d.PosList[2].X, d.PosList[2].Y = d.PosList[2].Y, d.PosList[2].X
+    case Rotate180:
+        off = 2
+    case Rotate270:
+        off = 3
+        d.PosList[1].X, d.PosList[3].Y = d.PosList[3].Y, d.PosList[1].X
+        d.PosList[2].X, d.PosList[2].Y = d.PosList[2].Y, d.PosList[2].X
+    }
+    for i := range NumRefPoints {
+        d.RawPosList[(int(i)+off)%int(NumRefPoints)] = calibData.RawPosList[i]
+    }
+
+    d.update()
 }
 
 // Liest die Konfiguration aus dem angegebenen File. Der Pfad kann absolut
 // oder relativ angegeben werden. Als Dateiformat wird JSON verwendet.
-func (d *DistortedPlane) ReadConfigFile(fileName string) {
-	data, err := os.ReadFile(fileName)
-	if err != nil {
-		adalog.Fatal(err)
-	}
-	err = json.Unmarshal(data, d)
-	if err != nil {
-		adalog.Fatal(err)
-	}
-	d.update()
+func (d *DistortedPlane) ReadConfigFile(fileName string, rot RotationType) {
+    off := 0
+    calibData := ReadCalibDataFile(fileName)
+    d.PosList = calibData.PosList
+    switch rot {
+    case Rotate000:
+        off = 0
+    case Rotate090:
+        off = 1
+        d.PosList[1].X, d.PosList[3].Y = d.PosList[3].Y, d.PosList[1].X
+        d.PosList[2].X, d.PosList[2].Y = d.PosList[2].Y, d.PosList[2].X
+    case Rotate180:
+        off = 2
+    case Rotate270:
+        off = 3
+        d.PosList[1].X, d.PosList[3].Y = d.PosList[3].Y, d.PosList[1].X
+        d.PosList[2].X, d.PosList[2].Y = d.PosList[2].Y, d.PosList[2].X
+    }
+    for i := range NumRefPoints {
+        d.RawPosList[(int(i)+off)%int(NumRefPoints)] = calibData.RawPosList[i]
+    }
+
+    d.update()
 }
 
 func (d *DistortedPlane) SetRefPoint(id RefPointType, rawPos TouchRawPos,

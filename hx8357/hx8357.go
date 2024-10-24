@@ -241,16 +241,12 @@ func (d *HX8357) Init(initParams []any) {
 func (d *HX8357) Cmd(cmd uint8) {
 	d.pin.Out(gpio.Low)
 	d.spi.Tx([]byte{cmd}, nil)
-	// err := d.spi.Tx([]byte{cmd}, nil)
-	// check("Cmd()", err)
 }
 
 // Sende die Daten in 'value' (1 Byte) als Datenpaket zum HX8357.
 func (d *HX8357) Data8(value uint8) {
 	d.pin.Out(gpio.High)
 	d.spi.Tx([]byte{value}, nil)
-	// err := d.spi.Tx([]byte{value}, nil)
-	// check("Data8()", err)
 }
 
 // Sende die Daten in 'value' (4 Bytes) als Datenpaket zum HX8357.
@@ -263,8 +259,6 @@ func (d *HX8357) Data32(value uint32) {
 	}
 	d.pin.Out(gpio.High)
 	d.spi.Tx(txBuf, nil)
-	// err := d.spi.Tx(txBuf, nil)
-	// check("Data32()", err)
 }
 
 // Sendet die Daten aus dem Slice 'buf' als Daten zum HX8357. Dies ist bloss
@@ -278,8 +272,6 @@ func (d *HX8357) DataArray(buf []byte) {
 	d.pin.Out(gpio.High)
 	if len(buf) <= SPI_BLOCK_SIZE {
 		d.spi.Tx(buf, nil)
-		// err := d.spi.Tx(buf, nil)
-		// check("DataArray()", err)
 	} else {
 		startIdx = 0
 		for countRemain > 0 {
@@ -289,8 +281,6 @@ func (d *HX8357) DataArray(buf []byte) {
 				sendSize = countRemain
 			}
 			d.spi.Tx(buf[startIdx:startIdx+sendSize], nil)
-			// err := d.spi.Tx(buf[startIdx:startIdx+sendSize], nil)
-			// check("DataArray()", err)
 			countRemain -= sendSize
 			startIdx += sendSize
 		}

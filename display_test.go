@@ -17,19 +17,18 @@ import (
 )
 
 const (
-	defSpeed  = 45_000_000
 	randSeed  = 12_345_678
-	imageFile = "testbild.png"
+	imageFile01 = "testbild01.png"
+    imageFile02 = "testbild02.png"
 )
 
 var (
 	disp                                     *Display
 	pixBuf                                   *ILIImage
 	fWidth, fHeight                          float64
-	tempBild, testBild, workImage            *image.RGBA
-	RectFull, RectHalve, RectHalve02, RectHalve03, RectQuart, RectCust image.Rectangle
+	tempBild, testBild01, testBild02, workImage            *image.RGBA
+	rectFull, rectHalve, rectHalve02, rectHalve03, rectQuart, rectCust, rect image.Rectangle
 	srcPoint                                 image.Point
-	rect                                     image.Rectangle
 	gc                                       *gg.Context
 	gcImage                                  *image.RGBA
 	err                                      error
@@ -42,20 +41,25 @@ var (
 )
 
 func init() {
-	log.Printf("%d, %v", len(os.Args), os.Args)
+	//log.Printf("%d, %v", len(os.Args), os.Args)
 	spiSpeed, err = strconv.ParseInt(os.Args[len(os.Args)-1], 10, 32)
-	if err != nil {
-		spiSpeed = defSpeed
+	if err == nil {
+	    SPISpeedHz = physic.Frequency(spiSpeed)
 	}
-	SPISpeedHz = physic.Frequency(spiSpeed)
 
 	disp = OpenDisplay(Rotate090)
 	fWidth, fHeight = float64(Width), float64(Height)
-	rect = image.Rect(0, 0, Width, Height)
 
-	pixBuf = NewILIImage(rect)
+	rectFull = image.Rect(0, 0, Width, Height)
+	rectHalve = image.Rect(Width/4, Height/4, 3*Width/4, 3*Height/4)
+	rectQuart = image.Rect(3*Width/8, 3*Height/8, 5*Width/8, 5*Height/8)
+	rectHalve02 = image.Rect(0, Height/4, Width, 3*Height/4)
+	rectHalve03 = image.Rect(Width/4, 0, 3*Width/4, Height)
+	rectCust = image.Rect(0, 0, Width/3, Height/3)
 
-	fh, err := os.Open(imageFile)
+	pixBuf = NewILIImage(rectFull)
+
+	fh, err := os.Open(imageFile01)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -64,24 +68,15 @@ func init() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	tempBild = img.(*image.RGBA)
-	testBild = image.NewRGBA(rect)
-	draw.Draw(testBild, rect, tempBild, image.Point{}, draw.Src)
+	testBild01 = image.NewRGBA(rectFull)
+	draw.Draw(testBild01, rectFull, img, image.Point{}, draw.Src)
 
-	workImage = image.NewRGBA(rect)
-
-	RectFull = image.Rect(0, 0, Width, Height)
-	RectHalve = image.Rect(Width/4, Height/4, 3*Width/4, 3*Height/4)
-	RectHalve02 = image.Rect(0, Height/4, Width, 3*Height/4)
-	RectHalve03 = image.Rect(Width/4, 0, 3*Width/4, Height)
-	RectQuart = image.Rect(3*Width/8, 3*Height/8, 5*Width/8, 5*Height/8)
-	RectCust = image.Rect(0, 0, Width/3, Height/3)
+	workImage = image.NewRGBA(rectFull)
 
 	srcPoint = image.Pt(0, 0)
-	rect = image.Rectangle{}
 
 	plane = &DistortedPlane{}
-	plane.ReadConfig()
+	plane.ReadConfig(Rotate090)
 
 	gc = gg.NewContext(Width, Height)
 	gcImage = gc.Image().(*image.RGBA)
@@ -94,48 +89,58 @@ func init() {
 	rand.Seed(randSeed)
 }
 
-func TestSendImage(t *testing.T) {
+func TestSendFullImage(t *testing.T) {
     pixBuf.Clear()
-    pixBuf.Convert(testBild)
+    pixBuf.Convert(testBild01)
 	disp.sendImage(pixBuf)
 }
-func BenchmarkSendImage(b *testing.B) {
+func TestSendHalveImage(t *testing.T) {
     pixBuf.Clear()
-    pixBuf.Convert(testBild)
-    b.ResetTimer()
-    for i := 0; i < b.N; i++ {
-	    disp.sendImage(pixBuf.SubImage(RectHalve).(*ILIImage))
-    }
+    pixBuf.Convert(testBild01)
+	disp.sendImage(pixBuf.SubImage(rectHalve).(*ILIImage))
 }
-func BenchmarkSendImage02(b *testing.B) {
+func TestSendQuartImage(t *testing.T) {
     pixBuf.Clear()
-    pixBuf.Convert(testBild)
-    b.ResetTimer()
-    for i := 0; i < b.N; i++ {
-	    disp.sendImage(pixBuf.SubImage(RectHalve02).(*ILIImage))
-    }
-}
-func BenchmarkSendImage03(b *testing.B) {
-    pixBuf.Clear()
-    pixBuf.Convert(testBild)
-    b.ResetTimer()
-    for i := 0; i < b.N; i++ {
-	    disp.sendImage(pixBuf.SubImage(RectHalve03).(*ILIImage))
-    }
+    pixBuf.Convert(testBild01)
+	disp.sendImage(pixBuf.SubImage(rectQuart).(*ILIImage))
 }
 
+func BenchmarkSendFullImage(b *testing.B) {
+    pixBuf.Clear()
+    pixBuf.Convert(testBild01)
+    b.ResetTimer()
+    for i := 0; i < b.N; i++ {
+	    disp.sendImage(pixBuf)
+    }
+}
+func BenchmarkSendHalveImage(b *testing.B) {
+    pixBuf.Clear()
+    pixBuf.Convert(testBild01)
+    b.ResetTimer()
+    for i := 0; i < b.N; i++ {
+		disp.sendImage(pixBuf.SubImage(rectHalve).(*ILIImage))
+    }
+}
+func BenchmarkSendQuartImage(b *testing.B) {
+    pixBuf.Clear()
+    pixBuf.Convert(testBild01)
+    b.ResetTimer()
+    for i := 0; i < b.N; i++ {
+		disp.sendImage(pixBuf.SubImage(rectQuart).(*ILIImage))
+    }
+}
 
 // Test der synchronisierten Draw-Funktionen
 func TestDrawSyncFull(t *testing.T) {
 	gc.SetFillColor(color.Black)
 	gc.Clear()
-	gc.DrawImage(testBild.SubImage(RectFull), 0, 0)
+	gc.DrawImage(testBild01.SubImage(rectFull), 0, 0)
 	disp.DrawSync(gc.Image())
 }
 func BenchmarkDrawSyncFull(b *testing.B) {
 	gc.SetFillColor(color.Black)
 	gc.Clear()
-	gc.DrawImage(testBild.SubImage(RectFull), 0, 0)
+	gc.DrawImage(testBild01.SubImage(rectFull), 0, 0)
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
 		disp.DrawSync(gc.Image())
@@ -148,8 +153,8 @@ func TestDrawSyncRand(t *testing.T) {
 	for i := 0; i < 5; i++ {
 		dx := rand.Intn(240) - 120
 		dy := rand.Intn(180) - 90
-		rect := RectQuart.Add(image.Point{dx, dy})
-		draw.Draw(gcImage, rect, testBild, rect.Min, draw.Src)
+		rect := rectQuart.Add(image.Point{dx, dy})
+		draw.Draw(gcImage, rect, testBild01, rect.Min, draw.Src)
 	}
 	disp.DrawSync(gc.Image())
 }
@@ -158,18 +163,17 @@ func TestDrawSyncRand(t *testing.T) {
 func TestDrawAsyncFull(t *testing.T) {
 	gc.SetFillColor(color.Black)
 	gc.Clear()
-	gc.DrawImage(testBild.SubImage(RectFull), 0, 0)
+	gc.DrawImage(testBild01.SubImage(rectFull), 0, 0)
 	disp.Draw(gc.Image())
 }
 func BenchmarkDrawAsyncFull(b *testing.B) {
 	gc.SetFillColor(color.Black)
 	gc.Clear()
-	gc.DrawImage(testBild.SubImage(RectFull), 0, 0)
+	gc.DrawImage(testBild01.SubImage(rectFull), 0, 0)
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
 		disp.Draw(gc.Image())
 	}
-	b.StopTimer()
 }
 func TestDrawAsyncRand(t *testing.T) {
 	rand.Seed(randSeed)
@@ -178,8 +182,8 @@ func TestDrawAsyncRand(t *testing.T) {
 	for i := 0; i < 5; i++ {
 		dx := rand.Intn(240) - 120
 		dy := rand.Intn(180) - 90
-		rect := RectQuart.Add(image.Point{dx, dy})
-		draw.Draw(gcImage, rect, testBild, rect.Min, draw.Src)
+		rect := rectQuart.Add(image.Point{dx, dy})
+		draw.Draw(gcImage, rect, testBild01, rect.Min, draw.Src)
 	}
 	disp.Draw(gc.Image())
 }
@@ -244,7 +248,7 @@ func TestDiff(t *testing.T) {
 // Zuerst fuer den Fall, dass sich gar nichts aendert, also das gesamte Bild
 // durchsucht werden muss.
 func BenchmarkDiffFull(b *testing.B) {
-	img := NewILIImage(image.Rect(0, 0, Width, Height))
+	img := NewILIImage(rectFull)
 	img.Clear()
 	pixBuf.Clear()
 
@@ -257,7 +261,7 @@ func BenchmarkDiffFull(b *testing.B) {
 // Und danach fuer 20 zufaellig gesetzte Punkte.
 func BenchmarkDiffRand(b *testing.B) {
 	rand.Seed(randSeed)
-	img := NewILIImage(image.Rect(0, 0, Width, Height))
+	img := NewILIImage(rectFull)
 	pixBuf.Clear()
 
 	b.StopTimer()
@@ -280,7 +284,7 @@ func BenchmarkDiffRand(b *testing.B) {
 // und Cust (siehe auch die Variablen dstRectXXX in der Funktion init()).
 func BenchmarkConvertFull(b *testing.B) {
 	for i := 0; i < b.N; i++ {
-		pixBuf.Convert(testBild)
+		pixBuf.Convert(testBild01)
 	}
 }
 func BenchmarkConvertRand(b *testing.B) {
@@ -291,18 +295,12 @@ func BenchmarkConvertRand(b *testing.B) {
 		x0, y0 := rand.Intn(Width/2), rand.Intn(Height/2)
 		x1, y1 := Width/2+rand.Intn(Width/2), Height/2+rand.Intn(Height/2)
 		rect := image.Rect(x0, y0, x1, y1)
-		img := testBild.SubImage(rect).(*image.RGBA)
+		img := testBild01.SubImage(rect).(*image.RGBA)
 		b.StartTimer()
 		pixBuf.Convert(img)
 		b.StopTimer()
 	}
 }
-
-// func BenchmarkConvertFullByGo(b *testing.B) {
-//     for i := 0; i < b.N; i++ {
-//         draw.Draw(pixBuf, pixBuf.Rect, testBild, image.Point{}, draw.Src)
-//     }
-// }
 
 // Benchmark der Konvertierung von Touchscreen-Koordinaten nach Bildschirm-
 // Koordinaten. TO DO: ev. sollte die Erzeugung der Touchscreen-Koordinaten
@@ -322,7 +320,7 @@ func BenchmarkTransformPoint(b *testing.B) {
 // Ausschnitte des Bildes darstellen: Full, Halve, Quart und Cust (siehe auch
 // die Variablen dstRectXXX in der Funktion init()).
 func BenchmarkSendFull(b *testing.B) {
-	pixBuf.Convert(testBild)
+	pixBuf.Convert(testBild01)
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
 		disp.sendImage(pixBuf)
@@ -330,7 +328,7 @@ func BenchmarkSendFull(b *testing.B) {
 }
 func BenchmarkSendRand(b *testing.B) {
 	rand.Seed(randSeed)
-	pixBuf.Convert(testBild)
+	pixBuf.Convert(testBild01)
 	b.StopTimer()
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
@@ -351,8 +349,8 @@ func BenchmarkDrawFull(b *testing.B) {
 	pixBuf.Clear()
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		img.Convert(testBild)
-		rect = pixBuf.Diff(img)
+		img.Convert(testBild01)
+		rect := pixBuf.Diff(img)
 		disp.sendImage(img.SubImage(rect).(*ILIImage))
 	}
 }
@@ -360,16 +358,16 @@ func BenchmarkDrawRand(b *testing.B) {
 	rand.Seed(randSeed)
 	imgA := NewILIImage(image.Rect(0, 0, Width, Height))
 	imgB := NewILIImage(image.Rect(0, 0, Width, Height))
-	imgB.Convert(testBild)
+	imgB.Convert(testBild01)
 	b.StopTimer()
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
 		for j := 0; j < 2; j++ {
 			x, y := rand.Intn(Width), rand.Intn(Height)
-			testBild.Set(x, y, color.YellowGreen)
+			testBild01.Set(x, y, color.YellowGreen)
 		}
 		b.StartTimer()
-		imgA.Convert(testBild)
+		imgA.Convert(testBild01)
 		rect := imgA.Diff(imgB)
 		disp.sendImage(imgA.SubImage(rect).(*ILIImage))
 		b.StopTimer()
@@ -430,7 +428,7 @@ func BenchmarkDrawImageGG(b *testing.B) {
 	disp.DrawSync(gc.Image())
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		gc.DrawImage(testBild, 0, 0)
+		gc.DrawImage(testBild01, 0, 0)
 	}
 	b.StopTimer()
 	disp.DrawSync(gc.Image())
@@ -442,7 +440,7 @@ func BenchmarkDrawImageGo(b *testing.B) {
 	disp.DrawSync(gc.Image())
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		draw.Draw(out, out.Bounds(), testBild, image.Point{0, 0}, draw.Src)
+		draw.Draw(out, out.Bounds(), testBild01, image.Point{0, 0}, draw.Src)
 	}
 	b.StopTimer()
 	disp.DrawSync(gc.Image())
@@ -454,7 +452,7 @@ func BenchmarkDrawImageGo2(b *testing.B) {
 	disp.DrawSync(gc.Image())
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		draw2.Draw(out, out.Bounds(), testBild, image.Point{0, 0}, draw2.Src)
+		draw2.Draw(out, out.Bounds(), testBild01, image.Point{0, 0}, draw2.Src)
 	}
 	b.StopTimer()
 	disp.DrawSync(gc.Image())
@@ -466,7 +464,7 @@ func BenchmarkCopyImageGo2(b *testing.B) {
 	disp.DrawSync(gc.Image())
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		draw2.Copy(out, image.Point{0, 0}, testBild, testBild.Bounds(), draw2.Src, nil)
+		draw2.Copy(out, image.Point{0, 0}, testBild01, testBild01.Bounds(), draw2.Src, nil)
 	}
 	b.StopTimer()
 	disp.DrawSync(gc.Image())

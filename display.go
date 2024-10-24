@@ -15,6 +15,7 @@ const (
 var (
 	SPISpeedHz physic.Frequency = 45_000_000
 	//SPISpeedHz physic.Frequency = 65_000_000
+	//SPISpeedHz physic.Frequency = 80_000_000
 	Width, Height int
 )
 
@@ -40,6 +41,7 @@ type Display struct {
 	imgChan            []chan *ILIImage
 	syncImg, activeImg *ILIImage
 	quitQ              chan bool
+	rect image.Rectangle
 }
 
 // OpenDisplay initialisiert die Hardware, damit ein Zeichnen auf dem TFT
@@ -48,34 +50,28 @@ type Display struct {
 // Ebenso werden Channels und Go-Routines erstellt, die für das asynchrone
 // Anzeigen notwendig sind.
 func OpenDisplay(rot RotationType) *Display {
-	var dsp *Display
-	var rect image.Rectangle
-	var img *ILIImage
-
-	Width = rotDat[rot].width
-	Height = rotDat[rot].height
-	//calibDataFile = rotDat[rot].calibDataFile
-
-	dsp = &Display{}
+	dsp := &Display{}
 	if isRaspberry {
 		dsp.dspi = hw.Open(SPISpeedHz)
 	} else {
 		dsp.dspi = hw.OpenDummy(SPISpeedHz)
 	}
-	dsp.dspi.Init([]any{false, rotDat[rot].madctlParam, pixfmt})
+	dsp.dspi.Init([]any{false, RotationData[rot].madctlParam, pixfmt})
 
 	dsp.imgChan = make([]chan *ILIImage, numChannels)
-	for i := 0; i < len(dsp.imgChan); i++ {
+	for i := toConv; i < numChannels; i++ {
 		dsp.imgChan[i] = make(chan *ILIImage, numBuffers+1)
 	}
 
-	rect = image.Rect(0, 0, Width, Height)
+	Width = RotationData[rot].width
+	Height = RotationData[rot].height
+	dsp.rect = image.Rect(0, 0, Width, Height)
 	for i := 0; i < numBuffers; i++ {
-		img = NewILIImage(rect)
+		img := NewILIImage(dsp.rect)
 		dsp.imgChan[toConv] <- img
 	}
-	dsp.syncImg = NewILIImage(rect)
-	dsp.activeImg = NewILIImage(rect)
+	dsp.syncImg = NewILIImage(dsp.rect)
+	dsp.activeImg = NewILIImage(dsp.rect)
 	dsp.sendImage(dsp.activeImg)
 
 	dsp.quitQ = make(chan bool)
@@ -98,7 +94,7 @@ func (dsp *Display) Close() {
 // es wird kein geom.Rectangle Wert zurueckgegeben, da dieser float64-Werte
 // enthaelt.
 func (dsp *Display) Bounds() image.Rectangle {
-	return image.Rect(0, 0, Width, Height)
+	return dsp.rect
 }
 
 // Damit wird das Bild img auf dem Bildschirm dargestellt. Die Darstellung
