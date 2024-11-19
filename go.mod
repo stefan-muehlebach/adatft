@@ -1,6 +1,6 @@
 module github.com/stefan-muehlebach/adatft
 
-go 1.23.2
+go 1.23.3
 
 replace github.com/stefan-muehlebach/gg => ../gg
 
