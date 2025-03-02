@@ -270,7 +270,7 @@ func (d *HX8357) DataArray(buf []byte) {
 	var sendSize, startIdx int
 
 	d.pin.Out(gpio.High)
-	if len(buf) <= SPI_BLOCK_SIZE {
+	if countRemain <= SPI_BLOCK_SIZE {
 		d.spi.Tx(buf, nil)
 	} else {
 		startIdx = 0

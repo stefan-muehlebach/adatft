@@ -52,7 +52,7 @@ const (
 	//
 	SYS_CTRL1_RESET = 0x02
 
-	INT_CTRL_POL_HIGH = 0x04
+	INT_CTRL_RISING   = 0x04
 	INT_CTRL_EDGE     = 0x02
 	INT_CTRL_ENABLE   = 0x01
 	INT_FIFO_EMPTY    = 0x10
@@ -164,15 +164,16 @@ func Open(speedHz physic.Frequency) (*STMPE610) {
 	p, err = spireg.Open(SpiDevFile)
 	check("OpenSTMPE610(): error on spireg.Open()", err)
 
-	d.spi, err = p.Connect(speedHz*physic.Hertz, spi.Mode1, 8)
+	d.spi, err = p.Connect(speedHz*physic.Hertz, spi.Mode0, 8)
 	check("OpenSTMPE610(): error on port.Connect()", err)
 
 	d.pin = gpioreg.ByName(IntPin)
 	if d.pin == nil {
 	    log.Fatal("OpenSTMPE610(): gpio io pin not found")
 	}
-	err = d.pin.In(gpio.PullUp, gpio.FallingEdge)
-	// err = d.pin.In(gpio.PullNoChange, gpio.FallingEdge)
+	//err = d.pin.In(gpio.PullUp, gpio.FallingEdge)
+	//err = d.pin.In(gpio.Float, gpio.FallingEdge)
+	err = d.pin.In(gpio.Float, gpio.FallingEdge)
 	check("OpenSTMPE610(): couldn't configure interrupt pin", err)
 
 	return d
@@ -212,15 +213,15 @@ func (d *STMPE610) Init(initParams []any) {
 	// - enable touch screen control
 	//
 	d.WriteReg8(TSC_CTRL,
-		TSC_CTRL_WTRK8|
-			TSC_CTRL_XY|
+		TSC_CTRL_WTRK8 |
+			TSC_CTRL_XY |
 			TSC_CTRL_EN)
 
 	// Analog Digital Converter Register (ADC_XXX)
 	// (Wozu braucht es diese?)
 	//
 	d.WriteReg8(ADC_CTRL1,
-		ADC_CTRL1_12BIT|
+		ADC_CTRL1_12BIT |
 			ADC_CTRL1_96CLK) // Ada
 	//ADC_CTRL1_36CLK)
 
@@ -236,12 +237,12 @@ func (d *STMPE610) Init(initParams []any) {
 	// - set a settling time of 5ms
 	//
 	d.WriteReg8(TSC_CFG,
-		TSC_CFG_8SAMPLE|
-			TSC_CFG_DELAY_1MS|
+		TSC_CFG_8SAMPLE |
+			TSC_CFG_DELAY_1MS |
 			TSC_CFG_SETTLE_5MS)
 	// TSC_CFG_8SAMPLE |
-	// TSC_CFG_DELAY_500US |
-	// TSC_CFG_SETTLE_500US)
+	// TSC_CFG_DELAY_1MS |
+	// TSC_CFG_SETTLE_5MS)
 
 	// Don't collect any Z data since we cannot relay on this feature!
 	//d.WriteReg8(TSC_FRACTION_Z,
@@ -249,9 +250,8 @@ func (d *STMPE610) Init(initParams []any) {
 
 	// FIFO Register (FIFO_XXX)
 	//
-	d.WriteReg8(FIFO_TH, 1)
-	d.WriteReg8(FIFO_STA,
-		FIFO_STA_RESET)
+	d.WriteReg8(FIFO_TH, 2)
+	d.WriteReg8(FIFO_STA, FIFO_STA_RESET)
 	d.WriteReg8(FIFO_STA, 0x00)
 
 	// Interrupt Register (INT_XXX)
@@ -262,6 +262,9 @@ func (d *STMPE610) Init(initParams []any) {
 	d.WriteReg8(INT_EN,
 		INT_TOUCH_DET |
 			INT_FIFO_TH)
+	//		INT_FIFO_EMPTY |
+	//		INT_FIFO_FULL |
+	//		INT_FIFO_OFLOW)
 
 	d.WriteReg8(TSC_I_DRIVE,
 		TSC_I_DRIVE_50MA)
@@ -284,25 +287,25 @@ func (d *STMPE610) Init(initParams []any) {
 func (d *STMPE610) ReadReg8(addr uint8) uint8 {
 	var txBuf []byte = []byte{0x80 + addr, 0x00}
 	var rxBuf []byte = []byte{0x00, 0x00}
-	d.spi.Tx(txBuf, rxBuf)
-	//err := d.spi.Tx(txBuf, rxBuf)
-	//check("ReadReg8()", err)
+	//d.spi.Tx(txBuf, rxBuf)
+	err := d.spi.Tx(txBuf, rxBuf)
+	check("ReadReg8()", err)
 	return rxBuf[1]
 }
 
 func (d *STMPE610) WriteReg8(addr uint8, value uint8) {
 	var buf []byte = []byte{addr, value}
-	d.spi.Tx(buf, nil)
-	//err := d.spi.Tx(buf, nil)
-	//check("WriteReg8()", err)
+	//d.spi.Tx(buf, nil)
+	err := d.spi.Tx(buf, nil)
+	check("WriteReg8()", err)
 }
 
 func (d *STMPE610) ReadReg16(addr uint8) uint16 {
 	var txBuf []byte = []byte{0x80 + addr, 0x81 + addr, 0x00}
 	var rxBuf []byte = []byte{0x00, 0x00, 0x00}
-	d.spi.Tx(txBuf, rxBuf)
-	//err := d.spi.Tx(txBuf, rxBuf)
-	//check("ReadReg16()", err)
+	//d.spi.Tx(txBuf, rxBuf)
+	err := d.spi.Tx(txBuf, rxBuf)
+	check("ReadReg16()", err)
 	return (uint16(rxBuf[1]) << 8) | uint16(rxBuf[2])
 }
 
@@ -313,9 +316,9 @@ func (d *STMPE610) WriteReg16(addr uint8, value uint16) {
 func (d *STMPE610) ReadData() (x, y uint16 /*, z uint8*/) {
 	var txBuf []byte = []byte{0xD7, 0xD7, 0xD7, 0x00}
 	var rxBuf []byte = []byte{0x00, 0x00, 0x00, 0x00}
-	d.spi.Tx(txBuf, rxBuf)
-	//err := d.spi.Tx(txBuf, rxBuf)
-	//check("ReadData()", err)
+	//d.spi.Tx(txBuf, rxBuf)
+	err := d.spi.Tx(txBuf, rxBuf)
+	check("ReadData()", err)
 	x = (uint16(rxBuf[1]) << 4) | (uint16(rxBuf[2]) >> 4)
 	y = (uint16(rxBuf[2]&0x0F) << 8) | uint16(rxBuf[3])
 	//z = uint8(rxBuf[4])
@@ -325,10 +328,10 @@ func (d *STMPE610) ReadData() (x, y uint16 /*, z uint8*/) {
 func (d *STMPE610) SetCallback(cbFunc func(any), cbData any) {
 	go func() {
 		for {
-			if d.pin.WaitForEdge(-1) {
+			if d.pin.WaitForEdge(10 * time.Second) {
 				cbFunc(cbData)
 			} else {
-				//log.Printf("WaitForEdge() returned 'false'\n")
+				log.Printf("WaitForEdge() returned 'false'\n")
 			}
 		}
 	}()

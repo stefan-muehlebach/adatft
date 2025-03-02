@@ -2,6 +2,7 @@ package adatft
 
 import (
 	"fmt"
+	// "log"
 	"time"
 	hw "github.com/stefan-muehlebach/adatft/stmpe610"
 )
@@ -9,7 +10,7 @@ import (
 // Mit diesen Konstanten wird einerseits die Frequenz fuer den SPI-Bus
 // definiert und die Groesse der Queue fuer die Touch-Events festgelegt.
 const (
-	tchSpeedHz     = 1_000_000
+	tchSpeedHz     = 500_000
 	eventQueueSize = 30
 	sampleTime = 5 * time.Millisecond
 )
@@ -196,35 +197,42 @@ func eventDispatcher(arg any) {
 
 	tch = arg.(*Touch)
 
-	// log.Printf("Interrupt received!\n")
-
+	//log.Printf("ISR called\n")
 	// intStatus enthält pro Interrupt den aktuellen Status (active,
 	// not active) während in intEnable pro Interrupt festgehalten ist, ob
 	// dieser Interrupt überhaupt eingeschaltet ist.
 	intStatus := tch.tspi.ReadReg8(hw.INT_STA)
 	intEnable := tch.tspi.ReadReg8(hw.INT_EN)
 
-	if (intStatus & (hw.INT_TOUCH_DET | hw.INT_FIFO_TH)) == 0 {
+	//log.Printf("  INT_STA: %08b; INT_EN: %08b\n", intStatus, intEnable)
+	if (intStatus & intEnable) == 0 {
+		//log.Printf("  Abort\n")
 		return
 	}
 
 	// Schalte alle (!) Interrupts aus.
 	tch.tspi.WriteReg8(hw.INT_EN, 0x00)
 
-	switch {
-	case (intStatus & hw.INT_TOUCH_DET) != 0:
+	if (intStatus & hw.INT_TOUCH_DET) != 0 {
+		//log.Printf("    INT_TOUCH_DET\n")
 		if (tch.tspi.ReadReg8(hw.TSC_CTRL) & 0x80) == 0 {
 			if !penUp {
+				//log.Printf("      Pen up\n")
 				ev = tch.newPenEvent(PenRelease, posRaw)
 				tch.enqueueEvent(ev)
 				penUp = true
 			}
+		} else {
+			//log.Printf("      Pen down\n")
 		}
 		tch.tspi.WriteReg8(hw.INT_STA, hw.INT_TOUCH_DET)
+	}
 
-	case (intStatus & hw.INT_FIFO_TH) != 0:
+	if (intStatus & hw.INT_FIFO_TH) != 0 {
+		//log.Printf("    INT_FIFO_TH\n")
 		for tch.tspi.ReadReg8(hw.FIFO_SIZE) > 0 {
-			time.Sleep(sampleTime) // NEU!!! ACHTUNG!!!
+		    //log.Printf("      FIFO_SIZE > 0\n")
+			//time.Sleep(sampleTime) // NEU!!! ACHTUNG!!!
 			posRaw = tch.readRawPos()
 			evTyp = PenDrag
 			if penUp {
@@ -234,10 +242,27 @@ func eventDispatcher(arg any) {
 			ev = tch.newPenEvent(evTyp, posRaw)
 			tch.enqueueEvent(ev)
 		}
-		tch.tspi.WriteReg8(hw.INT_STA, hw.INT_FIFO_TH)
 		tch.tspi.WriteReg8(hw.FIFO_STA, 0x01)
 		tch.tspi.WriteReg8(hw.FIFO_STA, 0x00)
+		tch.tspi.WriteReg8(hw.INT_STA, hw.INT_FIFO_TH)
 	}
+
+	/*
+	if (intStatus & hw.INT_FIFO_EMPTY) != 0 {
+		log.Printf("    INT_FIFO_EMPTH\n")
+		tch.tspi.WriteReg8(hw.INT_STA, hw.INT_FIFO_EMPTY)
+	}
+
+	if (intStatus & hw.INT_FIFO_FULL) != 0 {
+		log.Printf("    INT_FIFO_FULL\n")
+		tch.tspi.WriteReg8(hw.INT_STA, hw.INT_FIFO_FULL)
+	}
+
+	if (intStatus & hw.INT_FIFO_OFLOW) != 0 {
+		log.Printf("    INT_FIFO_OFLOW\n")
+		tch.tspi.WriteReg8(hw.INT_STA, hw.INT_FIFO_OFLOW)
+	}
+	*/
 
 	// Schalte die Interrupts wieder ein.
 	tch.tspi.WriteReg8(hw.INT_EN, intEnable)
