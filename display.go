@@ -13,7 +13,8 @@ const (
 )
 
 var (
-	SPISpeedHz physic.Frequency = 45_000_000
+	//SPISpeedHz physic.Frequency = 25_000_000 // Diese Einstellung geht sicher
+	SPISpeedHz physic.Frequency = 30_000_000
 	//SPISpeedHz physic.Frequency = 65_000_000
 	//SPISpeedHz physic.Frequency = 80_000_000
 	Width, Height int

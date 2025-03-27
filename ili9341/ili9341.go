@@ -269,17 +269,17 @@ func (d *ILI9341) Init(initParams []any) {
 // Sende den Befehl in 'cmd' zum ILI9341.
 func (d *ILI9341) Cmd(cmd uint8) {
     d.pin.Out(gpio.Low)
-    d.spi.Tx([]byte{cmd}, nil)
-    // err := d.spi.Tx([]byte{cmd}, nil)
-    // check("Cmd()", err)
+    //d.spi.Tx([]byte{cmd}, nil)
+    err := d.spi.Tx([]byte{cmd}, nil)
+    check("Cmd()", err)
 }
 
 // Sende die Daten in 'value' (1 Byte) als Datenpaket zum ILI9341.
 func (d *ILI9341) Data8(value uint8) {
     d.pin.Out(gpio.High)
-    d.spi.Tx([]byte{value}, nil)
-    // err := d.spi.Tx([]byte{value}, nil)
-    // check("Data8()", err)
+    //d.spi.Tx([]byte{value}, nil)
+    err := d.spi.Tx([]byte{value}, nil)
+    check("Data8()", err)
 }
 
 // Sende die Daten in 'value' (4 Bytes) als Datenpaket zum ILI9341.
@@ -291,9 +291,9 @@ func (d *ILI9341) Data32(value uint32) {
         byte(value),
     }
     d.pin.Out(gpio.High)
-    d.spi.Tx(txBuf, nil)
-    // err := d.spi.Tx(txBuf, nil)
-    // check("Data32()", err)
+    //d.spi.Tx(txBuf, nil)
+    err := d.spi.Tx(txBuf, nil)
+    check("Data32()", err)
 }
 
 // Sendet die Daten aus dem Slice 'buf' als Daten zum ILI9341. Dies ist bloss
@@ -306,9 +306,9 @@ func (d *ILI9341) DataArray(buf []byte) {
 
     d.pin.Out(gpio.High)
     if len(buf) <= SPI_BLOCK_SIZE {
-        d.spi.Tx(buf, nil)
-        // err := d.spi.Tx(buf, nil)
-        // check("DataArray()", err)
+        //d.spi.Tx(buf, nil)
+        err := d.spi.Tx(buf, nil)
+        check("DataArray()", err)
     } else {
         startIdx = 0
         for countRemain > 0 {
@@ -317,11 +317,20 @@ func (d *ILI9341) DataArray(buf []byte) {
             } else {
                 sendSize = countRemain
             }
-            d.spi.Tx(buf[startIdx:startIdx+sendSize], nil)
-            // err := d.spi.Tx(buf[startIdx:startIdx+sendSize], nil)
-            // check("DataArray()", err)
+            //d.spi.Tx(buf[startIdx:startIdx+sendSize], nil)
+            err := d.spi.Tx(buf[startIdx:startIdx+sendSize], nil)
+            check("DataArray()", err)
             countRemain -= sendSize
             startIdx += sendSize
         }
     }
 }
+
+// Interne Check-Funktion, welche bei gravierenden Fehlern das Programm
+// beendet.
+func check(fnc string, err error) {
+	if err != nil {
+		log.Fatalf("%s: %s", fnc, err)
+	}
+}
+
