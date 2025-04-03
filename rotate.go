@@ -56,17 +56,16 @@ func (rot *RotationType) Set(s string) error {
 // abgelegt. Es ist ein interner Datentyp, der wohl verwendet, aber nicht
 // verändert werden kann.
 type RotationDataType struct {
-//	calibDataFile string
+	//	calibDataFile string
 	width, height int
 	madctlParam   uint8
 }
 
 var (
 	RotationData = []RotationDataType{
-		{/*"Rotate000.json",*/ hw.SHORT_SIDE, hw.LONG_SIDE, 0x48},
-		{/*"Rotate090.json",*/ hw.LONG_SIDE, hw.SHORT_SIDE, 0xe8},
-		{/*"Rotate180.json",*/ hw.SHORT_SIDE, hw.LONG_SIDE, 0x88},
-		{/*"Rotate270.json",*/ hw.LONG_SIDE, hw.SHORT_SIDE, 0x28},
+		{ /*"Rotate000.json",*/ hw.SHORT_SIDE, hw.LONG_SIDE, 0x48},
+		{ /*"Rotate090.json",*/ hw.LONG_SIDE, hw.SHORT_SIDE, 0xe8},
+		{ /*"Rotate180.json",*/ hw.SHORT_SIDE, hw.LONG_SIDE, 0x88},
+		{ /*"Rotate270.json",*/ hw.LONG_SIDE, hw.SHORT_SIDE, 0x28},
 	}
 )
-

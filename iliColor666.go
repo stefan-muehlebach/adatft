@@ -9,16 +9,16 @@ import (
 )
 
 const (
-    bytesPerPixel = 3
-    pixfmt uint8 = 0x06
+	bytesPerPixel       = 3
+	pixfmt        uint8 = 0x06
 )
 
 type ILIColor struct {
 	R, G, B uint8
 }
 
-func NewILIColor(r, g, b uint8) (ILIColor) {
-    return ILIColor{r, g, b}
+func NewILIColor(r, g, b uint8) ILIColor {
+	return ILIColor{r, g, b}
 }
 
 func (c ILIColor) RGBA() (r, g, b, a uint32) {
@@ -52,4 +52,3 @@ func iliModel(c color.Color) color.Color {
 var (
 	ILIModel color.Model = color.ModelFunc(iliModel)
 )
-

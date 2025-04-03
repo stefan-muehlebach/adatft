@@ -55,8 +55,8 @@ func (d *STMPE610Dummy) WriteReg16(addr uint8, value uint16) {
 	// Nicht implementiert
 }
 
-func (d *STMPE610Dummy) ReadData() (x, y uint16 /*, z uint8*/) {
-	return 0, 0
+func (d *STMPE610Dummy) ReadData() (x, y uint16, z uint8) {
+	return 0, 0, 0
 }
 
 func (d *STMPE610Dummy) SetCallback(cbFunc func(any), cbData any) {

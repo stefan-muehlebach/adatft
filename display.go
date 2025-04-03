@@ -2,7 +2,9 @@ package adatft
 
 import (
 	"image"
+
 	"periph.io/x/conn/v3/physic"
+
 	// hw "github.com/stefan-muehlebach/adatft/ili9341"
 	hw "github.com/stefan-muehlebach/adatft/hx8357"
 )
@@ -14,7 +16,7 @@ const (
 
 var (
 	//SPISpeedHz physic.Frequency = 25_000_000 // Diese Einstellung geht sicher
-	SPISpeedHz physic.Frequency = 30_000_000
+	SPISpeedHz physic.Frequency = 45_000_000
 	//SPISpeedHz physic.Frequency = 65_000_000
 	//SPISpeedHz physic.Frequency = 80_000_000
 	Width, Height int
@@ -42,7 +44,7 @@ type Display struct {
 	imgChan            []chan *ILIImage
 	syncImg, activeImg *ILIImage
 	quitQ              chan bool
-	rect image.Rectangle
+	rect               image.Rectangle
 }
 
 // OpenDisplay initialisiert die Hardware, damit ein Zeichnen auf dem TFT

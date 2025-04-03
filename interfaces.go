@@ -55,7 +55,7 @@ type TouchInterface interface {
 	// Mit ReadData kann die aktuelle Position auf dem Touchscreen ermittelt
 	// werden. Diese Methode sollte nur dann aufgerufen werden, wenn auch
 	// Positionsdaten vorhanden sind.
-	ReadData() (x, y uint16)
+	ReadData() (x, y uint16, z uint8)
 
 	// Damit wird die Funktion cbFunc als Handler für alle Interrupts im
 	// Zusammenhang mit dem Touchscreen hinterlegt. Der Funktion wird beim

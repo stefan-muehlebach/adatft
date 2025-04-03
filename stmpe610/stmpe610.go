@@ -1,20 +1,14 @@
 package stmpe610
 
 import (
-	_ "fmt"
 	"log"
 	"time"
+
 	"periph.io/x/conn/v3/gpio"
 	"periph.io/x/conn/v3/gpio/gpioreg"
 	"periph.io/x/conn/v3/physic"
 	"periph.io/x/conn/v3/spi"
 	"periph.io/x/conn/v3/spi/spireg"
-
-	//"periph.io/x/conn/gpio"
-	//"periph.io/x/conn/gpio/gpioreg"
-	//"periph.io/x/conn/physic"
-	//"periph.io/x/conn/spi"
-	//"periph.io/x/conn/spi/spireg"
 )
 
 // -----------------------------------------------------------------------------
@@ -52,14 +46,18 @@ const (
 	//
 	SYS_CTRL1_RESET = 0x02
 
-	INT_CTRL_RISING   = 0x04
+	INT_CTRL_POL_HIGH = 0x04
+	INT_CTRL_POL_LOW  = 0x00
 	INT_CTRL_EDGE     = 0x02
+	INT_CTRL_LEVEL    = 0x00
 	INT_CTRL_ENABLE   = 0x01
-	INT_FIFO_EMPTY    = 0x10
-	INT_FIFO_FULL     = 0x08
-	INT_FIFO_OFLOW    = 0x04
-	INT_FIFO_TH       = 0x02
-	INT_TOUCH_DET     = 0x01
+	INT_CTRL_DISABLE  = 0x00
+
+	INT_TOUCH_DET  = 0x01
+	INT_FIFO_TH    = 0x02
+	INT_FIFO_OFLOW = 0x04
+	INT_FIFO_FULL  = 0x08
+	INT_FIFO_EMPTY = 0x10
 
 	ADC_CTRL1_10BIT  = 0x00
 	ADC_CTRL1_12BIT  = 0x08
@@ -155,7 +153,7 @@ type STMPE610 struct {
 //
 // Beim auftreten eines Fehlers wird das Programm abgebrochen. Ausserdem
 // wird der Pin fuer das Empfangen von Interrupts konfiguriert.
-func Open(speedHz physic.Frequency) (*STMPE610) {
+func Open(speedHz physic.Frequency) *STMPE610 {
 	var err error
 	var d *STMPE610
 	var p spi.PortCloser
@@ -169,7 +167,7 @@ func Open(speedHz physic.Frequency) (*STMPE610) {
 
 	d.pin = gpioreg.ByName(IntPin)
 	if d.pin == nil {
-	    log.Fatal("OpenSTMPE610(): gpio io pin not found")
+		log.Fatal("OpenSTMPE610(): gpio io pin not found")
 	}
 	//err = d.pin.In(gpio.PullUp, gpio.FallingEdge)
 	//err = d.pin.In(gpio.Float, gpio.FallingEdge)
@@ -196,14 +194,12 @@ func (d *STMPE610) Init(initParams []any) {
 
 	// System Register (SYS_XXX)
 	//
-	d.WriteReg8(SYS_CTRL1,
-		SYS_CTRL1_RESET)
+	d.WriteReg8(SYS_CTRL1, SYS_CTRL1_RESET)
 	time.Sleep(10 * time.Millisecond)
 	for i := uint8(0); i < 65; i++ {
 		d.ReadReg8(i)
 	}
-	d.WriteReg8(SYS_CTRL2,
-		0x00)
+	d.WriteReg8(SYS_CTRL2, 0x00)
 
 	// Touchscreen Register (TSC_XXX)
 	//
@@ -213,23 +209,26 @@ func (d *STMPE610) Init(initParams []any) {
 	// - enable touch screen control
 	//
 	d.WriteReg8(TSC_CTRL,
-		TSC_CTRL_WTRK8 |
-			TSC_CTRL_XY |
-			TSC_CTRL_EN)
+		TSC_CTRL_WTRK8|TSC_CTRL_XYZ|TSC_CTRL_EN)
+
+	d.WriteReg8(INT_EN,
+		INT_TOUCH_DET|INT_FIFO_TH)
+	//		INT_FIFO_EMPTY |
+	//		INT_FIFO_FULL |
+	//		INT_FIFO_OFLOW)
 
 	// Analog Digital Converter Register (ADC_XXX)
 	// (Wozu braucht es diese?)
 	//
 	d.WriteReg8(ADC_CTRL1,
-		ADC_CTRL1_12BIT |
-			ADC_CTRL1_96CLK) // Ada
+		ADC_CTRL1_10BIT|(0x6<<4)) // Ada
 	//ADC_CTRL1_36CLK)
 
 	d.WriteReg8(ADC_CTRL2,
 		ADC_CTRL2_6_5MHZ)
 
-	d.WriteReg8(ADC_CAPT,
-		ADC_CAPT_ALL)
+	//d.WriteReg8(ADC_CAPT,
+	//	ADC_CAPT_ALL)
 
 	// Touchscreen Controller Configuration
 	// - average 8 samples
@@ -237,51 +236,32 @@ func (d *STMPE610) Init(initParams []any) {
 	// - set a settling time of 5ms
 	//
 	d.WriteReg8(TSC_CFG,
-		TSC_CFG_8SAMPLE |
-			TSC_CFG_DELAY_1MS |
-			TSC_CFG_SETTLE_5MS)
-	// TSC_CFG_8SAMPLE |
-	// TSC_CFG_DELAY_1MS |
-	// TSC_CFG_SETTLE_5MS)
+		TSC_CFG_4SAMPLE|TSC_CFG_DELAY_1MS|TSC_CFG_SETTLE_5MS)
 
 	// Don't collect any Z data since we cannot relay on this feature!
-	//d.WriteReg8(TSC_FRACTION_Z,
-	//        TSC_FRACT_Z_2_6)
+	d.WriteReg8(TSC_FRACTION_Z,
+		0x6)
 
 	// FIFO Register (FIFO_XXX)
 	//
-	d.WriteReg8(FIFO_TH, 2)
+	d.WriteReg8(FIFO_TH, 1)
 	d.WriteReg8(FIFO_STA, FIFO_STA_RESET)
-	d.WriteReg8(FIFO_STA, 0x00)
+	d.WriteReg8(FIFO_STA, 0)
+
+	d.WriteReg8(TSC_I_DRIVE, TSC_I_DRIVE_50MA)
 
 	// Interrupt Register (INT_XXX)
 	//
 	// Wir abonnieren uns auf zwei Events: das Drücken, respl. Loslassen
 	// des Bildschirms (beide Ereignisse generieren das gleiche Event) sowie
 	// das Erreichen eines bestimmten Schwellwertes bei der FIFO-Queue
-	d.WriteReg8(INT_EN,
-		INT_TOUCH_DET |
-			INT_FIFO_TH)
-	//		INT_FIFO_EMPTY |
-	//		INT_FIFO_FULL |
-	//		INT_FIFO_OFLOW)
-
-	d.WriteReg8(TSC_I_DRIVE,
-		TSC_I_DRIVE_50MA)
-
-	//d.WriteReg8(TSC_SHIELD,
-	//        TSC_GROUND_X_P |
-	//        TSC_GROUND_X_N |
-	//        TSC_GROUND_Y_P |
-	//        TSC_GROUND_Y_N)
 
 	// Reset all interupts to begin with
 	d.WriteReg8(INT_STA, 0xFF)
 
 	// Mit diesem Register schliesslich, wird das Interrupt-System aktiviert.
 	d.WriteReg8(INT_CTRL,
-		INT_CTRL_EDGE |
-			INT_CTRL_ENABLE)
+		INT_CTRL_POL_LOW|INT_CTRL_EDGE|INT_CTRL_ENABLE)
 }
 
 func (d *STMPE610) ReadReg8(addr uint8) uint8 {
@@ -310,25 +290,26 @@ func (d *STMPE610) ReadReg16(addr uint8) uint16 {
 }
 
 func (d *STMPE610) WriteReg16(addr uint8, value uint16) {
-    // Nicht implementiert
+	// Nicht implementiert
 }
 
-func (d *STMPE610) ReadData() (x, y uint16 /*, z uint8*/) {
-	var txBuf []byte = []byte{0xD7, 0xD7, 0xD7, 0x00}
-	var rxBuf []byte = []byte{0x00, 0x00, 0x00, 0x00}
+func (d *STMPE610) ReadData() (x, y uint16, z uint8) {
+	var txBuf []byte = []byte{0xD7, 0xD7, 0xD7, 0xD7, 0x00}
+	var rxBuf []byte = []byte{0x00, 0x00, 0x00, 0x00, 0x00}
 	//d.spi.Tx(txBuf, rxBuf)
 	err := d.spi.Tx(txBuf, rxBuf)
 	check("ReadData()", err)
 	x = (uint16(rxBuf[1]) << 4) | (uint16(rxBuf[2]) >> 4)
 	y = (uint16(rxBuf[2]&0x0F) << 8) | uint16(rxBuf[3])
-	//z = uint8(rxBuf[4])
+	z = uint8(rxBuf[4])
 	return
 }
 
 func (d *STMPE610) SetCallback(cbFunc func(any), cbData any) {
 	go func() {
 		for {
-			if d.pin.WaitForEdge(10 * time.Second) {
+			if d.pin.WaitForEdge(24 * time.Hour) {
+				//if d.pin.WaitForEdge(10 * time.Second) {
 				cbFunc(cbData)
 			} else {
 				log.Printf("WaitForEdge() returned 'false'\n")

@@ -125,10 +125,10 @@ func (p *ILIImage) Convert(src *image.RGBA) {
 		for col = src.Rect.Min.X; col < src.Rect.Max.X; col++ {
 			s := src.Pix[srcIdx : srcIdx+3 : srcIdx+3]
 			d := p.Pix[dstIdx : dstIdx+bytesPerPixel : dstIdx+bytesPerPixel]
-            r := s[0] & 0xF8
-            g := s[1] & 0xFC
-            b := s[2] & 0xF8
-			d[0] = (r)      | (g >> 5)
+			r := s[0] & 0xF8
+			g := s[1] & 0xFC
+			b := s[2] & 0xF8
+			d[0] = (r) | (g >> 5)
 			d[1] = (g << 3) | (b >> 3)
 			srcIdx += 4
 			dstIdx += bytesPerPixel

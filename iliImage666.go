@@ -140,4 +140,3 @@ func (p *ILIImage) Convert(src *image.RGBA) {
 	}
 	ConvWatch.Stop()
 }
-

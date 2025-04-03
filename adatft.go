@@ -12,11 +12,14 @@
 //
 //   - ili9341/ili9341.go: enthält alles, was für die Ansteuerung dieses
 //     konkreten Chips via SPI notwendig ist.
+//
 //   - hx8357/hx8357.go: analoge Sammlung für den leistungsfähigeren Chip.
+//
 //   - stmpe610/stmpe610.go: "low level API" für die Ansteuerung des
 //     Touchscreens über diesen Chip via SPI.
-//   
+//
 //   - display.go: enthält den Typ 'Display', der ein "high level API" anbietet.
+//
 //   - touch.go: enthält den Typ 'Touch', der ein "high level API" anbietet.
 package adatft
 
@@ -53,7 +56,7 @@ var (
 
 // Damit wird die 'periph.io'-Umgebung und diverse globale Variablen
 // initialisiert.
-func init() {
+func Init() {
 	var userConfDir, userLogDir, logDir, logFile string
 	var fh *os.File
 	var driverStates *driverreg.State
@@ -96,4 +99,8 @@ func init() {
 			break
 		}
 	}
+}
+
+func init() {
+	Init()
 }

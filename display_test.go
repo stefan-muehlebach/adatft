@@ -2,49 +2,52 @@ package adatft
 
 import (
 	//    "time"
-	"github.com/stefan-muehlebach/gg"
-	"github.com/stefan-muehlebach/gg/color"
-	draw2 "golang.org/x/image/draw"
 	"image"
 	"image/draw"
 	"image/png"
 	"log"
 	"math/rand"
 	"os"
-	"periph.io/x/conn/v3/physic"
 	"strconv"
 	"testing"
+
+	"github.com/stefan-muehlebach/gg"
+	"github.com/stefan-muehlebach/gg/color"
+	draw2 "golang.org/x/image/draw"
+	"periph.io/x/conn/v3/physic"
 )
 
 const (
-	randSeed  = 12_345_678
+	randSeed    = 12_345_678
 	imageFile01 = "testbild01.png"
-    imageFile02 = "testbild02.png"
+	imageFile02 = "testbild02.png"
 )
 
 var (
-	disp                                     *Display
-	pixBuf                                   *ILIImage
-	fWidth, fHeight                          float64
-	tempBild, testBild01, testBild02, workImage            *image.RGBA
-	rectFull, rectHalve, rectHalve02, rectHalve03, rectQuart, rectCust, rect image.Rectangle
-	srcPoint                                 image.Point
-	gc                                       *gg.Context
-	gcImage                                  *image.RGBA
-	err                                      error
-	plane                                    *DistortedPlane
-	touchData                                TouchRawPos
-	touchPos                                 TouchPos
-	backColor, fillColor, borderColor        color.Color
-	borderWidth                              float64
-	spiSpeed                                 int64
+	disp            *Display
+	pixBuf          *ILIImage
+	fWidth, fHeight float64
+	tempBild, testBild01, testBild02,
+	workImage *image.RGBA
+	rectFull, rectHalve, rectHalve02,
+	rectHalve03, rectQuart, rectCust, rect image.Rectangle
+	srcPoint                          image.Point
+	gc                                *gg.Context
+	gcImage                           *image.RGBA
+	err                               error
+	plane                             *DistortedPlane
+	touchData                         TouchRawPos
+	touchPos                          TouchPos
+	backColor, fillColor, borderColor color.Color
+	borderWidth                       float64
+	spiSpeed                          int64
 )
 
 func init() {
 	//log.Printf("%d, %v", len(os.Args), os.Args)
 	spiSpeed, err = strconv.ParseInt(os.Args[len(os.Args)-1], 10, 32)
 	if err == nil {
-	    SPISpeedHz = physic.Frequency(spiSpeed)
+		SPISpeedHz = physic.Frequency(spiSpeed)
 	}
 
 	disp = OpenDisplay(Rotate090)
@@ -90,44 +93,44 @@ func init() {
 }
 
 func TestSendFullImage(t *testing.T) {
-    pixBuf.Clear()
-    pixBuf.Convert(testBild01)
+	pixBuf.Clear()
+	pixBuf.Convert(testBild01)
 	disp.sendImage(pixBuf)
 }
 func TestSendHalveImage(t *testing.T) {
-    pixBuf.Clear()
-    pixBuf.Convert(testBild01)
+	pixBuf.Clear()
+	pixBuf.Convert(testBild01)
 	disp.sendImage(pixBuf.SubImage(rectHalve).(*ILIImage))
 }
 func TestSendQuartImage(t *testing.T) {
-    pixBuf.Clear()
-    pixBuf.Convert(testBild01)
+	pixBuf.Clear()
+	pixBuf.Convert(testBild01)
 	disp.sendImage(pixBuf.SubImage(rectQuart).(*ILIImage))
 }
 
 func BenchmarkSendFullImage(b *testing.B) {
-    pixBuf.Clear()
-    pixBuf.Convert(testBild01)
-    b.ResetTimer()
-    for i := 0; i < b.N; i++ {
-	    disp.sendImage(pixBuf)
-    }
+	pixBuf.Clear()
+	pixBuf.Convert(testBild01)
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		disp.sendImage(pixBuf)
+	}
 }
 func BenchmarkSendHalveImage(b *testing.B) {
-    pixBuf.Clear()
-    pixBuf.Convert(testBild01)
-    b.ResetTimer()
-    for i := 0; i < b.N; i++ {
+	pixBuf.Clear()
+	pixBuf.Convert(testBild01)
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
 		disp.sendImage(pixBuf.SubImage(rectHalve).(*ILIImage))
-    }
+	}
 }
 func BenchmarkSendQuartImage(b *testing.B) {
-    pixBuf.Clear()
-    pixBuf.Convert(testBild01)
-    b.ResetTimer()
-    for i := 0; i < b.N; i++ {
+	pixBuf.Clear()
+	pixBuf.Convert(testBild01)
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
 		disp.sendImage(pixBuf.SubImage(rectQuart).(*ILIImage))
-    }
+	}
 }
 
 // Test der synchronisierten Draw-Funktionen
