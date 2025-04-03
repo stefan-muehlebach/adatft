@@ -2,6 +2,7 @@ package adatft
 
 import (
 	"fmt"
+	"log"
 	"time"
 
 	hw "github.com/stefan-muehlebach/adatft/stmpe610"
@@ -147,13 +148,13 @@ func (tch *Touch) Close() {
 func (tch *Touch) enqueueEvent(event PenEvent) {
 	defer func() {
 		if x := recover(); x != nil {
-			adalog.Printf("Runtime panic: %v", x)
+			log.Printf("Runtime panic: %v\n", x)
 		}
 	}()
 	select {
 	case tch.EventQ <- event:
 	default:
-		adalog.Printf("Sending not possible: event queue full!\n")
+		log.Printf("Sending not possible: event queue full!\n")
 	}
 }
 
@@ -173,9 +174,24 @@ func (tch *Touch) newPenEvent(typ PenEventType, rawPos TouchRawPos) (ev PenEvent
 	return
 }
 
-func (tch *Touch) readRawPos() (td TouchRawPos) {
+func (t *Touch) readRawPos() (td TouchRawPos) {
 	//td.RawX, td.RawY = tch.tspi.ReadData()
-	td.RawX, td.RawY, td.RawZ = tch.tspi.ReadData()
+	td.RawX, td.RawY, td.RawZ = t.ReadData()
+	return
+}
+
+func (t *Touch) BufferLen() uint8 {
+	return t.tspi.ReadReg8(hw.FIFO_SIZE)
+}
+
+func (t *Touch) ReadData() (x, y uint16, z uint8) {
+	cnt := t.BufferLen()
+	for cnt > 0 {
+		x, y, z = t.tspi.ReadData()
+		cnt--
+	}
+	t.tspi.WriteReg8(hw.FIFO_STA, hw.FIFO_STA_RESET)
+	t.tspi.WriteReg8(hw.FIFO_STA, 0)
 	return
 }
 
@@ -186,58 +202,83 @@ var (
 	penUp  bool = true
 )
 
+/*
+func eventDispatcher(arg any) {
+	var ev PenEvent
+
+	t := arg.(*Touch)
+
+	if t.BufferLen() == 0 {
+		for i := 0; i < 10; i++ {
+			time.Sleep(5 * time.Millisecond)
+			if t.BufferLen() > 0 {
+				posRaw = t.readRawPos()
+				ev = t.newPenEvent(PenPress, posRaw)
+				t.enqueueEvent(ev)
+				break
+			}
+		}
+		t.tspi.WriteReg8(hw.INT_STA, 0xFF)
+		return
+	}
+
+	posRaw = t.readRawPos()
+	ev = t.newPenEvent(PenRelease, posRaw)
+	t.enqueueEvent(ev)
+	t.tspi.WriteReg8(hw.INT_STA, 0xFF)
+}
+*/
+
 // Diese Funktion ist der Callback-Handler, welcher beim Eintreten eines
 // Interrupts vom Touchscreen aufgerufen wird. Effizienz ist der Schlüssel
 // dieser Funktion, aber auch das korrekte Handling der darunterliegenden
 // Hardware, sprich Verwalten des Interrupt-Systems.
 func eventDispatcher(arg any) {
-	var tch *Touch
+	var t *Touch
 	var evTyp PenEventType
 	var ev PenEvent
 
-	tch = arg.(*Touch)
+	t = arg.(*Touch)
 
-	intEnable := tch.tspi.ReadReg8(hw.INT_EN)
-	//	log.Printf("ISR called (INT_EN: %08b)\n", intEnable)
-	// intStatus enthält pro Interrupt den aktuellen Status (active,
-	// not active) während in intEnable pro Interrupt festgehalten ist, ob
-	// dieser Interrupt überhaupt eingeschaltet ist.
-
-	intStatus := tch.tspi.ReadReg8(hw.INT_STA)
-	for (intStatus & intEnable) != 0 {
-		//		log.Printf("  INT_STA: %08b\n", intStatus)
+	intEnable := t.tspi.ReadReg8(hw.INT_EN)
+	// log.Printf("ISR called (INT_EN: %08b)\n", intEnable)
+	for {
+		time.Sleep(sampleTime) // NEU!!! ACHTUNG!!!
+		intStatus := t.tspi.ReadReg8(hw.INT_STA)
+		// log.Printf("  INT_STA: %08b\n", intStatus)
+		if (intStatus & intEnable) == 0 {
+			break
+		}
 
 		if (intStatus & hw.INT_TOUCH_DET) != 0 {
-			//			log.Printf("    INT_TOUCH_DET\n")
-			if (tch.tspi.ReadReg8(hw.TSC_CTRL) & 0x80) == 0 {
+			// log.Printf("    INT_TOUCH_DET\n")
+			if (t.tspi.ReadReg8(hw.TSC_CTRL) & 0x80) == 0 {
 				if !penUp {
-					//					log.Printf("      Pen up\n")
-					ev = tch.newPenEvent(PenRelease, posRaw)
-					tch.enqueueEvent(ev)
+					// log.Printf("      Pen up\n")
+					ev = t.newPenEvent(PenRelease, posRaw)
+					t.enqueueEvent(ev)
 					penUp = true
 				}
 			} else {
-				//				log.Printf("      Pen down\n")
+				// log.Printf("      Pen down\n")
 			}
-			tch.tspi.WriteReg8(hw.INT_STA, hw.INT_TOUCH_DET)
+			t.tspi.WriteReg8(hw.INT_STA, hw.INT_TOUCH_DET)
 		}
 
 		if (intStatus & hw.INT_FIFO_TH) != 0 {
-			//			log.Printf("    INT_FIFO_TH\n")
-			for tch.tspi.ReadReg8(hw.FIFO_SIZE) > 0 {
-				//				log.Printf("      FIFO_SIZE > 0\n")
-				time.Sleep(sampleTime) // NEU!!! ACHTUNG!!!
-				posRaw = tch.readRawPos()
+			// log.Printf("    INT_FIFO_TH\n")
+			for t.tspi.ReadReg8(hw.FIFO_SIZE) > 0 {
+				// log.Printf("      FIFO_SIZE > 0\n")
+				posRaw = t.readRawPos()
 				evTyp = PenDrag
 				if penUp {
 					evTyp = PenPress
 					penUp = false
 				}
-				ev = tch.newPenEvent(evTyp, posRaw)
-				tch.enqueueEvent(ev)
+				ev = t.newPenEvent(evTyp, posRaw)
+				t.enqueueEvent(ev)
 			}
-			tch.tspi.WriteReg8(hw.INT_STA, hw.INT_FIFO_TH)
+			t.tspi.WriteReg8(hw.INT_STA, hw.INT_FIFO_TH)
 		}
-		intStatus = tch.tspi.ReadReg8(hw.INT_STA)
 	}
 }

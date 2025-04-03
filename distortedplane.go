@@ -102,28 +102,33 @@ func (d *DistortedPlane) WriteConfigFile(fileName string) {
 
 // Liest die Konfiguration aus dem Default-File.
 func (d *DistortedPlane) ReadConfig(rot RotationType) {
-	off := 0
-	calibData := ReadCalibData()
-	d.PosList = calibData.PosList
-	switch rot {
-	case Rotate000:
-		off = 0
-	case Rotate090:
-		off = 1
-		d.PosList[1].X, d.PosList[3].Y = d.PosList[3].Y, d.PosList[1].X
-		d.PosList[2].X, d.PosList[2].Y = d.PosList[2].Y, d.PosList[2].X
-	case Rotate180:
-		off = 2
-	case Rotate270:
-		off = 3
-		d.PosList[1].X, d.PosList[3].Y = d.PosList[3].Y, d.PosList[1].X
-		d.PosList[2].X, d.PosList[2].Y = d.PosList[2].Y, d.PosList[2].X
-	}
-	for i := range NumRefPoints {
-		d.RawPosList[(int(i)+off)%int(NumRefPoints)] = calibData.RawPosList[i]
-	}
+	fileName := filepath.Join(confDir, calibDataFile)
+	d.ReadConfigFile(fileName, rot)
 
-	d.update()
+	/*
+		off := 0
+		calibData := ReadCalibData()
+		d.PosList = calibData.PosList
+		switch rot {
+		case Rotate000:
+			off = 0
+		case Rotate090:
+			off = 1
+			d.PosList[1].X, d.PosList[3].Y = d.PosList[3].Y, d.PosList[1].X
+			d.PosList[2].X, d.PosList[2].Y = d.PosList[2].Y, d.PosList[2].X
+		case Rotate180:
+			off = 2
+		case Rotate270:
+			off = 3
+			d.PosList[1].X, d.PosList[3].Y = d.PosList[3].Y, d.PosList[1].X
+			d.PosList[2].X, d.PosList[2].Y = d.PosList[2].Y, d.PosList[2].X
+		}
+		for i := range NumRefPoints {
+			d.RawPosList[(int(i)+off)%int(NumRefPoints)] = calibData.RawPosList[i]
+		}
+
+		d.update()
+	*/
 }
 
 // Liest die Konfiguration aus dem angegebenen File. Der Pfad kann absolut
