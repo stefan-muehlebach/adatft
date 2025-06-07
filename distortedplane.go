@@ -3,6 +3,7 @@ package adatft
 import (
 	"encoding/json"
 	"errors"
+	"log"
 	"math"
 	"os"
 	"path/filepath"
@@ -50,14 +51,15 @@ func ReadCalibData() *CalibData {
 // Liest die Konfiguration aus dem angegebenen File. Der Pfad kann absolut
 // oder relativ angegeben werden. Als Dateiformat wird JSON verwendet.
 func ReadCalibDataFile(fileName string) *CalibData {
+	var data []byte
+	var err error
+
 	d := &CalibData{}
-	data, err := os.ReadFile(fileName)
-	if err != nil {
-		adalog.Fatal(err)
+	if data, err = os.ReadFile(fileName); err != nil {
+		log.Fatalf("Couldn't read %s: %v", fileName, err)
 	}
-	err = json.Unmarshal(data, d)
-	if err != nil {
-		adalog.Fatal(err)
+	if err = json.Unmarshal(data, d); err != nil {
+		log.Fatalf("Couldn't unmarshal calibration file: %v", err)
 	}
 	return d
 }
@@ -193,6 +195,7 @@ func (d *DistortedPlane) Transform(rawPos TouchRawPos) (pos TouchPos,
 
 	pos.X = (1-tx)*d.PosList[0].X + tx*d.PosList[2].X
 	pos.Y = (1-ty)*d.PosList[0].Y + ty*d.PosList[2].Y
+	pos.Z = rawPos.RawZ
 
 	if pos.X < 0.0 || pos.X >= float64(Width) {
 		pos.X = max(pos.X, 0.0)

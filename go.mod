@@ -1,6 +1,6 @@
 module github.com/stefan-muehlebach/adatft
 
-go 1.24.2
+go 1.24.4
 
 replace github.com/stefan-muehlebach/gg => ../gg
 
@@ -14,7 +14,4 @@ require (
 require (
 	github.com/golang/freetype v0.0.0-20170609003504-e2365dfdc4a0 // indirect
 	github.com/jonboulle/clockwork v0.5.0 // indirect
-	periph.io/x/cmd v0.0.0-20250320001559-905e30669e74 // indirect
-	periph.io/x/d2xx v0.1.1 // indirect
-	periph.io/x/devices/v3 v3.7.4 // indirect
 )
