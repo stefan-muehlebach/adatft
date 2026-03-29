@@ -159,20 +159,20 @@ func Open(speedHz physic.Frequency) *STMPE610 {
 	var p spi.PortCloser
 
 	d = &STMPE610{}
-	p, err = spireg.Open(SpiDevFile)
-	check("OpenSTMPE610(): error on spireg.Open()", err)
-
-	d.spi, err = p.Connect(speedHz*physic.Hertz, spi.Mode0, 8)
-	check("OpenSTMPE610(): error on port.Connect()", err)
-
-	d.pin = gpioreg.ByName(IntPin)
-	if d.pin == nil {
+	if p, err = spireg.Open(SpiDevFile); err != nil {
+		log.Fatalf("OpenSTMPE610(): error on spireg.Open(): %v", err)
+	}
+	if d.spi, err = p.Connect(speedHz*physic.Hertz, spi.Mode0, 8); err != nil {
+		log.Fatalf("OpenSTMPE610(): error on port.Connect(): %v", err)
+	}
+	if d.pin = gpioreg.ByName(IntPin); d.pin == nil {
 		log.Fatal("OpenSTMPE610(): gpio io pin not found")
 	}
 	//err = d.pin.In(gpio.PullUp, gpio.FallingEdge)
 	//err = d.pin.In(gpio.Float, gpio.FallingEdge)
-	err = d.pin.In(gpio.Float, gpio.FallingEdge)
-	check("OpenSTMPE610(): couldn't configure interrupt pin", err)
+	if err = d.pin.In(gpio.Float, gpio.FallingEdge); err != nil {
+		log.Fatalf("OpenSTMPE610(): couldn't configure interrupt pin: %v", err)
+	}
 
 	return d
 }
@@ -211,6 +211,18 @@ func (d *STMPE610) Init(initParams []any) {
 	d.WriteReg8(TSC_CTRL,
 		TSC_CTRL_WTRK8|TSC_CTRL_XYZ|TSC_CTRL_EN)
 
+	// Touchscreen Controller Configuration
+	// - average 8 samples
+	// - set a touch detect delay of 1ms
+	// - set a settling time of 5ms
+	//
+	d.WriteReg8(TSC_CFG,
+		TSC_CFG_4SAMPLE|TSC_CFG_DELAY_1MS|TSC_CFG_SETTLE_5MS)
+
+	// Don't collect any Z data since we cannot relay on this feature!
+	d.WriteReg8(TSC_FRACTION_Z,
+		0x6)
+
 	d.WriteReg8(INT_EN,
 		INT_TOUCH_DET|INT_FIFO_TH)
 	//		INT_FIFO_EMPTY |
@@ -229,18 +241,6 @@ func (d *STMPE610) Init(initParams []any) {
 
 	//d.WriteReg8(ADC_CAPT,
 	//	ADC_CAPT_ALL)
-
-	// Touchscreen Controller Configuration
-	// - average 8 samples
-	// - set a touch detect delay of 1ms
-	// - set a settling time of 5ms
-	//
-	d.WriteReg8(TSC_CFG,
-		TSC_CFG_4SAMPLE|TSC_CFG_DELAY_1MS|TSC_CFG_SETTLE_5MS)
-
-	// Don't collect any Z data since we cannot relay on this feature!
-	d.WriteReg8(TSC_FRACTION_Z,
-		0x6)
 
 	// FIFO Register (FIFO_XXX)
 	//

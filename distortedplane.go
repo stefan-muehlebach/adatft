@@ -3,6 +3,7 @@ package adatft
 import (
 	"encoding/json"
 	"errors"
+	"log"
 	"math"
 	"os"
 	"path/filepath"
@@ -50,14 +51,15 @@ func ReadCalibData() *CalibData {
 // Liest die Konfiguration aus dem angegebenen File. Der Pfad kann absolut
 // oder relativ angegeben werden. Als Dateiformat wird JSON verwendet.
 func ReadCalibDataFile(fileName string) *CalibData {
+	var data []byte
+	var err error
+
 	d := &CalibData{}
-	data, err := os.ReadFile(fileName)
-	if err != nil {
-		adalog.Fatal(err)
+	if data, err = os.ReadFile(fileName); err != nil {
+		log.Fatalf("Couldn't read %s: %v", fileName, err)
 	}
-	err = json.Unmarshal(data, d)
-	if err != nil {
-		adalog.Fatal(err)
+	if err = json.Unmarshal(data, d); err != nil {
+		log.Fatalf("Couldn't unmarshal calibration file: %v", err)
 	}
 	return d
 }
@@ -77,16 +79,6 @@ type DistortedPlane struct {
 	ax, ay                 float64
 }
 
-// Schreibt die aktuelle Konfiguration in das Default-File.
-//func (d *DistortedPlane) WriteConfig() {
-//	fileName := filepath.Join(confDir, calibDataFile)
-//	d.WriteConfigFile(fileName)
-//}
-//func (d *DistortedPlane) WriteConfig(dataFile string) {
-//	fileName := filepath.Join(confDir, dataFile)
-//	d.WriteConfigFile(fileName)
-//}
-
 // Schreibt die aktuelle Konfiguration in das angegebene File. Der Pfad kann
 // absolut oder relativ angegeben werden. Als Dateiformat wird JSON verwendet.
 func (d *DistortedPlane) WriteConfigFile(fileName string) {
@@ -104,56 +96,25 @@ func (d *DistortedPlane) WriteConfigFile(fileName string) {
 func (d *DistortedPlane) ReadConfig(rot RotationType) {
 	fileName := filepath.Join(confDir, calibDataFile)
 	d.ReadConfigFile(fileName, rot)
-
-	/*
-		off := 0
-		calibData := ReadCalibData()
-		d.PosList = calibData.PosList
-		switch rot {
-		case Rotate000:
-			off = 0
-		case Rotate090:
-			off = 1
-			d.PosList[1].X, d.PosList[3].Y = d.PosList[3].Y, d.PosList[1].X
-			d.PosList[2].X, d.PosList[2].Y = d.PosList[2].Y, d.PosList[2].X
-		case Rotate180:
-			off = 2
-		case Rotate270:
-			off = 3
-			d.PosList[1].X, d.PosList[3].Y = d.PosList[3].Y, d.PosList[1].X
-			d.PosList[2].X, d.PosList[2].Y = d.PosList[2].Y, d.PosList[2].X
-		}
-		for i := range NumRefPoints {
-			d.RawPosList[(int(i)+off)%int(NumRefPoints)] = calibData.RawPosList[i]
-		}
-
-		d.update()
-	*/
 }
 
 // Liest die Konfiguration aus dem angegebenen File. Der Pfad kann absolut
 // oder relativ angegeben werden. Als Dateiformat wird JSON verwendet.
 func (d *DistortedPlane) ReadConfigFile(fileName string, rot RotationType) {
-	off := 0
+	off := int(rot)
 	calibData := ReadCalibDataFile(fileName)
 	d.PosList = calibData.PosList
 	switch rot {
-	case Rotate000:
-		off = 0
-	case Rotate090:
-		off = 1
-		d.PosList[1].X, d.PosList[3].Y = d.PosList[3].Y, d.PosList[1].X
-		d.PosList[2].X, d.PosList[2].Y = d.PosList[2].Y, d.PosList[2].X
-	case Rotate180:
-		off = 2
-	case Rotate270:
-		off = 3
+	case Rotate090, Rotate270:
 		d.PosList[1].X, d.PosList[3].Y = d.PosList[3].Y, d.PosList[1].X
 		d.PosList[2].X, d.PosList[2].Y = d.PosList[2].Y, d.PosList[2].X
 	}
 	for i := range NumRefPoints {
 		d.RawPosList[(int(i)+off)%int(NumRefPoints)] = calibData.RawPosList[i]
 	}
+
+	//log.Printf("posList   : %+v\n", d.PosList)
+	//log.Printf("rawPosList: %+v\n", d.RawPosList)
 
 	d.update()
 }
@@ -171,6 +132,17 @@ func (d *DistortedPlane) SetRefPoints(rawPosList []TouchRawPos,
 		d.RawPosList[id] = rawPosList[id]
 		d.PosList[id] = posList[id]
 	}
+}
+
+func (d *DistortedPlane) TransformNew(rawPos TouchRawPos) (pos TouchPos, err error) {
+	x1 := Map(rawPos.RawX, d.RawPosList[0].RawX, d.RawPosList[1].RawX, d.PosList[0].X, d.PosList[1].X)
+	//x2 := Map(rawPos.RawX, d.RawPosList[3].RawX, d.RawPosList[2].RawX, d.PosList[3].X, d.PosList[2].X)
+	y1 := Map(rawPos.RawY, d.RawPosList[0].RawY, d.RawPosList[3].RawY, d.PosList[0].Y, d.PosList[3].Y)
+	//y2 := Map(rawPos.RawY, d.RawPosList[1].RawY, d.RawPosList[2].RawY, d.PosList[1].Y, d.PosList[2].Y)
+	pos.X = x1
+	pos.Y = y1
+	//log.Printf("(%d, %d) -> (%f, %f)\n", rawPos.RawX, rawPos.RawY, pos.X, pos.Y)
+	return pos, nil
 }
 
 // Transformiert die Touchscreen-Koordinaten in rawPos zu Bildschirm-
@@ -193,6 +165,7 @@ func (d *DistortedPlane) Transform(rawPos TouchRawPos) (pos TouchPos,
 
 	pos.X = (1-tx)*d.PosList[0].X + tx*d.PosList[2].X
 	pos.Y = (1-ty)*d.PosList[0].Y + ty*d.PosList[2].Y
+	pos.Z = rawPos.RawZ
 
 	if pos.X < 0.0 || pos.X >= float64(Width) {
 		pos.X = max(pos.X, 0.0)
@@ -204,6 +177,7 @@ func (d *DistortedPlane) Transform(rawPos TouchRawPos) (pos TouchPos,
 		pos.Y = min(pos.Y, float64(Height)-1.0)
 		err = errors.New("coordinate outside reasonable range")
 	}
+	//log.Printf("(%d, %d) -> (%f, %f)\n", rawPos.RawX, rawPos.RawY, pos.X, pos.Y)
 	return pos, err
 }
 
@@ -216,4 +190,12 @@ func (d *DistortedPlane) update() {
 	d.o2 = float64(d.RawPosList[2].RawY) - float64(d.RawPosList[3].RawY) - d.m2
 	d.ax = d.m2*d.o1 - d.m1*d.o2
 	d.ay = d.n2*d.o1 - d.n1*d.o2
+}
+
+type Mappable interface {
+	~int | ~int16 | ~uint16 | ~float64
+}
+
+func Map[In, Out Mappable](valIn, lbIn, ubIn In, lbOut, ubOut Out) (valOut Out) {
+	return lbOut + Out(valIn-lbIn)*(ubOut-lbOut)/Out(ubIn-lbIn)
 }

@@ -82,6 +82,9 @@ var (
 func PrintStat() {
 	fmt.Printf("total:\n")
 	fmt.Printf("  %d frames\n", ConvWatch.Num())
+	fmt.Printf("application animation:\n")
+	fmt.Printf("  %v total\n", AnimWatch.Total())
+	fmt.Printf("  %v / frame\n", AnimWatch.Avg())
 	fmt.Printf("application painting:\n")
 	fmt.Printf("  %v total\n", PaintWatch.Total())
 	fmt.Printf("  %v / frame\n", PaintWatch.Avg())
@@ -91,4 +94,11 @@ func PrintStat() {
 	fmt.Printf("sending to SPI:\n")
 	fmt.Printf("  %v total\n", DispWatch.Total())
 	fmt.Printf("  %v / frame\n", DispWatch.Avg())
+}
+
+func ResetStat() {
+	AnimWatch.Reset()
+	PaintWatch.Reset()
+	ConvWatch.Reset()
+	DispWatch.Reset()
 }

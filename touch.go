@@ -68,16 +68,6 @@ func (tp TouchPos) String() string {
 	return fmt.Sprintf("(%5.1f, %5.1f, %08b)", tp.X, tp.Y, tp.Z)
 }
 
-// Jedes Ereignis des Touchscreens wird durch eine Variable des Typs
-// 'Event' repraesentiert.
-type PenEvent struct {
-	Type PenEventType
-	TouchRawPos
-	TouchPos
-	Time time.Time
-	//FifoSize uint8
-}
-
 func (p1 TouchPos) Near(p2 TouchPos) bool {
 	var dx, dy float64
 	dx = p1.X - p2.X
@@ -116,12 +106,13 @@ func OpenTouch(rot RotationType) *Touch {
 	revNr = tch.tspi.ReadReg8(hw.ID_VER)
 	devId = tch.tspi.ReadReg16(hw.CHIP_ID)
 	if (devId != 0x0811) || (revNr != 0x03) {
-		adalog.Fatalf("device id and/or revision numbers are not as expected: got (0x%04x, 0x%02x) should be (0x0811, 0x03)\n", devId, revNr)
+		log.Fatalf("Device ID and/or revision numbers are not as expected: got (0x%04x, 0x%02x) should be (0x0811, 0x03)\n", devId, revNr)
 	}
 
 	// Initialisiere die Queue für applikatorische Events und setze den
 	// Interrupt-Handler für Touch-Events.
 	tch.EventQ = make(chan PenEvent, eventQueueSize)
+	ev.Type = PenRelease
 	tch.tspi.SetCallback(eventDispatcher, tch)
 
 	tch.tspi.Init(nil)
@@ -145,14 +136,15 @@ func (tch *Touch) Close() {
 //
 // Mit dem auskommentierten Code kann für Testzwecke dafür gesorgt werden,
 // dass bei einem Fehler ein Runtime-Panic ausgelöst wird.
-func (tch *Touch) enqueueEvent(event PenEvent) {
+func (tch *Touch) enqueueEvent(ev PenEvent) {
+	ev.Time = time.Now()
 	defer func() {
 		if x := recover(); x != nil {
 			log.Printf("Runtime panic: %v\n", x)
 		}
 	}()
 	select {
-	case tch.EventQ <- event:
+	case tch.EventQ <- ev:
 	default:
 		log.Printf("Sending not possible: event queue full!\n")
 	}
@@ -165,14 +157,16 @@ func (tch *Touch) WaitForEvent() PenEvent {
 }
 
 // Diese Hilfsfunktion dient der einfacheren Erstellung eines Event-Objektes.
+/*
 func (tch *Touch) newPenEvent(typ PenEventType, rawPos TouchRawPos) (ev PenEvent) {
 	ev.Type = typ
 	ev.TouchRawPos = rawPos
 	ev.TouchPos, _ = tch.plane.Transform(rawPos)
 	ev.Time = time.Now()
-	//ev.FifoSize = tch.tspi.ReadReg8(hw.FIFO_SIZE)
+	ev.FifoSize = tch.tspi.ReadReg8(hw.FIFO_SIZE)
 	return
 }
+*/
 
 func (t *Touch) readRawPos() (td TouchRawPos) {
 	//td.RawX, td.RawY = tch.tspi.ReadData()
@@ -194,13 +188,6 @@ func (t *Touch) ReadData() (x, y uint16, z uint8) {
 	t.tspi.WriteReg8(hw.FIFO_STA, 0)
 	return
 }
-
-// In diesen globalen Variablen werden Daten verwaltet, die vom
-// Callback-Handler (siehe unten) benötigt werden.
-var (
-	posRaw TouchRawPos
-	penUp  bool = true
-)
 
 /*
 func eventDispatcher(arg any) {
@@ -229,19 +216,35 @@ func eventDispatcher(arg any) {
 }
 */
 
+// In diesen globalen Variablen werden Daten verwaltet, die vom
+// Callback-Handler (siehe unten) benötigt werden.
+var (
+	posRaw TouchRawPos
+	penUp  bool = true
+	ev     PenEvent
+)
+
+// Jedes Ereignis des Touchscreens wird durch eine Variable des Typs
+// 'Event' repraesentiert.
+type PenEvent struct {
+	Type PenEventType
+	TouchRawPos
+	TouchPos
+	Time     time.Time
+	FifoSize uint8
+}
+
 // Diese Funktion ist der Callback-Handler, welcher beim Eintreten eines
 // Interrupts vom Touchscreen aufgerufen wird. Effizienz ist der Schlüssel
 // dieser Funktion, aber auch das korrekte Handling der darunterliegenden
 // Hardware, sprich Verwalten des Interrupt-Systems.
 func eventDispatcher(arg any) {
 	var t *Touch
-	var evTyp PenEventType
-	var ev PenEvent
 
 	t = arg.(*Touch)
 
 	intEnable := t.tspi.ReadReg8(hw.INT_EN)
-	// log.Printf("ISR called (INT_EN: %08b)\n", intEnable)
+	// log.Printf("ISR called\n")
 	for {
 		time.Sleep(sampleTime) // NEU!!! ACHTUNG!!!
 		intStatus := t.tspi.ReadReg8(hw.INT_STA)
@@ -250,35 +253,33 @@ func eventDispatcher(arg any) {
 			break
 		}
 
-		if (intStatus & hw.INT_TOUCH_DET) != 0 {
-			// log.Printf("    INT_TOUCH_DET\n")
-			if (t.tspi.ReadReg8(hw.TSC_CTRL) & 0x80) == 0 {
-				if !penUp {
-					// log.Printf("      Pen up\n")
-					ev = t.newPenEvent(PenRelease, posRaw)
-					t.enqueueEvent(ev)
-					penUp = true
-				}
-			} else {
-				// log.Printf("      Pen down\n")
-			}
-			t.tspi.WriteReg8(hw.INT_STA, hw.INT_TOUCH_DET)
-		}
-
 		if (intStatus & hw.INT_FIFO_TH) != 0 {
 			// log.Printf("    INT_FIFO_TH\n")
 			for t.tspi.ReadReg8(hw.FIFO_SIZE) > 0 {
 				// log.Printf("      FIFO_SIZE > 0\n")
-				posRaw = t.readRawPos()
-				evTyp = PenDrag
-				if penUp {
-					evTyp = PenPress
-					penUp = false
+				if ev.Type == PenRelease {
+					ev.Type = PenPress
+				} else {
+					ev.Type = PenDrag
 				}
-				ev = t.newPenEvent(evTyp, posRaw)
+				ev.TouchRawPos = t.readRawPos()
+				ev.TouchPos, _ = t.plane.Transform(ev.TouchRawPos)
 				t.enqueueEvent(ev)
 			}
 			t.tspi.WriteReg8(hw.INT_STA, hw.INT_FIFO_TH)
 		}
+
+		if (intStatus & hw.INT_TOUCH_DET) != 0 {
+			// log.Printf("    INT_TOUCH_DET\n")
+			if (t.tspi.ReadReg8(hw.TSC_CTRL) & 0x80) != 0 {
+				// log.Printf("      Pen down\n")
+			} else {
+				// log.Printf("      Pen up\n")
+				ev.Type = PenRelease
+				t.enqueueEvent(ev)
+			}
+			t.tspi.WriteReg8(hw.INT_STA, hw.INT_TOUCH_DET)
+		}
 	}
+	// log.Printf("ISR left\n")
 }

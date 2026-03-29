@@ -56,7 +56,7 @@ var (
 
 // Damit wird die 'periph.io'-Umgebung und diverse globale Variablen
 // initialisiert.
-func Init() {
+func init() {
 	var userConfDir, userLogDir, logDir, logFile string
 	var fh *os.File
 	var driverStates *driverreg.State
@@ -99,8 +99,4 @@ func Init() {
 			break
 		}
 	}
-}
-
-func init() {
-	Init()
 }
