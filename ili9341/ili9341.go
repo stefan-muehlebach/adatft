@@ -145,7 +145,7 @@ type InitCommand struct {
 
 var ()
 
-func (d *ILI9341) Init2(initParams []any) {
+func (d *ILI9341) Init(initParams []any) {
 	madctlParam := initParams[1].(uint8)
 
 	cmdList := []InitCommand{
@@ -181,13 +181,14 @@ func (d *ILI9341) Init2(initParams []any) {
 	d.Cmd(SLPOUT) // Exit Sleep
 	time.Sleep(125 * time.Millisecond)
 	d.Cmd(DISPON) // Display On
+	time.Sleep(125 * time.Millisecond)
 }
 
 // Führt die Initialisierung des Chips durch. initParams ist ein Slice
 // von Hardware-spezifischen Einstellungen. Beim ILI9341 sind dies:
 //
 //	{ initMinimal, madctlParam }
-func (d *ILI9341) Init(initParams []any) {
+func (d *ILI9341) InitOld(initParams []any) {
 	var initMinimal bool
 	var madctlParam uint8
 
@@ -318,15 +319,17 @@ func (d *ILI9341) Init(initParams []any) {
 // Sende den Befehl in 'cmd' zum ILI9341.
 func (d *ILI9341) Cmd(cmd uint8) {
 	d.pin.Out(gpio.Low)
-	err := d.spi.Tx([]byte{cmd}, nil)
-	check("Cmd()", err)
+	if err := d.spi.Tx([]byte{cmd}, nil); err != nil {
+		log.Fatalf("Cmd(): %s", err)
+	}
 }
 
 // Sende die Daten in 'value' (1 Byte) als Datenpaket zum ILI9341.
 func (d *ILI9341) Data8(value uint8) {
 	d.pin.Out(gpio.High)
-	err := d.spi.Tx([]byte{value}, nil)
-	check("Data8()", err)
+	if err := d.spi.Tx([]byte{value}, nil); err != nil {
+		log.Fatalf("Data8(): %s", err)
+	}
 }
 
 // Sende die Daten in 'value' (4 Bytes) als Datenpaket zum ILI9341.
@@ -338,8 +341,9 @@ func (d *ILI9341) Data32(value uint32) {
 		byte(value),
 	}
 	d.pin.Out(gpio.High)
-	err := d.spi.Tx(txBuf, nil)
-	check("Data32()", err)
+	if err := d.spi.Tx(txBuf, nil); err != nil {
+		log.Fatalf("Data32(): %s", err)
+	}
 }
 
 // Sendet die Daten aus dem Slice 'buf' als Daten zum ILI9341. Dies ist bloss
@@ -352,8 +356,9 @@ func (d *ILI9341) DataArray(buf []byte) {
 
 	d.pin.Out(gpio.High)
 	if len(buf) <= SPI_BLOCK_SIZE {
-		err := d.spi.Tx(buf, nil)
-		check("DataArray()", err)
+		if err := d.spi.Tx(buf, nil); err != nil {
+			log.Fatalf("DataArray(): %s", err)
+		}
 	} else {
 		startIdx = 0
 		for countRemain > 0 {
@@ -362,18 +367,12 @@ func (d *ILI9341) DataArray(buf []byte) {
 			} else {
 				sendSize = countRemain
 			}
-			err := d.spi.Tx(buf[startIdx:startIdx+sendSize], nil)
-			check("DataArray()", err)
+			if err := d.spi.Tx(buf[startIdx:startIdx+sendSize], nil); err != nil {
+				log.Fatalf("DataArray(): %s", err)
+			}
 			countRemain -= sendSize
 			startIdx += sendSize
 		}
 	}
 }
 
-// Interne Check-Funktion, welche bei gravierenden Fehlern das Programm
-// beendet.
-func check(fnc string, err error) {
-	if err != nil {
-		log.Fatalf("%s: %s", fnc, err)
-	}
-}

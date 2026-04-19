@@ -1,6 +1,7 @@
 package adatft
 
 import (
+	"errors"
 	"image"
 
 	"periph.io/x/conn/v3/physic"
@@ -60,15 +61,15 @@ func OpenDisplay(rot RotationType) *Display {
 	} else {
 		dsp.dspi = hw.OpenDummy(SPISpeedHz)
 	}
-	dsp.dspi.Init([]any{false, RotationData[rot].madctlParam, pixfmt})
+	Width, Height = dsp.dspi.Init(byte(rot))
 
 	dsp.imgChan = make([]chan *ILIImage, numChannels)
 	for i := toConv; i < numChannels; i++ {
 		dsp.imgChan[i] = make(chan *ILIImage, numBuffers+1)
 	}
 
-	Width = RotationData[rot].width
-	Height = RotationData[rot].height
+	//Width = RotationData[rot].width
+	//Height = RotationData[rot].height
 	dsp.rect = image.Rect(0, 0, Width, Height)
 	for i := 0; i < numBuffers; i++ {
 		img := NewILIImage(dsp.rect)
@@ -174,3 +175,68 @@ func (dsp *Display) displayer() {
 	close(dsp.imgChan[toConv])
 	dsp.quitQ <- true
 }
+
+// Rotationsmöglichkeiten des Displays. Es gibt (logischerweise) 4
+// Möglichkeiten das Display zu rotieren. Dies hat Auswirkungen auf die
+// Initialisierung des Displays, auf die globalen Variablen Width und Height
+// und auf die Konfigurationsdateien, in welchen die Daten für die
+// Transformation von Touch-Koordinaten auf Display-Koordianten abgelegt
+// sind, etc.
+type RotationType int
+
+const (
+	Rotate000 RotationType = iota
+	Rotate090
+	Rotate180
+	Rotate270
+)
+
+func (rot RotationType) String() string {
+	switch rot {
+	case Rotate000:
+		return "Rotate000"
+	case Rotate090:
+		return "Rotate090"
+	case Rotate180:
+		return "Rotate180"
+	case Rotate270:
+		return "Rotate270"
+	default:
+		return "(unknown rotation)"
+	}
+}
+
+func (rot *RotationType) Set(s string) error {
+	switch s {
+	case "Rotate000":
+		*rot = Rotate000
+	case "Rotate090":
+		*rot = Rotate090
+	case "Rotate180":
+		*rot = Rotate180
+	case "Rotate270":
+		*rot = Rotate270
+	default:
+		return errors.New("Unknown rotation: " + s)
+	}
+	return nil
+}
+
+// In RotationData sind nun alle von der Rotation abhängigen Einstellungen
+// abgelegt. Es ist ein interner Datentyp, der wohl verwendet, aber nicht
+// verändert werden kann.
+/*
+type RotationDataType struct {
+	width, height int
+	madctlParam   uint8
+}
+
+var (
+	RotationData = []RotationDataType{
+		{hw.SHORT_SIDE, hw.LONG_SIDE, 0x48},
+		{hw.LONG_SIDE, hw.SHORT_SIDE, 0xe8},
+		{hw.SHORT_SIDE, hw.LONG_SIDE, 0x88},
+		{hw.LONG_SIDE, hw.SHORT_SIDE, 0x28},
+	}
+)
+*/

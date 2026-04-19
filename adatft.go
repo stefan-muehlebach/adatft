@@ -51,14 +51,15 @@ var (
 	isRaspberry bool
 
 	// Der Logger, welcher von diesem Package verwendet wird.
-	adalog *log.Logger
+	//adalog *log.Logger
 )
 
 // Damit wird die 'periph.io'-Umgebung und diverse globale Variablen
 // initialisiert.
 func init() {
-	var userConfDir, userLogDir, logDir, logFile string
-	var fh *os.File
+	var userConfDir, userLogDir, logDir string
+	//var logFile string
+	//var fh *os.File
 	var driverStates *driverreg.State
 	var err error
 
@@ -81,11 +82,14 @@ func init() {
 		errors.Is(err, fs.ErrNotExist) {
 		log.Fatalf("os.MkdirAll(): %v", err)
 	}
-	logFile = filepath.Join(logDir, "adatft.log")
-	if fh, err = os.OpenFile(logFile, os.O_RDWR|os.O_CREATE, 0644); err != nil {
-		log.Fatalf("os.OpenFile(): %v", err)
-	}
-	adalog = log.New(fh, "", log.Ltime|log.Lshortfile)
+	//logFile = filepath.Join(logDir, "adatft.log")
+	//if fh, err = os.OpenFile(logFile, os.O_RDWR|os.O_CREATE, 0644); err != nil {
+	//	log.Fatalf("os.OpenFile(): %v", err)
+	//}
+	//adalog = log.New(fh, "", log.Ltime|log.Lshortfile)
+	log.SetFlags(log.Ltime | log.Lshortfile)
+	log.SetPrefix("")
+	//log.SetOutput(fh)
 
 	// Initialisiere die 'periph.io'-Umgebung und halte fest, ob wir
 	// auf einem echten RaspberryPi laufen.

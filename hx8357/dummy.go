@@ -25,16 +25,14 @@ func OpenDummy(speedHz physic.Frequency) *HX8357Dummy {
 
 // Schliesst die Verbindung zum HX8357.
 func (d *HX8357Dummy) Close() {
-	// err := d.spi.Close()
-	// check("Close(): error in spi.Close()", err)
 }
 
 // Führt die Initialisierung des Chips durch. initParams ist ein Slice
 // von Hardware-spezifischen Einstellungen. Beim HX8357 sind dies:
 //
 //	{ initMinimal, madctlParam }
-func (d *HX8357Dummy) Init(initParams []any) {
-
+func (d *HX8357Dummy) Init(rotation byte) (w, h int) {
+	return 0, 0
 }
 
 // Sende den Befehl in 'cmd' zum HX8357.

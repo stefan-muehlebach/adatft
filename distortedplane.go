@@ -2,9 +2,7 @@ package adatft
 
 import (
 	"encoding/json"
-	"errors"
 	"log"
-	"math"
 	"os"
 	"path/filepath"
 )
@@ -73,10 +71,11 @@ func ReadCalibDataFile(fileName string) *CalibData {
 // Für die Konvertierung der Touchscreen-Koordinaten in Bildschirm-Koordinaten
 // wird der Datentyp DistortedPlane verwendet.
 type DistortedPlane struct {
+	Rot					   RotationType
 	RawPosList             [NumRefPoints]TouchRawPos
 	PosList                [NumRefPoints]TouchPos
-	m1, m2, n1, n2, o1, o2 float64
-	ax, ay                 float64
+//	m1, m2, n1, n2, o1, o2 float64
+//	ax, ay                 float64
 }
 
 // Schreibt die aktuelle Konfiguration in das angegebene File. Der Pfad kann
@@ -84,11 +83,11 @@ type DistortedPlane struct {
 func (d *DistortedPlane) WriteConfigFile(fileName string) {
 	data, err := json.MarshalIndent(d, "", "  ")
 	if err != nil {
-		adalog.Fatal(err)
+		log.Fatal(err)
 	}
 	err = os.WriteFile(fileName, data, 0644)
 	if err != nil {
-		adalog.Fatal(err)
+		log.Fatal(err)
 	}
 }
 
@@ -103,6 +102,7 @@ func (d *DistortedPlane) ReadConfig(rot RotationType) {
 func (d *DistortedPlane) ReadConfigFile(fileName string, rot RotationType) {
 	off := int(rot)
 	calibData := ReadCalibDataFile(fileName)
+	d.Rot = rot
 	d.PosList = calibData.PosList
 	switch rot {
 	case Rotate090, Rotate270:
@@ -110,20 +110,17 @@ func (d *DistortedPlane) ReadConfigFile(fileName string, rot RotationType) {
 		d.PosList[2].X, d.PosList[2].Y = d.PosList[2].Y, d.PosList[2].X
 	}
 	for i := range NumRefPoints {
-		d.RawPosList[(int(i)+off)%int(NumRefPoints)] = calibData.RawPosList[i]
+		d.RawPosList[i] = calibData.RawPosList[(int(i)+off)%int(NumRefPoints)]
 	}
 
 	//log.Printf("posList   : %+v\n", d.PosList)
 	//log.Printf("rawPosList: %+v\n", d.RawPosList)
-
-	d.update()
 }
 
 func (d *DistortedPlane) SetRefPoint(id RefPointType, rawPos TouchRawPos,
 	pos TouchPos) {
 	d.RawPosList[id] = rawPos
 	d.PosList[id] = pos
-	d.update()
 }
 
 func (d *DistortedPlane) SetRefPoints(rawPosList []TouchRawPos,
@@ -134,66 +131,31 @@ func (d *DistortedPlane) SetRefPoints(rawPosList []TouchRawPos,
 	}
 }
 
-func (d *DistortedPlane) TransformNew(rawPos TouchRawPos) (pos TouchPos, err error) {
-	x1 := Map(rawPos.RawX, d.RawPosList[0].RawX, d.RawPosList[1].RawX, d.PosList[0].X, d.PosList[1].X)
-	//x2 := Map(rawPos.RawX, d.RawPosList[3].RawX, d.RawPosList[2].RawX, d.PosList[3].X, d.PosList[2].X)
-	y1 := Map(rawPos.RawY, d.RawPosList[0].RawY, d.RawPosList[3].RawY, d.PosList[0].Y, d.PosList[3].Y)
-	//y2 := Map(rawPos.RawY, d.RawPosList[1].RawY, d.RawPosList[2].RawY, d.PosList[1].Y, d.PosList[2].Y)
-	pos.X = x1
-	pos.Y = y1
-	//log.Printf("(%d, %d) -> (%f, %f)\n", rawPos.RawX, rawPos.RawY, pos.X, pos.Y)
+func (d *DistortedPlane) Transform(rawPos TouchRawPos) (pos TouchPos, err error) {
+	switch d.Rot {
+	case Rotate000, Rotate180:
+		pos.X = Map(float64(rawPos.RawX),
+			float64(d.RawPosList[0].RawX), float64(d.RawPosList[1].RawX),
+			d.PosList[0].X, d.PosList[1].X)
+		pos.Y = Map(float64(rawPos.RawY),
+			float64(d.RawPosList[0].RawY), float64(d.RawPosList[3].RawY),
+			d.PosList[0].Y, d.PosList[3].Y)
+	case Rotate090, Rotate270:
+		pos.X = Map(float64(rawPos.RawY),
+			float64(d.RawPosList[0].RawY), float64(d.RawPosList[1].RawY),
+			d.PosList[0].X, d.PosList[1].X)
+		pos.Y = Map(float64(rawPos.RawX),
+			float64(d.RawPosList[0].RawX), float64(d.RawPosList[3].RawX),
+			d.PosList[0].Y, d.PosList[3].Y)
+	}
+	pos.Z = rawPos.RawZ
+	//log.Printf("(%d, %d) -> (%.0f, %.0f) (%d)\n",
+	//	rawPos.RawX, rawPos.RawY, pos.X, pos.Y, pos.Z)
 	return pos, nil
 }
 
-// Transformiert die Touchscreen-Koordinaten in rawPos zu Bildschirm-
-// Koordinaten.
-func (d *DistortedPlane) Transform(rawPos TouchRawPos) (pos TouchPos,
-	err error) {
-	var p1, p2, bx, cx, by, cy float64
-	var tx, ty float64
-
-	p1 = float64(rawPos.RawX) - float64(d.RawPosList[0].RawX)
-	p2 = float64(rawPos.RawY) - float64(d.RawPosList[0].RawY)
-
-	bx = p1*d.o2 - d.m1*d.n2 - p2*d.o1 + d.n1*d.m2
-	cx = p1*d.n2 - p2*d.n1
-	tx = (-bx - math.Sqrt(bx*bx-4*d.ax*cx)) / (2 * d.ax)
-
-	by = p1*d.o2 - d.n1*d.m2 - p2*d.o1 + d.m1*d.n2
-	cy = p1*d.m2 - p2*d.m1
-	ty = (-by + math.Sqrt(by*by-4*d.ay*cy)) / (2 * d.ay)
-
-	pos.X = (1-tx)*d.PosList[0].X + tx*d.PosList[2].X
-	pos.Y = (1-ty)*d.PosList[0].Y + ty*d.PosList[2].Y
-	pos.Z = rawPos.RawZ
-
-	if pos.X < 0.0 || pos.X >= float64(Width) {
-		pos.X = max(pos.X, 0.0)
-		pos.X = min(pos.X, float64(Width)-1.0)
-		err = errors.New("coordinate outside reasonable range")
-	}
-	if pos.Y < 0.0 || pos.Y >= float64(Height) {
-		pos.Y = max(pos.Y, 0.0)
-		pos.Y = min(pos.Y, float64(Height)-1.0)
-		err = errors.New("coordinate outside reasonable range")
-	}
-	//log.Printf("(%d, %d) -> (%f, %f)\n", rawPos.RawX, rawPos.RawY, pos.X, pos.Y)
-	return pos, err
-}
-
-func (d *DistortedPlane) update() {
-	d.m1 = float64(d.RawPosList[1].RawX) - float64(d.RawPosList[0].RawX)
-	d.m2 = float64(d.RawPosList[1].RawY) - float64(d.RawPosList[0].RawY)
-	d.n1 = float64(d.RawPosList[3].RawX) - float64(d.RawPosList[0].RawX)
-	d.n2 = float64(d.RawPosList[3].RawY) - float64(d.RawPosList[0].RawY)
-	d.o1 = float64(d.RawPosList[2].RawX) - float64(d.RawPosList[3].RawX) - d.m1
-	d.o2 = float64(d.RawPosList[2].RawY) - float64(d.RawPosList[3].RawY) - d.m2
-	d.ax = d.m2*d.o1 - d.m1*d.o2
-	d.ay = d.n2*d.o1 - d.n1*d.o2
-}
-
 type Mappable interface {
-	~int | ~int16 | ~uint16 | ~float64
+	~int | ~int16 | ~float64
 }
 
 func Map[In, Out Mappable](valIn, lbIn, ubIn In, lbOut, ubOut Out) (valOut Out) {

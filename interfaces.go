@@ -10,7 +10,7 @@ type DispInterface interface {
 	// Damit die Initialisierung so flexibel wie moeglich bleibt, wird der
 	// Init-Methode ein Slice von beliebigen Parametern uebergeben. Wie die
 	// Werte interpretiert werden, ist Interface-spezifisch.
-	Init(initParams []any)
+	Init(rotation byte) (w, h int)
 
 	// Schliesst die Verbindung zum ILI-Chip und gibt alle Ressourcen in
 	// Zusammenhang mit dieser Verbindung frei.

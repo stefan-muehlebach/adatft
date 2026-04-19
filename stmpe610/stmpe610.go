@@ -168,9 +168,12 @@ func Open(speedHz physic.Frequency) *STMPE610 {
 	if d.pin = gpioreg.ByName(IntPin); d.pin == nil {
 		log.Fatal("OpenSTMPE610(): gpio io pin not found")
 	}
+	// Grosse Frage, was hier genommen werden soll
+	// - PullUp und FallingEdge sicher auf einem Raspi-4 mit Dietpi und dem
+	//   3.5'' Adafruit Display (TFT: HX8357, Touch: STMPE610)
 	//err = d.pin.In(gpio.PullUp, gpio.FallingEdge)
 	//err = d.pin.In(gpio.Float, gpio.FallingEdge)
-	if err = d.pin.In(gpio.Float, gpio.FallingEdge); err != nil {
+	if err = d.pin.In(gpio.PullUp, gpio.FallingEdge); err != nil {
 		log.Fatalf("OpenSTMPE610(): couldn't configure interrupt pin: %v", err)
 	}
 
@@ -268,24 +271,27 @@ func (d *STMPE610) ReadReg8(addr uint8) uint8 {
 	var txBuf []byte = []byte{0x80 + addr, 0x00}
 	var rxBuf []byte = []byte{0x00, 0x00}
 	//d.spi.Tx(txBuf, rxBuf)
-	err := d.spi.Tx(txBuf, rxBuf)
-	check("ReadReg8()", err)
+	if err := d.spi.Tx(txBuf, rxBuf); err != nil {
+		log.Fatalf("ReadReg8(): %s", err)
+	}
 	return rxBuf[1]
 }
 
 func (d *STMPE610) WriteReg8(addr uint8, value uint8) {
 	var buf []byte = []byte{addr, value}
 	//d.spi.Tx(buf, nil)
-	err := d.spi.Tx(buf, nil)
-	check("WriteReg8()", err)
+	if err := d.spi.Tx(buf, nil); err != nil {
+		log.Fatalf("WriteReg8(): %s", err)
+	}
 }
 
 func (d *STMPE610) ReadReg16(addr uint8) uint16 {
 	var txBuf []byte = []byte{0x80 + addr, 0x81 + addr, 0x00}
 	var rxBuf []byte = []byte{0x00, 0x00, 0x00}
 	//d.spi.Tx(txBuf, rxBuf)
-	err := d.spi.Tx(txBuf, rxBuf)
-	check("ReadReg16()", err)
+	if err := d.spi.Tx(txBuf, rxBuf); err != nil {
+		log.Fatalf("ReadReg16(): %s", err)
+	}
 	return (uint16(rxBuf[1]) << 8) | uint16(rxBuf[2])
 }
 
@@ -297,8 +303,9 @@ func (d *STMPE610) ReadData() (x, y uint16, z uint8) {
 	var txBuf []byte = []byte{0xD7, 0xD7, 0xD7, 0xD7, 0x00}
 	var rxBuf []byte = []byte{0x00, 0x00, 0x00, 0x00, 0x00}
 	//d.spi.Tx(txBuf, rxBuf)
-	err := d.spi.Tx(txBuf, rxBuf)
-	check("ReadData()", err)
+	if err := d.spi.Tx(txBuf, rxBuf); err != nil {
+		log.Fatalf("ReadData(): %s", err)
+	}
 	x = (uint16(rxBuf[1]) << 4) | (uint16(rxBuf[2]) >> 4)
 	y = (uint16(rxBuf[2]&0x0F) << 8) | uint16(rxBuf[3])
 	z = uint8(rxBuf[4])
@@ -320,8 +327,10 @@ func (d *STMPE610) SetCallback(cbFunc func(any), cbData any) {
 
 // Interne Check-Funktion, welche bei gravierenden Fehlern das Programm
 // beendet.
+/*
 func check(fnc string, err error) {
 	if err != nil {
 		log.Fatalf("%s: %s", fnc, err)
 	}
 }
+*/

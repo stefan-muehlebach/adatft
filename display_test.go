@@ -37,7 +37,7 @@ var (
 	plane                             *DistortedPlane
 	touchData                         TouchRawPos
 	touchPos                          TouchPos
-	backColor, fillColor, borderColor colors.Color
+	backColor, fillColor, borderColor colors.RGBA
 	borderWidth                       float64
 	spiSpeed                          int64
 )
@@ -49,7 +49,7 @@ func init() {
 		SPISpeedHz = physic.Frequency(spiSpeed)
 	}
 
-	disp = OpenDisplay(Rotate090)
+	disp = OpenDisplay(Rotate270)
 	fWidth, fHeight = float64(Width), float64(Height)
 
 	rectFull = image.Rect(0, 0, Width, Height)
