@@ -9,7 +9,6 @@ import (
 	"periph.io/x/conn/v3/physic"
 	"periph.io/x/conn/v3/spi"
 	"periph.io/x/conn/v3/spi/spireg"
-	//"periph.io/x/host/v3/sysfs"
 )
 
 // Konstanten für den Display-Chip HX8357.
@@ -107,38 +106,6 @@ const (
 var (
 	SpiDevFile = "/dev/spidev0.0"
 	DatCmdPin  = "GPIO25"
-
-/*
-	gammaPar = []uint8{
-		// Positive polarity
-		0x02, 0x0a, 0x11, 0x1d, 0x23, 0x35, 0x41, 0x4b,
-		0x4b, 0x42, 0x3a, 0x27, 0x1b, 0x08, 0x09, 0x03,
-		// Negative polarity
-		0x02, 0x0a, 0x11, 0x1d, 0x23, 0x35, 0x41, 0x4b,
-		0x4b, 0x42, 0x3a, 0x27, 0x1b, 0x08, 0x09, 0x03,
-		// Some control bytes
-		0x00, 0x01,
-	}
-
-	gammaLUT = []uint8{
-		0x01,
-		// Lookup values for red
-		0x00, 0x08, 0x10, 0x18, 0x20, 0x28, 0x30, 0x38,
-		0x40, 0x48, 0x50, 0x58, 0x60, 0x68, 0x70, 0x7a,
-		0x80, 0x88, 0x90, 0x98, 0xa0, 0xa8, 0xb0, 0xb8,
-		0xc0, 0xc8, 0xd0, 0xd8, 0xe0, 0xe8, 0xf0, 0xf8, 0xfc,
-		// Lookup values for green
-		0x00, 0x08, 0x10, 0x18, 0x20, 0x28, 0x30, 0x38,
-		0x40, 0x48, 0x50, 0x58, 0x60, 0x68, 0x70, 0x78,
-		0x80, 0x88, 0x90, 0x98, 0xa0, 0xa8, 0xb0, 0xb8,
-		0xc0, 0xc8, 0xd0, 0xd8, 0xe0, 0xe8, 0xf0, 0xf8, 0xfc,
-		// Lookup values for blue
-		0x00, 0x08, 0x10, 0x18, 0x20, 0x28, 0x30, 0x38,
-		0x40, 0x48, 0x50, 0x58, 0x60, 0x68, 0x70, 0x7a,
-		0x80, 0x88, 0x90, 0x98, 0xa0, 0xa8, 0xb0, 0xb8,
-		0xc0, 0xc8, 0xd0, 0xd8, 0xe0, 0xe8, 0xf0, 0xf8, 0xfc,
-	}
-*/
 )
 
 // Dies ist der Datentyp, welche für die Verbindung zum HX8357 via SPI
@@ -168,17 +135,11 @@ func Open(speedHz physic.Frequency) *HX8357 {
 		log.Fatal("OpenHX8357(): gpio io pin not found")
 	}
 
-	//spi, _ := sysfs.NewSPI(0, 0)
-	//log.Printf("MaxTxSize(): %d", spi.MaxTxSize())
-	//spi.Close()
-
 	return d
 }
 
 // Schliesst die Verbindung zum HX8357.
 func (d *HX8357) Close() {
-	// d.spi.Close()
-	// check("Close(): error in spi.Close()", err)
 }
 
 type InitCommand struct {
@@ -227,18 +188,6 @@ func (d *HX8357) Init(rotation byte) (w, h int) {
 		{DISPON, []byte{}, 150},
 	}
 
-/*
-	d.Cmd(DISPOFF)
-	time.Sleep(125 * time.Millisecond)
-
-	d.Cmd(SWRESET)
-	time.Sleep(128 * time.Millisecond)
-
-	d.Cmd(SETEXTC)
-	d.DataArray([]byte{0xFF, 0x83, 0x57})
-	time.Sleep(300 * time.Millisecond)
-*/
-
 	for _, initCmd := range cmdList {
 		d.Cmd(initCmd.Cmd)
 		if len(initCmd.Data) > 0 {
@@ -249,127 +198,8 @@ func (d *HX8357) Init(rotation byte) (w, h int) {
 		}
 	}
 
-/*
-	d.Cmd(SLPOUT)
-	time.Sleep(150 * time.Millisecond)
-
-	d.Cmd(DISPON)
-	time.Sleep(150 * time.Millisecond)
-*/
-
 	return w, h
 }
-
-// Führt die Initialisierung des Chips durch. initParams ist ein Slice
-// von Hardware-spezifischen Einstellungen. Beim HX8357 sind dies:
-//
-//	{ initMinimal, madctlParam }
-//func (d *HX8357) InitOld(initParams []any) {
-//	//    var initMinimal bool
-//	var madctlParam uint8
-//	var colmodParam uint8
-//
-//	//    initMinimal = initParams[0].(bool)
-//	madctlParam = initParams[1].(uint8)
-//	colmodParam = initParams[2].(uint8)
-//
-//	d.Cmd(DISPOFF) // Display Off
-//	time.Sleep(125 * time.Millisecond)
-//
-//	d.Cmd(COLMOD) // Pixel format
-//	d.Data8(colmodParam)
-//
-//	d.Cmd(SWRESET) // Reset the chip at the beginning
-//	time.Sleep(128 * time.Millisecond)
-//
-//	d.Cmd(MADCTL) // Memory Access Control
-//	d.Data8(madctlParam)
-//
-//	d.Cmd(WRCTRLD) // Write Control Display
-//	d.Data8(0x2c)  // Backlight Control Block: ON, Display Dimming: ON,
-//	// Backlight Control: ON
-//
-//	d.Cmd(SETEXTC)
-//	d.DataArray([]byte{0xFF, 0x83, 0x57})
-//
-//	d.Cmd(SETPANEL)
-//	d.Data8(0x00)
-//
-//	d.Cmd(SETGAMMA)
-//	d.DataArray(gammaPar)
-//
-//	//d.Cmd(SETDGC)
-//	//d.DataArray(gammaLUT)
-//
-//	d.Cmd(SETEXTC)
-//	d.DataArray([]byte{0x01, 0x01, 0x01})
-//
-//	d.Cmd(SLPOUT) // Exit Sleep
-//	time.Sleep(125 * time.Millisecond)
-//
-//	d.Cmd(DISPON) // Display On
-//	time.Sleep(125 * time.Millisecond)
-//
-//	/*
-//		d.Cmd(DISPOFF) // Reset the chip at the beginning
-//		time.Sleep(128 * time.Millisecond)
-//
-//		d.Cmd(SWRESET) // Reset the chip at the beginning
-//		time.Sleep(128 * time.Millisecond)
-//
-//		d.Cmd(SETEXTC)
-//		d.DataArray([]byte{0xFF, 0x83, 0x57})
-//		time.Sleep(300 * time.Millisecond)
-//
-//		d.Cmd(COLMOD) // Pixel format
-//		d.Data8(colmodParam)
-//
-//		d.Cmd(MADCTL) // Memory Access Control
-//		d.Data8(madctlParam)
-//
-//		d.Cmd(WRCTRLD)
-//		d.Data8(0x2C)
-//
-//		d.Cmd(SETPANEL)
-//		d.Data8(0x00)
-//
-//		d.Cmd(GAMSET)
-//		d.Data8(0x08)
-//
-//		d.Cmd(SETRGB)
-//		d.DataArray([]byte{0x00, 0x00, 0x06, 0x06})
-//
-//		d.Cmd(SETVCOM)
-//		d.Data8(0x4B)
-//
-//		d.Cmd(SETOSC)
-//		d.DataArray([]byte{0x66, 0x00})
-//
-//		d.Cmd(SETPOWER)
-//		d.DataArray([]byte{0x00, 0x11, 0x1C, 0x1C, 0x83, 0x5C, 0x29})
-//
-//		d.Cmd(SETSTBA)
-//		d.DataArray([]byte{0x73, 0x50, 0x00, 0x3C, 0xC4, 0x08})
-//
-//		d.Cmd(SETCYC)
-//		d.DataArray([]byte{0x02, 0x40, 0x00, 0x2A, 0x2A, 0x0D, 0x96})
-//
-//		d.Cmd(TEON)
-//		d.Data8(0x00)
-//
-//		d.Cmd(TESL)
-//		d.DataArray([]byte{0x00, 0x02})
-//
-//		d.Cmd(SETEXTC)
-//		d.DataArray([]byte{0x01, 0x01, 0x01})
-//
-//		d.Cmd(SLPOUT) // Exit Sleep
-//		time.Sleep(128 * time.Millisecond)
-//
-//		d.Cmd(DISPON) // Display On
-//		time.Sleep(128 * time.Millisecond)
-//	*/
-//}
 
 // Sende den Befehl in 'cmd' zum HX8357.
 func (d *HX8357) Cmd(cmd uint8) {
