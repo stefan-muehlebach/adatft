@@ -184,6 +184,7 @@ func (d *HX8357) Close() {
 type InitCommand struct {
 	Cmd byte
 	Data []byte
+	WaitMs int
 }
 
 func (d *HX8357) Init(rotation byte) (w, h int) {
@@ -204,23 +205,29 @@ func (d *HX8357) Init(rotation byte) (w, h int) {
 	}
 	
 	cmdList := []InitCommand{
-		{SETRGB, []byte{0x80, 0x00, 0x06, 0x06}},
-		{SETVCOM, []byte{0x25}},
-		{SETOSC, []byte{0x68}},
-		{SETPANEL, []byte{0x05}},
-		{SETPOWER, []byte{0x00, 0x15, 0x1C, 0x1C, 0x83, 0xAA}},
-		{SETSTBA, []byte{0x50, 0x50, 0x01, 0x3C, 0x1E, 0x08}},
-		{SETCYC, []byte{0x02, 0x40, 0x00, 0x2A, 0x2A, 0x0D, 0x78}},
+		{DISPOFF, []byte{}, 125},
+		{SWRESET, []byte{}, 128},
+		{SETEXTC, []byte{0xFF, 0x83, 0x57}, 300},
+		{SETRGB, []byte{0x80, 0x00, 0x06, 0x06}, 0},
+		{SETVCOM, []byte{0x25}, 0},
+		{SETOSC, []byte{0x68}, 0},
+		{SETPANEL, []byte{0x05}, 0},
+		{SETPOWER, []byte{0x00, 0x15, 0x1C, 0x1C, 0x83, 0xAA}, 0},
+		{SETSTBA, []byte{0x50, 0x50, 0x01, 0x3C, 0x1E, 0x08}, 0},
+		{SETCYC, []byte{0x02, 0x40, 0x00, 0x2A, 0x2A, 0x0D, 0x78}, 0},
 		{SETGAMMA, []byte{0x02, 0x0A, 0x11, 0x1d, 0x23, 0x35, 0x41, 0x4b,
 			0x4b, 0x42, 0x3A, 0x27, 0x1B, 0x08, 0x09, 0x03, 0x02, 0x0A,
 			0x11, 0x1d, 0x23, 0x35, 0x41, 0x4b, 0x4b, 0x42, 0x3A, 0x27,
-			0x1B, 0x08, 0x09, 0x03, 0x00, 0x01}},
-		{COLMOD, []byte{0x55}},
-		{MADCTL, []byte{madctlParam}},
-		{TEON, []byte{0x00}},
-		{TEARLINE, []byte{0x00, 0x02}},
+			0x1B, 0x08, 0x09, 0x03, 0x00, 0x01}, 0},
+		{COLMOD, []byte{0x55}, 0},
+		{MADCTL, []byte{madctlParam}, 0},
+		{TEON, []byte{0x00}, 0},
+		{TEARLINE, []byte{0x00, 0x02}, 0},
+		{SLPOUT, []byte{}, 150},
+		{DISPON, []byte{}, 150},
 	}
 
+/*
 	d.Cmd(DISPOFF)
 	time.Sleep(125 * time.Millisecond)
 
@@ -230,17 +237,25 @@ func (d *HX8357) Init(rotation byte) (w, h int) {
 	d.Cmd(SETEXTC)
 	d.DataArray([]byte{0xFF, 0x83, 0x57})
 	time.Sleep(300 * time.Millisecond)
+*/
 
 	for _, initCmd := range cmdList {
 		d.Cmd(initCmd.Cmd)
-		d.DataArray(initCmd.Data)
+		if len(initCmd.Data) > 0 {
+			d.DataArray(initCmd.Data)
+		}
+		if initCmd.WaitMs > 0 {
+			time.Sleep(time.Duration(initCmd.WaitMs) * time.Millisecond)
+		}
 	}
 
+/*
 	d.Cmd(SLPOUT)
 	time.Sleep(150 * time.Millisecond)
 
 	d.Cmd(DISPON)
 	time.Sleep(150 * time.Millisecond)
+*/
 
 	return w, h
 }

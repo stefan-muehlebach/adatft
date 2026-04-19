@@ -171,8 +171,6 @@ func Open(speedHz physic.Frequency) *STMPE610 {
 	// Grosse Frage, was hier genommen werden soll
 	// - PullUp und FallingEdge sicher auf einem Raspi-4 mit Dietpi und dem
 	//   3.5'' Adafruit Display (TFT: HX8357, Touch: STMPE610)
-	//err = d.pin.In(gpio.PullUp, gpio.FallingEdge)
-	//err = d.pin.In(gpio.Float, gpio.FallingEdge)
 	if err = d.pin.In(gpio.PullUp, gpio.FallingEdge); err != nil {
 		log.Fatalf("OpenSTMPE610(): couldn't configure interrupt pin: %v", err)
 	}
@@ -193,7 +191,9 @@ func (d *STMPE610) Close() {
 // dem Internet zusammenorchestriert - geschmückt mit vielen Stunden
 // 'try and error'. Verbesserungen und Vorschläge sind jederzeit herzlich
 // willkommen.
-func (d *STMPE610) Init(initParams []any) {
+func (d *STMPE610) Init(params []any) {
+
+	zFract := params[0].(byte)
 
 	// System Register (SYS_XXX)
 	//
@@ -208,29 +208,20 @@ func (d *STMPE610) Init(initParams []any) {
 	//
 	// Touchscreen Controller Control
 	// - set the window tracking feature to 8 pixels
-	// - acquire X, Y data
+	// - acquire X, Y, Z data
 	// - enable touch screen control
 	//
 	d.WriteReg8(TSC_CTRL,
 		TSC_CTRL_WTRK8|TSC_CTRL_XYZ|TSC_CTRL_EN)
+	d.WriteReg8(TSC_FRACTION_Z, zFract)
 
 	// Touchscreen Controller Configuration
-	// - average 8 samples
+	// - average 4 samples
 	// - set a touch detect delay of 1ms
 	// - set a settling time of 5ms
 	//
 	d.WriteReg8(TSC_CFG,
 		TSC_CFG_4SAMPLE|TSC_CFG_DELAY_1MS|TSC_CFG_SETTLE_5MS)
-
-	// Don't collect any Z data since we cannot relay on this feature!
-	d.WriteReg8(TSC_FRACTION_Z,
-		0x6)
-
-	d.WriteReg8(INT_EN,
-		INT_TOUCH_DET|INT_FIFO_TH)
-	//		INT_FIFO_EMPTY |
-	//		INT_FIFO_FULL |
-	//		INT_FIFO_OFLOW)
 
 	// Analog Digital Converter Register (ADC_XXX)
 	// (Wozu braucht es diese?)
@@ -258,6 +249,12 @@ func (d *STMPE610) Init(initParams []any) {
 	// Wir abonnieren uns auf zwei Events: das Drücken, respl. Loslassen
 	// des Bildschirms (beide Ereignisse generieren das gleiche Event) sowie
 	// das Erreichen eines bestimmten Schwellwertes bei der FIFO-Queue
+
+	d.WriteReg8(INT_EN,
+		INT_TOUCH_DET|INT_FIFO_TH)
+	//		INT_FIFO_EMPTY |
+	//		INT_FIFO_FULL |
+	//		INT_FIFO_OFLOW)
 
 	// Reset all interupts to begin with
 	d.WriteReg8(INT_STA, 0xFF)
@@ -316,7 +313,6 @@ func (d *STMPE610) SetCallback(cbFunc func(any), cbData any) {
 	go func() {
 		for {
 			if d.pin.WaitForEdge(24 * time.Hour) {
-				//if d.pin.WaitForEdge(10 * time.Second) {
 				cbFunc(cbData)
 			} else {
 				log.Printf("WaitForEdge() returned 'false'\n")
@@ -325,12 +321,3 @@ func (d *STMPE610) SetCallback(cbFunc func(any), cbData any) {
 	}()
 }
 
-// Interne Check-Funktion, welche bei gravierenden Fehlern das Programm
-// beendet.
-/*
-func check(fnc string, err error) {
-	if err != nil {
-		log.Fatalf("%s: %s", fnc, err)
-	}
-}
-*/

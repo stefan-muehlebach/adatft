@@ -12,8 +12,13 @@ var (
 
 func TestTouchScreen(t *testing.T) {
 	touch = OpenTouch(Rotate000)
+	i := 0
 	for event := range touch.EventQ {
 		t.Logf("Event received: %v\n", event)
+		i += 1
+		if i >= 100 {
+			break
+		}
 	}
 }
 

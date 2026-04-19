@@ -7,13 +7,11 @@ import (
 	"log"
 	"math/rand"
 	"os"
-	"strconv"
 	"testing"
 
 	"github.com/stefan-muehlebach/gg"
 	"github.com/stefan-muehlebach/gg/colors"
 	draw2 "golang.org/x/image/draw"
-	"periph.io/x/conn/v3/physic"
 )
 
 const (
@@ -23,32 +21,24 @@ const (
 )
 
 var (
-	disp            *Display
-	pixBuf          *ILIImage
-	fWidth, fHeight float64
-	tempBild, testBild01, testBild02,
-	workImage *image.RGBA
-	rectFull, rectHalve, rectHalve02,
-	rectHalve03, rectQuart, rectCust, rect image.Rectangle
-	srcPoint                          image.Point
-	gc                                *gg.Context
-	gcImage                           *image.RGBA
-	err                               error
-	plane                             *DistortedPlane
-	touchData                         TouchRawPos
-	touchPos                          TouchPos
-	backColor, fillColor, borderColor colors.RGBA
-	borderWidth                       float64
-	spiSpeed                          int64
+	disp                                                                     *Display
+	pixBuf                                                                   *ILIImage
+	fWidth, fHeight                                                          float64
+	tempBild, testBild01, testBild02, workImage                              *image.RGBA
+	rectFull, rectHalve, rectHalve02, rectHalve03, rectQuart, rectCust, rect image.Rectangle
+	srcPoint                                                                 image.Point
+	gc                                                                       *gg.Context
+	gcImage                                                                  *image.RGBA
+	err                                                                      error
+	plane                                                                    *DistortedPlane
+	touchData                                                                TouchRawPos
+	touchPos                                                                 TouchPos
+	backColor, fillColor, borderColor                                        colors.RGBA
+	borderWidth                                                              float64
+	spiSpeed                                                                 int64
 )
 
 func init() {
-	//log.Printf("%d, %v", len(os.Args), os.Args)
-	spiSpeed, err = strconv.ParseInt(os.Args[len(os.Args)-1], 10, 32)
-	if err == nil {
-		SPISpeedHz = physic.Frequency(spiSpeed)
-	}
-
 	disp = OpenDisplay(Rotate270)
 	fWidth, fHeight = float64(Width), float64(Height)
 

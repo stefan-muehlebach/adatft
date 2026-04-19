@@ -74,6 +74,8 @@ type DistortedPlane struct {
 	Rot					   RotationType
 	RawPosList             [NumRefPoints]TouchRawPos
 	PosList                [NumRefPoints]TouchPos
+	RawZmin, RawZmax       uint8
+	Zmin, Zmax             float64
 //	m1, m2, n1, n2, o1, o2 float64
 //	ax, ay                 float64
 }
@@ -131,6 +133,11 @@ func (d *DistortedPlane) SetRefPoints(rawPosList []TouchRawPos,
 	}
 }
 
+func (d *DistortedPlane) SetZRange(rawZmin, rawZmax uint8, zmin, zmax float64) {
+	d.RawZmin, d.RawZmax = rawZmin, rawZmax
+	d.Zmin, d.Zmax = zmin, zmax
+}
+
 func (d *DistortedPlane) Transform(rawPos TouchRawPos) (pos TouchPos, err error) {
 	switch d.Rot {
 	case Rotate000, Rotate180:
@@ -148,7 +155,9 @@ func (d *DistortedPlane) Transform(rawPos TouchRawPos) (pos TouchPos, err error)
 			float64(d.RawPosList[0].RawX), float64(d.RawPosList[3].RawX),
 			d.PosList[0].Y, d.PosList[3].Y)
 	}
-	pos.Z = rawPos.RawZ
+	pos.Z = Map(float64(rawPos.RawZ),
+		float64(d.RawZmin), float64(d.RawZmax),
+		d.Zmin, d.Zmax)
 	//log.Printf("(%d, %d) -> (%.0f, %.0f) (%d)\n",
 	//	rawPos.RawX, rawPos.RawY, pos.X, pos.Y, pos.Z)
 	return pos, nil

@@ -6,21 +6,20 @@ import (
 
 	"periph.io/x/conn/v3/physic"
 
-	// hw "github.com/stefan-muehlebach/adatft/ili9341"
+	//hw "github.com/stefan-muehlebach/adatft/ili9341"
 	hw "github.com/stefan-muehlebach/adatft/hx8357"
 )
 
 const (
 	numBuffers  int  = 3
-	initMinimal bool = false
 )
 
 var (
-	//SPISpeedHz physic.Frequency = 25_000_000 // Diese Einstellung geht sicher
-	SPISpeedHz physic.Frequency = 40_000_000
-	//SPISpeedHz physic.Frequency = 45_000_000
-	//SPISpeedHz physic.Frequency = 65_000_000
-	//SPISpeedHz physic.Frequency = 80_000_000
+	//dspSpeedHz physic.Frequency = 20_000_000 // Diese Einstellung geht sicher
+	dspSpeedHz physic.Frequency = 40_000_000
+	//dspSpeedHz physic.Frequency = 45_000_000
+	//dspSpeedHz physic.Frequency = 65_000_000
+	//dspSpeedHz physic.Frequency = 80_000_000
 	Width, Height int
 )
 
@@ -57,9 +56,9 @@ type Display struct {
 func OpenDisplay(rot RotationType) *Display {
 	dsp := &Display{}
 	if isRaspberry {
-		dsp.dspi = hw.Open(SPISpeedHz)
+		dsp.dspi = hw.Open(dspSpeedHz)
 	} else {
-		dsp.dspi = hw.OpenDummy(SPISpeedHz)
+		dsp.dspi = hw.OpenDummy(dspSpeedHz)
 	}
 	Width, Height = dsp.dspi.Init(byte(rot))
 
@@ -68,8 +67,6 @@ func OpenDisplay(rot RotationType) *Display {
 		dsp.imgChan[i] = make(chan *ILIImage, numBuffers+1)
 	}
 
-	//Width = RotationData[rot].width
-	//Height = RotationData[rot].height
 	dsp.rect = image.Rect(0, 0, Width, Height)
 	for i := 0; i < numBuffers; i++ {
 		img := NewILIImage(dsp.rect)
@@ -88,7 +85,7 @@ func OpenDisplay(rot RotationType) *Display {
 // Schliesst die Verbindung zum ILI9341.
 func (dsp *Display) Close() {
 	close(dsp.imgChan[toDisp])
-	<-dsp.quitQ
+	<- dsp.quitQ
 	dsp.syncImg.Clear()
 	dsp.sendImage(dsp.syncImg)
 	dsp.dspi.Close()
@@ -144,10 +141,11 @@ func (dsp *Display) sendImage(img *ILIImage) {
 		len = rect.Dy() * img.Stride
 		dsp.dspi.DataArray(img.Pix[:len:len])
 	} else {
-		idx := 0
+		idx0 := 0
 		for y := rect.Min.Y; y < rect.Max.Y; y++ {
-			dsp.dspi.DataArray(img.Pix[idx : idx+bytesPerLine : idx+bytesPerLine])
-			idx += img.Stride
+			idx1 := idx0 + bytesPerLine
+			dsp.dspi.DataArray(img.Pix[idx0 : idx1 : idx1])
+			idx0 += img.Stride
 		}
 	}
 	DispWatch.Stop()
@@ -222,21 +220,3 @@ func (rot *RotationType) Set(s string) error {
 	return nil
 }
 
-// In RotationData sind nun alle von der Rotation abhängigen Einstellungen
-// abgelegt. Es ist ein interner Datentyp, der wohl verwendet, aber nicht
-// verändert werden kann.
-/*
-type RotationDataType struct {
-	width, height int
-	madctlParam   uint8
-}
-
-var (
-	RotationData = []RotationDataType{
-		{hw.SHORT_SIDE, hw.LONG_SIDE, 0x48},
-		{hw.LONG_SIDE, hw.SHORT_SIDE, 0xe8},
-		{hw.SHORT_SIDE, hw.LONG_SIDE, 0x88},
-		{hw.LONG_SIDE, hw.SHORT_SIDE, 0x28},
-	}
-)
-*/

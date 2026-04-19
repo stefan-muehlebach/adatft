@@ -54,18 +54,18 @@ type TouchRawPos struct {
 
 func (td TouchRawPos) String() string {
 	//return fmt.Sprintf("(%4d, %4d)", td.RawX, td.RawY)
-	return fmt.Sprintf("(%4d, %4d, %3d)", td.RawX, td.RawY, td.RawZ)
+	return fmt.Sprintf("(%4d, %4d, %08b)", td.RawX, td.RawY, td.RawZ)
 }
 
 // Während in diesem Typ die kalibrierten Postitionsdaten abgelegt werden.
 type TouchPos struct {
 	X, Y float64
-	Z    uint8
+	Z    float64
 }
 
 func (tp TouchPos) String() string {
 	//return fmt.Sprintf("(%5.1f, %5.1f)", tp.X, tp.Y)
-	return fmt.Sprintf("(%5.1f, %5.1f, %08b)", tp.X, tp.Y, tp.Z)
+	return fmt.Sprintf("(%5.1f, %5.1f, % 6.3f)", tp.X, tp.Y, tp.Z)
 }
 
 func (p1 TouchPos) Near(p2 TouchPos) bool {
@@ -95,6 +95,7 @@ func OpenTouch(rot RotationType) *Touch {
 	var tch *Touch
 	var devId uint16
 	var revNr uint8
+	var zFract byte = hw.TSC_FRACT_Z_3_5
 
 	tch = &Touch{}
 	if isRaspberry {
@@ -106,7 +107,8 @@ func OpenTouch(rot RotationType) *Touch {
 	revNr = tch.tspi.ReadReg8(hw.ID_VER)
 	devId = tch.tspi.ReadReg16(hw.CHIP_ID)
 	if (devId != 0x0811) || (revNr != 0x03) {
-		log.Fatalf("Device ID and/or revision numbers are not as expected: got (0x%04x, 0x%02x) should be (0x0811, 0x03)\n", devId, revNr)
+		log.Fatalf("Wrong ID; got (0x%04x, 0x%02x) want (0x0811, 0x03)\n",
+			devId, revNr)
 	}
 
 	// Initialisiere die Queue für applikatorische Events und setze den
@@ -115,10 +117,11 @@ func OpenTouch(rot RotationType) *Touch {
 	ev.Type = PenRelease
 	tch.tspi.SetCallback(eventDispatcher, tch)
 
-	tch.tspi.Init(nil)
+	tch.tspi.Init([]any{zFract})
 	tch.isOpen = true
 
 	tch.plane.ReadConfig(rot)
+	tch.plane.SetZRange(0, (0b100 << zFract)-1, 1.0, 0.0)
 
 	return tch
 }
@@ -156,20 +159,7 @@ func (tch *Touch) WaitForEvent() PenEvent {
 	return <-tch.EventQ
 }
 
-// Diese Hilfsfunktion dient der einfacheren Erstellung eines Event-Objektes.
-/*
-func (tch *Touch) newPenEvent(typ PenEventType, rawPos TouchRawPos) (ev PenEvent) {
-	ev.Type = typ
-	ev.TouchRawPos = rawPos
-	ev.TouchPos, _ = tch.plane.Transform(rawPos)
-	ev.Time = time.Now()
-	ev.FifoSize = tch.tspi.ReadReg8(hw.FIFO_SIZE)
-	return
-}
-*/
-
 func (t *Touch) readRawPos() (td TouchRawPos) {
-	//td.RawX, td.RawY = tch.tspi.ReadData()
 	td.RawX, td.RawY, td.RawZ = t.ReadData()
 	return
 }
@@ -188,33 +178,6 @@ func (t *Touch) ReadData() (x, y uint16, z uint8) {
 	t.tspi.WriteReg8(hw.FIFO_STA, 0)
 	return
 }
-
-/*
-func eventDispatcher(arg any) {
-	var ev PenEvent
-
-	t := arg.(*Touch)
-
-	if t.BufferLen() == 0 {
-		for i := 0; i < 10; i++ {
-			time.Sleep(5 * time.Millisecond)
-			if t.BufferLen() > 0 {
-				posRaw = t.readRawPos()
-				ev = t.newPenEvent(PenPress, posRaw)
-				t.enqueueEvent(ev)
-				break
-			}
-		}
-		t.tspi.WriteReg8(hw.INT_STA, 0xFF)
-		return
-	}
-
-	posRaw = t.readRawPos()
-	ev = t.newPenEvent(PenRelease, posRaw)
-	t.enqueueEvent(ev)
-	t.tspi.WriteReg8(hw.INT_STA, 0xFF)
-}
-*/
 
 // In diesen globalen Variablen werden Daten verwaltet, die vom
 // Callback-Handler (siehe unten) benötigt werden.

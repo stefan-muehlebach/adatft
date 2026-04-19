@@ -2,18 +2,21 @@ package adatft
 
 import (
 	"fmt"
+	"math"
 	"time"
 )
 
 // Dieser Typ dient der Zeitmessung.
 type Stopwatch struct {
 	t time.Time
-	d time.Duration
+	d, min, max time.Duration
 	n int
 }
 
 func NewStopwatch() *Stopwatch {
-	return &Stopwatch{}
+	s := &Stopwatch{}
+	s.Reset()
+	return s
 }
 
 // Mit Start wird eine neue Messung begonnen.
@@ -24,19 +27,36 @@ func (s *Stopwatch) Start() {
 // Stop beendet die Messung und aktualisiert die Variablen, welche die totale
 // Messdauer als auch die Anzahl Messungen enthalten.
 func (s *Stopwatch) Stop() {
-	s.d += time.Since(s.t)
+	d := time.Since(s.t)
+	if d > s.max {
+		s.max = d
+	}
+	if d < s.min {
+		s.min = d
+	}
+	s.d += d
 	s.n += 1
 }
 
 // Setzt die gemessene Dauer auf 0 und die Anzahl Messungen ebenfalls.
 func (s *Stopwatch) Reset() {
 	s.d = 0
+	s.min = time.Duration(math.MaxInt64)
+	s.max = time.Duration(math.MinInt64)
 	s.n = 0
 }
 
 // Retourniert die totale Messdauer.
 func (s *Stopwatch) Total() time.Duration {
 	return s.d
+}
+
+func (s *Stopwatch) Min() time.Duration {
+	return s.min
+}
+
+func (s *Stopwatch) Max() time.Duration {
+	return s.max
 }
 
 // Retourniert die Anzahl Messungen.
@@ -83,16 +103,24 @@ func PrintStat() {
 	fmt.Printf("total:\n")
 	fmt.Printf("  %d frames\n", ConvWatch.Num())
 	fmt.Printf("application animation:\n")
-	fmt.Printf("  %v total\n", AnimWatch.Total())
+//	fmt.Printf("  %v total\n", AnimWatch.Total())
+//	fmt.Printf("  %v min\n", AnimWatch.Min())
+//	fmt.Printf("  %v max\n", AnimWatch.Max())
 	fmt.Printf("  %v / frame\n", AnimWatch.Avg())
 	fmt.Printf("application painting:\n")
-	fmt.Printf("  %v total\n", PaintWatch.Total())
+//	fmt.Printf("  %v total\n", PaintWatch.Total())
+//	fmt.Printf("  %v min\n", PaintWatch.Min())
+//	fmt.Printf("  %v max\n", PaintWatch.Max())
 	fmt.Printf("  %v / frame\n", PaintWatch.Avg())
 	fmt.Printf("buffer conversion:\n")
-	fmt.Printf("  %v total\n", ConvWatch.Total())
+//	fmt.Printf("  %v total\n", ConvWatch.Total())
+//	fmt.Printf("  %v min\n", ConvWatch.Min())
+//	fmt.Printf("  %v max\n", ConvWatch.Max())
 	fmt.Printf("  %v / frame\n", ConvWatch.Avg())
 	fmt.Printf("sending to SPI:\n")
-	fmt.Printf("  %v total\n", DispWatch.Total())
+//	fmt.Printf("  %v total\n", DispWatch.Total())
+//	fmt.Printf("  %v min\n", DispWatch.Min())
+//	fmt.Printf("  %v max\n", DispWatch.Max())
 	fmt.Printf("  %v / frame\n", DispWatch.Avg())
 }
 

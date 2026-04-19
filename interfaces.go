@@ -38,7 +38,7 @@ type TouchInterface interface {
 	// Damit die Initialisierung so flexibel wie moeglich bleibt, wird der
 	// Init-Methode ein Slice von beliebigen Parametern uebergeben. Wie die
 	// Werte interpretiert werden, ist Interface-spezifisch.
-	Init(initParams []any)
+	Init(params []any)
 
 	// Schliesst die Verbindung zum Touchscreen-Controller und gibt alle
 	// Ressourcen im Zusammenhang mit dieser Verbindung frei.
