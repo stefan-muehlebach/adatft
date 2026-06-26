@@ -19,7 +19,7 @@ type STMPE610Dummy struct {
 //
 // Beim auftreten eines Fehlers wird das Programm abgebrochen. Ausserdem
 // wird der Pin fuer das Empfangen von Interrupts konfiguriert.
-func OpenDummy(speedHz physic.Frequency) *STMPE610Dummy {
+func OpenDummy(speed physic.Frequency) *STMPE610Dummy {
 	var d *STMPE610Dummy
 	d = &STMPE610Dummy{}
 	return d

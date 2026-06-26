@@ -119,7 +119,7 @@ type HX8357 struct {
 
 // Damit wird die Verbindung zum HX8357 geöffnet. Die Initialisierung des
 // Chips wird in einer separaten Funktion (Init()) durchgeführt!
-func Open(speedHz physic.Frequency) *HX8357 {
+func Open(speed physic.Frequency) *HX8357 {
 	var err error
 	var d *HX8357
 	var p spi.PortCloser
@@ -128,7 +128,7 @@ func Open(speedHz physic.Frequency) *HX8357 {
 	if p, err = spireg.Open(SpiDevFile); err != nil {
 		log.Fatalf("OpenHX8357(): error on spireg.Open(): %v", err)
 	}
-	if d.spi, err = p.Connect(speedHz*physic.Hertz, spi.Mode0, 8); err != nil {
+	if d.spi, err = p.Connect(speed, spi.Mode0, 8); err != nil {
 		log.Fatalf("OpenHX8357(): error on port.Connect(): %v", err)
 	}
 	if d.pin = gpioreg.ByName(DatCmdPin); d.pin == nil {

@@ -15,11 +15,7 @@ const (
 )
 
 var (
-	//dspSpeedHz physic.Frequency = 20_000_000 // Diese Einstellung geht sicher
-	dspSpeedHz physic.Frequency = 40_000_000
-	//dspSpeedHz physic.Frequency = 45_000_000
-	//dspSpeedHz physic.Frequency = 65_000_000
-	//dspSpeedHz physic.Frequency = 80_000_000
+	dspSpeed physic.Frequency = 40 * physic.MegaHertz
 	Width, Height int
 )
 
@@ -56,9 +52,9 @@ type Display struct {
 func OpenDisplay(rot RotationType) *Display {
 	dsp := &Display{}
 	if isRaspberry {
-		dsp.dspi = hw.Open(dspSpeedHz)
+		dsp.dspi = hw.Open(dspSpeed)
 	} else {
-		dsp.dspi = hw.OpenDummy(dspSpeedHz)
+		dsp.dspi = hw.OpenDummy(dspSpeed)
 	}
 	Width, Height = dsp.dspi.Init(byte(rot))
 

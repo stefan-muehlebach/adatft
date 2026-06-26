@@ -153,7 +153,7 @@ type STMPE610 struct {
 //
 // Beim auftreten eines Fehlers wird das Programm abgebrochen. Ausserdem
 // wird der Pin fuer das Empfangen von Interrupts konfiguriert.
-func Open(speedHz physic.Frequency) *STMPE610 {
+func Open(speed physic.Frequency) *STMPE610 {
 	var err error
 	var d *STMPE610
 	var p spi.PortCloser
@@ -162,7 +162,7 @@ func Open(speedHz physic.Frequency) *STMPE610 {
 	if p, err = spireg.Open(SpiDevFile); err != nil {
 		log.Fatalf("OpenSTMPE610(): error on spireg.Open(): %v", err)
 	}
-	if d.spi, err = p.Connect(speedHz*physic.Hertz, spi.Mode0, 8); err != nil {
+	if d.spi, err = p.Connect(speed, spi.Mode0, 8); err != nil {
 		log.Fatalf("OpenSTMPE610(): error on port.Connect(): %v", err)
 	}
 	if d.pin = gpioreg.ByName(IntPin); d.pin == nil {

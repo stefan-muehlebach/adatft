@@ -71,11 +71,11 @@ func ReadCalibDataFile(fileName string) *CalibData {
 // Für die Konvertierung der Touchscreen-Koordinaten in Bildschirm-Koordinaten
 // wird der Datentyp DistortedPlane verwendet.
 type DistortedPlane struct {
-	Rot					   RotationType
-	RawPosList             [NumRefPoints]TouchRawPos
-	PosList                [NumRefPoints]TouchPos
-	RawZmin, RawZmax       uint8
-	Zmin, Zmax             float64
+	Rot					   RotationType					`json:"-"`
+	RawPosList             [NumRefPoints]TouchRawPos	`json:"RawPosList"`
+	PosList                [NumRefPoints]TouchPos		`json:"PosList"`
+	RawZmin, RawZmax       uint8						`json:"-"`
+	Zmin, Zmax             float64						`json:"-"`
 //	m1, m2, n1, n2, o1, o2 float64
 //	ax, ay                 float64
 }

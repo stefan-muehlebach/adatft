@@ -5,15 +5,20 @@ import (
 	"log"
 	"time"
 
+	"periph.io/x/conn/v3/physic"
+
 	hw "github.com/stefan-muehlebach/adatft/stmpe610"
 )
 
 // Mit diesen Konstanten wird einerseits die Frequenz fuer den SPI-Bus
 // definiert und die Groesse der Queue fuer die Touch-Events festgelegt.
 const (
-	tchSpeedHz     = 500_000
 	eventQueueSize = 30
 	sampleTime     = 7 * time.Millisecond
+)
+
+var (
+	tchSpeed physic.Frequency = 500_00 * physic.Hertz
 )
 
 // Dies sind alle Pen- oder Touch-Events, auf welche man sich abonnieren kann.
@@ -99,9 +104,9 @@ func OpenTouch(rot RotationType) *Touch {
 
 	tch = &Touch{}
 	if isRaspberry {
-		tch.tspi = hw.Open(tchSpeedHz)
+		tch.tspi = hw.Open(tchSpeed)
 	} else {
-		tch.tspi = hw.OpenDummy(tchSpeedHz)
+		tch.tspi = hw.OpenDummy(tchSpeed)
 	}
 
 	revNr = tch.tspi.ReadReg8(hw.ID_VER)

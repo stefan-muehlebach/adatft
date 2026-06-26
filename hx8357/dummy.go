@@ -17,7 +17,7 @@ type HX8357Dummy struct {
 
 // Damit wird die Verbindung zum HX8357 geöffnet. Die Initialisierung des
 // Chips wird in einer separaten Funktion (Init()) durchgeführt!
-func OpenDummy(speedHz physic.Frequency) *HX8357Dummy {
+func OpenDummy(speed physic.Frequency) *HX8357Dummy {
 	d := &HX8357Dummy{}
 
 	return d
