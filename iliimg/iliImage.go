@@ -1,4 +1,4 @@
-package adatft
+package iliimg
 
 import (
 	"image"
@@ -9,9 +9,10 @@ import (
 // dargestellt werden kann und implementiert alle Interfaces, welche Go
 // fuer Bild-Typen kennt.
 type ILIImage struct {
-	Rect   image.Rectangle
-	Stride int
-	Pix    []uint8
+	Rect     image.Rectangle
+	Stride   int
+	Pix      []uint8
+	lsbFirst bool
 }
 
 func NewILIImage(r image.Rectangle) *ILIImage {
@@ -22,6 +23,14 @@ func NewILIImage(r image.Rectangle) *ILIImage {
 	}
 	p.Clear()
 	return p
+}
+
+func (p *ILIImage) SetLSBFirst() {
+	p.lsbFirst = true
+}
+
+func (p *ILIImage) SetMSBFirst() {
+	p.lsbFirst = false
 }
 
 // ColorModel, Bounds und At werden vom Interface image.Image gefordert.
@@ -47,9 +56,10 @@ func (p *ILIImage) SubImage(r image.Rectangle) image.Image {
 	}
 	idx := p.PixOffset(r.Min.X, r.Min.Y)
 	return &ILIImage{
-		Rect:   r,
-		Stride: p.Stride,
-		Pix:    p.Pix[idx:],
+		Rect:     r,
+		Stride:   p.Stride,
+		Pix:      p.Pix[idx:],
+		lsbFirst: p.lsbFirst,
 	}
 }
 

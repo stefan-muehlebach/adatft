@@ -10,6 +10,42 @@ import (
 	hw "github.com/stefan-muehlebach/adatft/stmpe610"
 )
 
+//----------------------------------------------------------------------------
+
+// Wie für den Display, so gibt es auch für den Touchscreen-Controller
+// verschiedene Ausführungen. Dieses Interface beschreibt alle Methoden,
+// welche von einer Touchscreen-Anbindung implementiert werden müssen.
+type TouchInterface interface {
+	// Damit die Initialisierung so flexibel wie moeglich bleibt, wird der
+	// Init-Methode ein Slice von beliebigen Parametern uebergeben. Wie die
+	// Werte interpretiert werden, ist Interface-spezifisch.
+	Init(params []any)
+
+	// Schliesst die Verbindung zum Touchscreen-Controller und gibt alle
+	// Ressourcen im Zusammenhang mit dieser Verbindung frei.
+	Close()
+
+	// Mit den folgenden vier Methoden können die Register des Controller
+	// ausgelesen oder beschrieben werden. Es stehen Methoden für 8-Bit oder
+	// 16-Bit Register zur Verfügung.
+	ReadReg8(addr uint8) uint8
+	WriteReg8(addr uint8, value uint8)
+	ReadReg16(addr uint8) uint16
+	WriteReg16(addr uint8, value uint16)
+
+	// Mit ReadData kann die aktuelle Position auf dem Touchscreen ermittelt
+	// werden. Diese Methode sollte nur dann aufgerufen werden, wenn auch
+	// Positionsdaten vorhanden sind.
+	ReadData() (x, y uint16, z uint8)
+
+	// Damit wird die Funktion cbFunc als Handler für alle Interrupts im
+	// Zusammenhang mit dem Touchscreen hinterlegt. Der Funktion wird beim
+	// Aufruf der Paramter cbData uebergeben.
+	SetCallback(cbFunc func(any), cbData any)
+}
+
+//----------------------------------------------------------------------------
+
 // Mit diesen Konstanten wird einerseits die Frequenz fuer den SPI-Bus
 // definiert und die Groesse der Queue fuer die Touch-Events festgelegt.
 const (
@@ -126,7 +162,7 @@ func OpenTouch(rot RotationType) *Touch {
 	tch.isOpen = true
 
 	tch.plane.ReadConfig(rot)
-	tch.plane.SetZRange(0, (0b100 << zFract)-1, 1.0, 0.0)
+	tch.plane.SetZRange(0, (0b100<<zFract)-1, 1.0, 0.0)
 
 	return tch
 }

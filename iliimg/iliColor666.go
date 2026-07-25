@@ -2,7 +2,7 @@
 
 // Dies ist die Implementation des ILI-Farbtyps mit je 6 Bit pro Farbe, resp.
 // 3 Bytes pro Pixel.
-package adatft
+package iliimg
 
 import (
 	"image/color"

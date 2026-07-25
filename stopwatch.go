@@ -8,9 +8,9 @@ import (
 
 // Dieser Typ dient der Zeitmessung.
 type Stopwatch struct {
-	t time.Time
+	t           time.Time
 	d, min, max time.Duration
-	n int
+	n           int
 }
 
 func NewStopwatch() *Stopwatch {
@@ -103,24 +103,24 @@ func PrintStat() {
 	fmt.Printf("total:\n")
 	fmt.Printf("  %d frames\n", ConvWatch.Num())
 	fmt.Printf("application animation:\n")
-//	fmt.Printf("  %v total\n", AnimWatch.Total())
-//	fmt.Printf("  %v min\n", AnimWatch.Min())
-//	fmt.Printf("  %v max\n", AnimWatch.Max())
+	//	fmt.Printf("  %v total\n", AnimWatch.Total())
+	//	fmt.Printf("  %v min\n", AnimWatch.Min())
+	//	fmt.Printf("  %v max\n", AnimWatch.Max())
 	fmt.Printf("  %v / frame\n", AnimWatch.Avg())
 	fmt.Printf("application painting:\n")
-//	fmt.Printf("  %v total\n", PaintWatch.Total())
-//	fmt.Printf("  %v min\n", PaintWatch.Min())
-//	fmt.Printf("  %v max\n", PaintWatch.Max())
+	//	fmt.Printf("  %v total\n", PaintWatch.Total())
+	//	fmt.Printf("  %v min\n", PaintWatch.Min())
+	//	fmt.Printf("  %v max\n", PaintWatch.Max())
 	fmt.Printf("  %v / frame\n", PaintWatch.Avg())
 	fmt.Printf("buffer conversion:\n")
-//	fmt.Printf("  %v total\n", ConvWatch.Total())
-//	fmt.Printf("  %v min\n", ConvWatch.Min())
-//	fmt.Printf("  %v max\n", ConvWatch.Max())
+	//	fmt.Printf("  %v total\n", ConvWatch.Total())
+	//	fmt.Printf("  %v min\n", ConvWatch.Min())
+	//	fmt.Printf("  %v max\n", ConvWatch.Max())
 	fmt.Printf("  %v / frame\n", ConvWatch.Avg())
 	fmt.Printf("sending to SPI:\n")
-//	fmt.Printf("  %v total\n", DispWatch.Total())
-//	fmt.Printf("  %v min\n", DispWatch.Min())
-//	fmt.Printf("  %v max\n", DispWatch.Max())
+	//	fmt.Printf("  %v total\n", DispWatch.Total())
+	//	fmt.Printf("  %v min\n", DispWatch.Min())
+	//	fmt.Printf("  %v max\n", DispWatch.Max())
 	fmt.Printf("  %v / frame\n", DispWatch.Avg())
 }
 

@@ -1,9 +1,10 @@
 package ili9341
 
 import (
-    "periph.io/x/conn/v3/gpio"
-    "periph.io/x/conn/v3/physic"
-    "periph.io/x/conn/v3/spi"
+	"github.com/stefan-muehlebach/adatft/iliimg"
+	"periph.io/x/conn/v3/gpio"
+	"periph.io/x/conn/v3/physic"
+	"periph.io/x/conn/v3/spi"
 )
 
 // Dies ist der Datentyp, welche für die Verbindung zum ILI9341 via SPI
@@ -11,28 +12,28 @@ import (
 // das Device-File für die SPI-Verbindung und den Pin, welcher für die
 // Command/Data-Leitung verwendet wird.
 type ILI9341Dummy struct {
-    spi spi.Conn
-    pin gpio.PinIO
+	spi spi.Conn
+	pin gpio.PinIO
 }
 
 // Damit wird die Verbindung zum ILI9341 geöffnet. Die Initialisierung des
 // Chips wird in einer separaten Funktion (Init()) durchgeführt!
 func OpenDummy(speedHz physic.Frequency) *ILI9341Dummy {
-    d := &ILI9341Dummy{}
+	d := &ILI9341Dummy{}
 
-    return d
+	return d
 }
 
 // Schliesst die Verbindung zum ILI9341.
 func (d *ILI9341Dummy) Close() {
-    // err := d.spi.Close()
-    // check("Close(): error in spi.Close()", err)
+	// err := d.spi.Close()
+	// check("Close(): error in spi.Close()", err)
 }
 
 // Führt die Initialisierung des Chips durch. initParams ist ein Slice
 // von Hardware-spezifischen Einstellungen. Beim ILI9341 sind dies:
 //
-//    { initMinimal, madctlParam }
+//	{ initMinimal, madctlParam }
 func (d *ILI9341Dummy) Init(initParams []any) {
 
 }
@@ -56,3 +57,5 @@ func (d *ILI9341Dummy) Data32(value uint32) {
 func (d *ILI9341Dummy) DataArray(buf []byte) {
 }
 
+func (d *ILI9341Dummy) Send(img *iliimg.ILIImage) {
+}

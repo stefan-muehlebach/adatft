@@ -3,7 +3,7 @@
 // Dies ist die Implementation des 565-Farbtyps. Er verwendet 5 Bit fuer Rot,
 // 6 Bit fuer Gruen und 5 Bit fuer Blau. Das sind 16 Bit, welche in 2 Bytes
 // gepackt werden.
-package adatft
+package iliimg
 
 import (
 	"image/color"

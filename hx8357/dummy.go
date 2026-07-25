@@ -1,6 +1,7 @@
 package hx8357
 
 import (
+	"github.com/stefan-muehlebach/adatft/iliimg"
 	"periph.io/x/conn/v3/gpio"
 	"periph.io/x/conn/v3/physic"
 	"periph.io/x/conn/v3/spi"
@@ -52,4 +53,7 @@ func (d *HX8357Dummy) Data32(value uint32) {
 // aufzurufen ist und die ganzen Konvertierungen nicht im Hauptprogramm
 // sichtbar sind.
 func (d *HX8357Dummy) DataArray(buf []byte) {
+}
+
+func (d *HX8357Dummy) Send(img *iliimg.ILIImage) {
 }

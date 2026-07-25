@@ -1,7 +1,7 @@
 package adatft
 
 import (
-	"flag"
+	//"flag"
 	"image"
 	"image/draw"
 	"image/png"
@@ -10,6 +10,7 @@ import (
 	"os"
 	"testing"
 
+	. "github.com/stefan-muehlebach/adatft/iliimg"
 	"github.com/stefan-muehlebach/gg"
 	"github.com/stefan-muehlebach/gg/colors"
 	draw2 "golang.org/x/image/draw"
@@ -25,6 +26,7 @@ const (
 var (
 	disp                                        *Display
 	touch                                       *Touch
+	pointer                                     *Pointer
 	pixBuf                                      *ILIImage
 	width, height                               int
 	fWidth, fHeight                             float64
@@ -44,11 +46,12 @@ var (
 	rnd                                         *rand.Rand
 )
 
-func TestMain(m *testing.M) {
-	flag.Var(&dspSpeed, "speed", "Freq (Hz) of SPI bus")
-	flag.Parse()
+// func TestMain(m *testing.M) {
+func init() {
+	//flag.Var(&dspSpeed, "speed", "Freq (Hz) of SPI bus")
+	//flag.Parse()
 
-	disp = OpenDisplay(Rotate270)
+	disp = OpenDisplay(Rotate000)
 	bounds := disp.Bounds()
 	width, height = bounds.Dx(), bounds.Dy()
 	fWidth, fHeight = float64(width), float64(height)
@@ -57,6 +60,7 @@ func TestMain(m *testing.M) {
 	rectCust = image.Rect(0, 0, width/3, height/3)
 
 	pixBuf = NewILIImage(rectFull)
+	pixBuf.SetLSBFirst()
 
 	fh, err := os.Open(imageFile01)
 	if err != nil {
@@ -88,15 +92,15 @@ func TestMain(m *testing.M) {
 	pcg = rand.NewPCG(randSeed1, randSeed2)
 	rnd = rand.New(pcg)
 
-	m.Run()
+	//m.Run()
 
-	disp.Close()
+	//disp.Close()
 }
 
 func TestSendImageFull(t *testing.T) {
 	pixBuf.Clear()
 	pixBuf.Convert(testBild01)
-	disp.sendImage(pixBuf)
+	disp.dspi.Send(pixBuf)
 }
 
 // Misst die Zeit für die Darstellung eines Bildes (resp. eines Teils davon)
@@ -107,7 +111,7 @@ func BenchmarkSendImageFull(b *testing.B) {
 	pixBuf.Clear()
 	pixBuf.Convert(testBild01)
 	for b.Loop() {
-		disp.sendImage(pixBuf)
+		disp.dspi.Send(pixBuf)
 	}
 }
 func BenchmarkSendImageRand(b *testing.B) {
@@ -118,7 +122,7 @@ func BenchmarkSendImageRand(b *testing.B) {
 		x1, y1 := rnd.IntN(width), rnd.IntN(height)
 		rect := image.Rect(x0, y0, x1, y1)
 		img := pixBuf.SubImage(rect).(*ILIImage)
-		disp.sendImage(img)
+		disp.dspi.Send(img)
 	}
 }
 
@@ -322,7 +326,7 @@ func BenchmarkAllFull(b *testing.B) {
 	for b.Loop() {
 		img.Convert(testBild01)
 		rect := pixBuf.Diff(img)
-		disp.sendImage(img.SubImage(rect).(*ILIImage))
+		disp.dspi.Send(img.SubImage(rect).(*ILIImage))
 	}
 }
 func BenchmarkAllRand(b *testing.B) {
@@ -337,7 +341,7 @@ func BenchmarkAllRand(b *testing.B) {
 		}
 		imgA.Convert(testBild01)
 		rect := imgA.Diff(imgB)
-		disp.sendImage(imgA.SubImage(rect).(*ILIImage))
+		disp.dspi.Send(imgA.SubImage(rect).(*ILIImage))
 		imgA, imgB = imgB, imgA
 	}
 }
@@ -427,8 +431,8 @@ func BenchmarkCopyImageGo2(b *testing.B) {
 	disp.DrawSync(gc.Image())
 }
 
-func TestTouchScreen(t *testing.T) {
-	touch = OpenTouch(Rotate000)
+func TestPointerDevice(t *testing.T) {
+	pointer = OpenPointer("/dev/input/event0", disp.Bounds())
 	i := 0
 	for event := range touch.EventQ {
 		t.Logf("Event received: %v\n", event)

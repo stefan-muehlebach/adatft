@@ -1,6 +1,6 @@
-//go:build pixfmt666
+//go:build pixfmt565
 
-package adatft
+package iliimg
 
 import (
 	"image"
@@ -15,11 +15,14 @@ func (p *ILIImage) Set(x, y int, c color.Color) {
 	}
 	idx := p.PixOffset(x, y)
 	c1 := ILIModel.Convert(c).(ILIColor)
-
 	s := p.Pix[idx : idx+bytesPerPixel : idx+bytesPerPixel]
-	s[0] = c1.R
-	s[1] = c1.G
-	s[2] = c1.B
+	if p.lsbFirst {
+		s[0] = c1.LB
+		s[1] = c1.HB
+	} else {
+		s[0] = c1.HB
+		s[1] = c1.LB
+	}
 }
 
 func (p *ILIImage) ILIColorAt(x, y int) ILIColor {
@@ -28,7 +31,11 @@ func (p *ILIImage) ILIColorAt(x, y int) ILIColor {
 	}
 	idx := p.PixOffset(x, y)
 	s := p.Pix[idx : idx+bytesPerPixel : idx+bytesPerPixel]
-	return ILIColor{s[0], s[1], s[2]}
+	if p.lsbFirst {
+		return ILIColor{s[1], s[0]}
+	} else {
+		return ILIColor{s[0], s[1]}
+	}
 }
 
 func (p *ILIImage) SetILIColor(x, y int, c ILIColor) {
@@ -36,11 +43,14 @@ func (p *ILIImage) SetILIColor(x, y int, c ILIColor) {
 		return
 	}
 	idx := p.PixOffset(x, y)
-
 	s := p.Pix[idx : idx+bytesPerPixel : idx+bytesPerPixel]
-	s[0] = c.R
-	s[1] = c.G
-	s[2] = c.B
+	if p.lsbFirst {
+		s[0] = c.LB
+		s[1] = c.HB
+	} else {
+		s[0] = c.HB
+		s[1] = c.LB
+	}
 }
 
 // Mit Diff wird das kleinstmoegliche Rechteck ermittelt, welches alle
@@ -86,7 +96,7 @@ Loop3:
 			idxEnd := idxStart + bytesPerPixel
 			s := p.Pix[idxStart:idxEnd:idxEnd]
 			d := img.Pix[idxStart:idxEnd:idxEnd]
-			if s[0] != d[0] || s[1] != d[1] || s[2] != d[2] {
+			if s[0] != d[0] || s[1] != d[1] {
 				xMin = x
 				break Loop3
 			}
@@ -101,7 +111,7 @@ Loop4:
 			idxEnd := idxStart + bytesPerPixel
 			s := p.Pix[idxStart:idxEnd:idxEnd]
 			d := img.Pix[idxStart:idxEnd:idxEnd]
-			if s[0] != d[0] || s[1] != d[1] || s[2] != d[2] {
+			if s[0] != d[0] || s[1] != d[1] {
 				xMax = x + 1
 				break Loop4
 			}
@@ -115,28 +125,35 @@ Loop4:
 // ILI-spezifisches Bild. Dabei kann mit Rect (d.h. Bounds()) bestimmt werden
 // welcher Bereich konvertiert werden soll.
 func (p *ILIImage) Convert(src *image.RGBA) {
-	var x, y int
+	var row, col int
 	var srcBaseIdx, srcIdx, dstBaseIdx, dstIdx int
 
-	ConvWatch.Start()
+	//ConvWatch.Start()
 
 	srcBaseIdx = 0
 	dstBaseIdx = src.Rect.Min.Y*p.Stride + src.Rect.Min.X*bytesPerPixel
-	for y = src.Rect.Min.Y; y < src.Rect.Max.Y; y++ {
+	for row = src.Rect.Min.Y; row < src.Rect.Max.Y; row++ {
 		srcIdx = srcBaseIdx
 		dstIdx = dstBaseIdx
 
-		for x = src.Rect.Min.X; x < src.Rect.Max.X; x++ {
-			s := src.Pix[srcIdx : srcIdx+bytesPerPixel : srcIdx+bytesPerPixel]
+		for col = src.Rect.Min.X; col < src.Rect.Max.X; col++ {
+			s := src.Pix[srcIdx : srcIdx+3 : srcIdx+3]
 			d := p.Pix[dstIdx : dstIdx+bytesPerPixel : dstIdx+bytesPerPixel]
-			d[0] = s[0]
-			d[1] = s[1]
-			d[2] = s[2]
+			r := s[0] & 0xF8
+			g := s[1] & 0xFC
+			b := s[2] & 0xF8
+			if p.lsbFirst {
+				d[1] = (r) | (g >> 5)
+				d[0] = (g << 3) | (b >> 3)
+			} else {
+				d[0] = (r) | (g >> 5)
+				d[1] = (g << 3) | (b >> 3)
+			}
 			srcIdx += 4
 			dstIdx += bytesPerPixel
 		}
 		srcBaseIdx += src.Stride
 		dstBaseIdx += p.Stride
 	}
-	ConvWatch.Stop()
+	//ConvWatch.Stop()
 }

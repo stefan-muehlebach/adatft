@@ -9,6 +9,8 @@ import (
 	"periph.io/x/conn/v3/physic"
 	"periph.io/x/conn/v3/spi"
 	"periph.io/x/conn/v3/spi/spireg"
+
+	"github.com/stefan-muehlebach/adatft/iliimg"
 )
 
 // Konstanten für den Display-Chip HX8357.
@@ -143,8 +145,8 @@ func (d *HX8357) Close() {
 }
 
 type InitCommand struct {
-	Cmd byte
-	Data []byte
+	Cmd    byte
+	Data   []byte
 	WaitMs int
 }
 
@@ -164,7 +166,7 @@ func (d *HX8357) Init(rotation byte) (w, h int) {
 		madctlParam |= MAD_MV | MAD_MX
 		w, h = LONG_SIDE, SHORT_SIDE
 	}
-	
+
 	cmdList := []InitCommand{
 		{DISPOFF, []byte{}, 125},
 		{SWRESET, []byte{}, 128},
@@ -247,6 +249,35 @@ func (d *HX8357) DataArray(buf []byte) {
 			d.spi.Tx(buf[startIdx:startIdx+sendSize], nil)
 			countRemain -= sendSize
 			startIdx += sendSize
+		}
+	}
+}
+
+const (
+	bytesPerPixel = 2
+)
+
+func (d *HX8357) Send(img *iliimg.ILIImage) {
+	var len int
+
+	rect := img.Rect
+	bytesPerLine := rect.Dx() * bytesPerPixel
+
+	d.Cmd(PASET)
+	d.Data32(uint32((rect.Min.Y << 16) | (rect.Max.Y - 1)))
+	d.Cmd(CASET)
+	d.Data32(uint32((rect.Min.X << 16) | (rect.Max.X - 1)))
+	d.Cmd(RAMWR)
+
+	if bytesPerLine == img.Stride {
+		len = rect.Dy() * img.Stride
+		d.DataArray(img.Pix[:len:len])
+	} else {
+		idx0 := 0
+		for y := rect.Min.Y; y < rect.Max.Y; y++ {
+			idx1 := idx0 + bytesPerLine
+			d.DataArray(img.Pix[idx0:idx1:idx1])
+			idx0 += img.Stride
 		}
 	}
 }

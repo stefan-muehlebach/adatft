@@ -320,4 +320,3 @@ func (d *STMPE610) SetCallback(cbFunc func(any), cbData any) {
 		}
 	}()
 }
-

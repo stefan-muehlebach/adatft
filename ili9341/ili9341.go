@@ -14,6 +14,7 @@ import (
 	//"periph.io/x/conn/physic"
 	//"periph.io/x/conn/spi"
 	//"periph.io/x/conn/spi/spireg"
+	"github.com/stefan-muehlebach/adatft/iliimg"
 )
 
 // Konstanten für den Display-Chip ILI9341.
@@ -139,188 +140,57 @@ func (d *ILI9341) Close() {
 // Yet another initialisation sequence... from the eksperts on github.com
 // TFT_eSPI.
 type InitCommand struct {
-	Cmd  byte
-	Data []byte
+	Cmd   byte
+	Data  []byte
+	Delay int
 }
 
-<<<<<<< HEAD
-var ()
-
-=======
->>>>>>> 9a46712b8303d02c233c99183f6fb0ef7e0b2be4
 func (d *ILI9341) Init(initParams []any) {
 	madctlParam := initParams[1].(uint8)
 
 	cmdList := []InitCommand{
-		{PWCTRLB, []byte{0x00, 0xC1, 0x30}},
-		{PWOSEQCTR, []byte{0x64, 0x03, 0x12, 0x81}},
-		{DRVTICTRLA, []byte{0x85, 0x00, 0x78}},
-		{PWCTRLA, []byte{0x39, 0x2C, 0x00, 0x34, 0x02}},
-		{PMPRTCTR, []byte{0x20}},
-		{DRVTICTRLB, []byte{0x00, 0x00}},
-		{PWCTR1, []byte{0x10}},
-		{PWCTR2, []byte{0x00}},
-		{VMCTR1, []byte{0x30, 0x30}},
-		{VMCTR2, []byte{0xB7}},
-		{PIXFMT, []byte{0x55}},
-		{MADCTL, []byte{madctlParam}},
-		{FRMCTR1, []byte{0x00, 0x1A}},
-		{DFUNCTR, []byte{0x08, 0x82, 0x27}},
-		{GAMMA_3G, []byte{0x00}},
-		{GAMMASET, []byte{0x01}},
+		{PWCTRLB, []byte{0x00, 0xC1, 0x30}, 0},
+		{PWOSEQCTR, []byte{0x64, 0x03, 0x12, 0x81}, 0},
+		{DRVTICTRLA, []byte{0x85, 0x00, 0x78}, 0},
+		{PWCTRLA, []byte{0x39, 0x2C, 0x00, 0x34, 0x02}, 0},
+		{PMPRTCTR, []byte{0x20}, 0},
+		{DRVTICTRLB, []byte{0x00, 0x00}, 0},
+		{PWCTR1, []byte{0x10}, 0},
+		{PWCTR2, []byte{0x00}, 0},
+		{VMCTR1, []byte{0x30, 0x30}, 0},
+		{VMCTR2, []byte{0xB7}, 0},
+		{PIXFMT, []byte{0x55}, 0},
+		{MADCTL, []byte{madctlParam}, 0},
+		{FRMCTR1, []byte{0x00, 0x1A}, 0},
+		{DFUNCTR, []byte{0x08, 0x82, 0x27}, 0},
+		{GAMMA_3G, []byte{0x00}, 0},
+		{GAMMASET, []byte{0x01}, 0},
 		{GMCTRP1, []byte{0x0F, 0x2A, 0x28, 0x08, 0x0e, 0x08, 0x54,
-			0xA9, 0x43, 0x0A, 0x0F, 0x00, 0x00, 0x00, 0x00}},
+			0xA9, 0x43, 0x0A, 0x0F, 0x00, 0x00, 0x00, 0x00}, 0},
 		{GMCTRN1, []byte{0x00, 0x15, 0x17, 0x07, 0x11, 0x06, 0x2B,
-			0x56, 0x3C, 0x05, 0x10, 0x0F, 0x3F, 0x3F, 0x0f}},
-		{PASET, []byte{0x00, 0x00, 0x01, 0x3F}},
-		{CASET, []byte{0x00, 0x00, 0x00, 0xEF}},
+			0x56, 0x3C, 0x05, 0x10, 0x0F, 0x3F, 0x3F, 0x0f}, 0},
+		{PASET, []byte{0x00, 0x00, 0x01, 0x3F}, 0},
+		{CASET, []byte{0x00, 0x00, 0x00, 0xEF}, 0},
+		{SLPOUT, []byte{}, 125},
+		{DISPON, []byte{}, 125},
 	}
 
-	for _, initCmd := range cmdList {
-		d.Cmd(initCmd.Cmd)
-		d.DataArray(initCmd.Data)
+	for _, cmd := range cmdList {
+		d.Cmd(cmd.Cmd)
+		if len(cmd.Data) > 0 {
+			d.DataArray(cmd.Data)
+		}
+		if cmd.Delay > 0 {
+			time.Sleep(time.Duration(cmd.Delay) * time.Millisecond)
+		}
 	}
-
-	d.Cmd(SLPOUT) // Exit Sleep
-	time.Sleep(125 * time.Millisecond)
-
-	d.Cmd(DISPON) // Display On
-	time.Sleep(125 * time.Millisecond)
 }
 
 // Führt die Initialisierung des Chips durch. initParams ist ein Slice
 // von Hardware-spezifischen Einstellungen. Beim ILI9341 sind dies:
 //
 //	{ initMinimal, madctlParam }
-<<<<<<< HEAD
-func (d *ILI9341) InitOld(initParams []any) {
-	var initMinimal bool
-	var madctlParam uint8
-
-	initMinimal = initParams[0].(bool)
-	madctlParam = initParams[1].(uint8)
-
-	var posGamma []uint8 = []uint8{
-		0x0f, 0x31, 0x2b, 0x0c, 0x0e, 0x08, 0x4e,
-		0xf1,
-		0x37, 0x07, 0x10, 0x03, 0x0e, 0x09, 0x00,
-	}
-	var negGamma []uint8 = []uint8{
-		0x00, 0x0e, 0x14, 0x03, 0x11, 0x07, 0x31,
-		0xc1,
-		0x48, 0x08, 0x0f, 0x0c, 0x31, 0x36, 0x0f,
-	}
-	/*
-	   var colorLut []uint8
-	   colorLut = make([]uint8, 128)
-	   for i := 0; i < 32; i++ {
-	       colorLut[i] = uint8(2*i)
-	   }
-	   for i := 0; i < 64; i++ {
-	       colorLut[i+32] = uint8(i)
-	   }
-	   for i := 0; i < 32; i++ {
-	       colorLut[i+96] = uint8(2*i)
-	   }
-	*/
-
-	/*
-	   macroGamma = make([]uint8, 16)
-	   for i := 0; i < 16; i++ {
-	       macroGamma[i] = 0x00
-	   }
-	   microGamma = make([]uint8, 64)
-	   for i := 0; i < 64; i++ {
-	       microGamma[i] = 0x00
-	   }
-	*/
-
-	d.Cmd(DISPOFF) // Display On
-	time.Sleep(125 * time.Millisecond)
-
-	d.Cmd(SWRESET) // Reset the chip at the beginning
-	time.Sleep(128 * time.Millisecond)
-
-	if !initMinimal {
-		d.Cmd(0xEF)
-		d.DataArray([]byte{0x03, 0x80, 0x02})
-
-		d.Cmd(PWCTRLB)
-		d.DataArray([]byte{0x00, 0xc1, 0x30})
-
-		d.Cmd(PWOSEQCTR)
-		d.DataArray([]byte{0x64, 0x03, 0x12, 0x81})
-
-		d.Cmd(DRVTICTRLA)
-		d.DataArray([]byte{0x85, 0x00, 0x78})
-
-		d.Cmd(PWCTRLA)
-		d.DataArray([]byte{0x39, 0x2c, 0x00, 0x34, 0x02})
-
-		d.Cmd(PMPRTCTR)
-		d.Data8(0x20)
-
-		d.Cmd(DRVTICTRLB)
-		d.DataArray([]byte{0x00, 0x00})
-
-		d.Cmd(PWCTR1)
-		d.Data8(0x23)
-
-		d.Cmd(PWCTR2)
-		d.Data8(0x10)
-
-		d.Cmd(VMCTR1)
-		d.DataArray([]byte{0x3e, 0x28})
-
-		d.Cmd(VMCTR2)
-		d.Data8(0x86)
-	}
-
-	d.Cmd(MADCTL) // Memory Access Control
-	d.Data8(madctlParam)
-
-	if !initMinimal {
-		d.Cmd(VSCRSADD)
-		d.Data8(0x00)
-	}
-
-	d.Cmd(PIXFMT)
-	//d.Data8(0x66) // Fuer das 666-Format
-	d.Data8(0x55) // Fuer das 565-Format
-
-	if !initMinimal {
-		//d.Cmd(WRDISBV)
-		//d.Data8(0x00)
-
-		//d.Cmd(WRCTRLD)
-		//d.Data8(0x2c)
-
-		d.Cmd(FRMCTR1)
-		d.DataArray([]byte{0x00, 0x18})
-
-		d.Cmd(DFUNCTR)
-		d.DataArray([]byte{0x08, 0x82, 0x27})
-	}
-
-	d.Cmd(GAMMA_3G) // Disable 3G (Gamma)
-	d.Data8(0x00)
-
-	d.Cmd(GAMMASET) // Set gamma correction to custom
-	d.Data8(0x01)   // curve 1
-
-	d.Cmd(GMCTRP1) // Positive Gamma Correction values
-	d.DataArray(posGamma)
-
-	d.Cmd(GMCTRN1) // Negative Gamma Correction values
-	d.DataArray(negGamma)
-
-	d.Cmd(SLPOUT) // Exit Sleep
-	time.Sleep(125 * time.Millisecond)
-
-	d.Cmd(DISPON) // Display On
-	time.Sleep(125 * time.Millisecond)
-}
-=======
+//
 //func (d *ILI9341) InitOld(initParams []any) {
 //	var initMinimal bool
 //	var madctlParam uint8
@@ -448,7 +318,6 @@ func (d *ILI9341) InitOld(initParams []any) {
 //	d.Cmd(DISPON) // Display On
 //	time.Sleep(125 * time.Millisecond)
 //}
->>>>>>> 9a46712b8303d02c233c99183f6fb0ef7e0b2be4
 
 // Sende den Befehl in 'cmd' zum ILI9341.
 func (d *ILI9341) Cmd(cmd uint8) {
@@ -510,3 +379,31 @@ func (d *ILI9341) DataArray(buf []byte) {
 	}
 }
 
+const (
+	bytesPerPixel = 2
+)
+
+func (d *ILI9341) Send(img *iliimg.ILIImage) {
+	var len int
+
+	rect := img.Rect
+	bytesPerLine := rect.Dx() * bytesPerPixel
+
+	d.Cmd(PASET)
+	d.Data32(uint32((rect.Min.Y << 16) | (rect.Max.Y - 1)))
+	d.Cmd(CASET)
+	d.Data32(uint32((rect.Min.X << 16) | (rect.Max.X - 1)))
+	d.Cmd(RAMWR)
+
+	if bytesPerLine == img.Stride {
+		len = rect.Dy() * img.Stride
+		d.DataArray(img.Pix[:len:len])
+	} else {
+		idx0 := 0
+		for y := rect.Min.Y; y < rect.Max.Y; y++ {
+			idx1 := idx0 + bytesPerLine
+			d.DataArray(img.Pix[idx0:idx1:idx1])
+			idx0 += img.Stride
+		}
+	}
+}
